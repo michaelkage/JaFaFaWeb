@@ -1,0 +1,35 @@
+name: Activate dashboard enhancements
+
+on:
+  push:
+    branches: [feat/dashboard-telemetry-ux]
+
+permissions:
+  contents: write
+
+jobs:
+  activate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load enhancement module
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+          tag = '<script src="dashboard-enhancements.js" defer></script>'
+          if tag not in text:
+              marker = '</body>'
+              if marker not in text:
+                  raise SystemExit('index.html has no closing body tag')
+              text = text.replace(marker, f'  {tag}\n{marker}', 1)
+              p.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit activation
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet || git commit -m 'feat: activate dashboard enhancements'
+          git push
