@@ -411,134 +411,48 @@
   padding: 0.65rem 0.5rem;
 }
 
-/* Container scroll wrapper setup */
-.table-container {
-  max-height: 600px; /* Limits table height so scrolling happens inside the container */
-  overflow-y: auto;
-  overflow-x: auto;
-  position: relative;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(15, 23, 42, 0.4);
-}
-
-/* Make the header row sticky */
-.telemetry-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background-color: #0b1120 !important; /* Solid dark background so scrolled text doesn't show through */
-  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.1); /* Crisp border line below sticky header */
-}
-
-/* Row hover highlight & smooth transition */
-.telemetry-table tbody tr {
-  transition: background-color 0.15s ease, transform 0.15s ease;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.telemetry-table tbody tr:hover {
-  background-color: rgba(56, 189, 248, 0.08) !important; /* Subtle blue highlight on hover */
-  cursor: pointer;
-}
-
-/* Ensure cell text stays centered and readable on hover */
-.telemetry-table td {
-  padding: 0.65rem 0.5rem;
-  font-size: 0.85rem;
-  text-align: center;
-  vertical-align: middle;
-  white-space: nowrap; /* Prevents text wrapping awkwardly inside cells */
-}
-
-/* Inline Metric Alert Badges */
-.badge-alert {
-  display: inline-block;
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 0.8rem;
-}
-
-.badge-danger {
-  background: rgba(244, 63, 94, 0.15);
-  color: #fb7185;
-  border: 1px solid rgba(244, 63, 94, 0.3);
-}
-
-.badge-warning {
-  background: rgba(251, 191, 36, 0.15);
-  color: #fcd34d;
-  border: 1px solid rgba(251, 191, 36, 0.3);
-}
-
-.badge-success {
-  background: rgba(52, 211, 153, 0.15);
-  color: #6ee7b7;
-  border: 1px solid rgba(52, 211, 153, 0.3);
-}
     </style>
   </head>
   <body>
-    <!-- =========================================================================
-     VIEW 1: UNAUTHENTICATED STATE
-     This container is visible by default when a user visits the page.
-     It prompts the user to log in before exposing any sensitive data.
-     ========================================================================= -->
-<div id="view-unauthenticated" class="auth-container">
-  <!-- Central card interface to neatly package the login prompt -->
-  <div class="card">
-    <h1>Customer Portal</h1>
-    
-    <p>
-      Sign in with your Google Account to access customer data and telemetry logs.
-    </p>
-    
-    <!-- Target container where the Google Sign-In JavaScript SDK 
-         will dynamically render the official "Sign in with Google" button -->
-    <div id="buttonDiv"></div>
-  </div>
-</div>
-
-<!-- =========================================================================
-     VIEW 2: AUTHENTICATED MAIN STATE
-     The 'hidden' attribute ensures this dashboard remains invisible until 
-     a JavaScript authentication script verifies a successful login.
-     ========================================================================= -->
-<div id="view-authenticated" hidden>
-  
-  <!-- Top navigation bar containing branding and user profile management -->
-  <header class="top-bar">
-    
-    <!-- Left Section: Application logo and name -->
-    <div class="app-brand">
-      <!-- Lightweight vector icon representing a user profile/hub -->
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-        <circle cx="9" cy="7" r="4"></circle>
-      </svg>
-      <span>Telemetry Hub</span>
-    </div>
-    
-    <!-- Right Section: Profile component displaying logged-in user details -->
-    <div class="user-pill">
-      <!-- Profile photo; the 'src' is blank and will be populated 
-           dynamically via JavaScript using the Google profile image URL -->
-      <img id="user-picture" class="user-avatar" src="" alt="User Avatar" />
-      
-      
-      <div class="user-info">
-        <!-- Dynamic placeholders for the user's name and Google email address -->
-        <span id="user-name" class="user-name"></span>
-        <span id="user-email" class="user-email"></span>
+    <!-- VIEW 1: UNAUTHENTICATED -->
+    <div id="view-unauthenticated" class="auth-container">
+      <div class="card">
+        <h1>Customer Portal</h1>
+        <p>
+          Sign in with your Google Account to access customer data and telemetry
+          logs.
+        </p>
+        <div id="buttonDiv"></div>
       </div>
-      
-      <!-- Logout action button that triggers the 'handleSignOut()' 
-           JavaScript function to clear the session and restore View 1 -->
-      <button class="btn-logout" onclick="handleSignOut()">Sign Out</button>
     </div>
-    
-  </header>
+
+    <!-- VIEW 2: AUTHENTICATED MAIN -->
+    <div id="view-authenticated" hidden>
+      <header class="top-bar">
+        <div class="app-brand">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+          </svg>
+          <span>Telemetry Hub</span>
+        </div>
+
+        <div class="user-pill">
+          <img id="user-picture" class="user-avatar" src="" alt="User Avatar" />
+          <div class="user-info">
+            <span id="user-name" class="user-name"></span>
+            <span id="user-email" class="user-email"></span>
+          </div>
+          <button class="btn-logout" onclick="handleSignOut()">Sign Out</button>
+        </div>
+      </header>
 
       <main class="main-content">
         <!-- SCREEN 1: CUSTOMERS -->
@@ -683,7 +597,6 @@
                 class="search-input"
                 placeholder="Type vehicle make, model, or plate number..."
                 oninput="onVehicleSearchInput()"
-                onfocus="onVehicleSearchInput()"
               />
             </div>
             <div
@@ -713,12 +626,12 @@
                   >Selected Vehicle</span
                 >
                 <h3
-                  id="summaryCarPlate"
-                  style="font-size: 1.4rem; color: #f8fafc; margin-top: 0.25rem"
+                  id="summaryCarTitle"
+                  style="font-size: 1.4rem; color: #f8fafc"
                 ></h3>
               </div>
+              <span id="summaryCarPlate" class="car-plate"></span>
             </div>
-
             <div
               style="
                 font-size: 0.9rem;
@@ -730,21 +643,22 @@
               "
             >
               <div>
-                <strong>Sensor / ID:</strong> <span id="summaryCarMac">--</span>
+                <strong>Status:</strong> <span id="summaryCarStatus"></span>
+              </div>
+              <div>
+                <strong>Mileage:</strong> <span id="summaryCarMileage"></span>
               </div>
             </div>
-
             <button
               class="btn-action"
               style="width: 100%; text-align: center"
-              onclick="confirmVehicleSelection()"
+              onclick="showTelemetryScreen()"
             >
               Launch Telemetry Dashboard →
             </button>
           </div>
         </section>
 
-        <!-- SCREEN 3: TELEMETRY -->
         <section id="screen-telemetry" hidden>
   <div class="breadcrumb">
     <button class="btn-back" onclick="showScreen('screen-vehicles')">
@@ -752,44 +666,27 @@
     </button>
   </div>
 
-  <div class="vehicle-overview-card" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; margin-bottom: 1.5rem;">
-  <div class="vehicle-spec">
-    <h3 id="telemetryCarTitle" style="margin: 0 0 0.25rem 0; color: #fff; font-size: 1.25rem; font-weight: 600;">--</h3>
-    <p id="telemetryCarOwner" style="margin: 0; color: #94a3b8; font-size: 0.875rem;">--</p>
-  </div>
-  <div style="display: flex; align-items: center; gap: 0.75rem;">
-    <span id="telemetryPlate" class="car-plate" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.875rem;">--</span>
-    <span id="telemetryStatus" class="status-badge status-active">Active</span>
-  </div>
-</div>
-
-<!-- Telemetry Highlights Bar -->
-<div id="telemetryHighlights" style="display: flex; gap: 1rem; margin-top: 1.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
-  <div style="flex: 1; min-width: 140px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 0.85rem 1rem; text-align: center;">
-    <span style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Total Logs</span>
-    <span id="statTotalLogs" style="font-size: 1.25rem; font-weight: 700; color: #38bdf8;">0</span>
-  </div>
-  
-  <div style="flex: 1; min-width: 140px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 0.85rem 1rem; text-align: center;">
-    <span style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Peak Speed</span>
-    <span id="statPeakSpeed" style="font-size: 1.25rem; font-weight: 700; color: #f43f5e;">0 Km/h</span>
-  </div>
-
-  <div style="flex: 1; min-width: 140px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 0.85rem 1rem; text-align: center;">
-    <span style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Max Engine Temp</span>
-    <span id="statMaxTemp" style="font-size: 1.25rem; font-weight: 700; color: #fbbf24;">0 °C</span>
-  </div>
-
-  <div style="flex: 1; min-width: 140px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 0.85rem 1rem; text-align: center;">
-    <span style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Avg Voltage</span>
-    <span id="statAvgVoltage" style="font-size: 1.25rem; font-weight: 700; color: #34d399;">0.0 V</span>
-  </div>
-</div>
+  <div class="vehicle-overview-card">
+    <div class="vehicle-spec">
+      <h3 id="telemetryCarTitle"></h3>
+      <p id="telemetryCarOwner"></p>
+    </div>
+    <div>
+      <span id="telemetryPlate" class="car-plate"></span>
+      <span
+        id="telemetryStatus"
+        class="status-badge status-active"
+      ></span>
+    </div>
+  </div> 
 
   <div class="table-container" style="margin-top: 1.5rem; overflow-x: auto; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(15, 23, 42, 0.4);">
   <table id="telemetryTable" class="telemetry-table" style="width: 100%; border-collapse: collapse; font-family: inherit;">
     <thead>
       <tr style="background: rgba(15, 23, 42, 0.8); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+        <th style="padding: 0.75rem 0.5rem; font-size: 0.75rem; font-weight: 500; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; text-align: center; vertical-align: middle;">
+          Vehicle<br><span style="font-size:0.65rem; color:#64748b; font-weight: 400;">ID</span>
+        </th>
         <th style="padding: 0.75rem 0.5rem; font-size: 0.75rem; font-weight: 500; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; text-align: center; vertical-align: middle;">
           Timestamp
         </th>
@@ -925,7 +822,8 @@
     <script>
       const GOOGLE_CLIENT_ID =
         "618464687927-3qhsv0r9012cn0e50g963vk4n71pb54r.apps.googleusercontent.com";
-      //const GOOGLE_CLIENT_ID = "399377688772-ftmi8iff8nimi34ldqslkvbohq5b1p6a.apps.googleusercontent.com";
+    /*  const GOOGLE_CLIENT_ID =
+        "399377688772-ftmi8iff8nimi34ldqslkvbohq5b1p6a.apps.googleusercontent.com"; */
 
       const API_KEY = "AIzaSyDnP5gQ-CWLj1J4xEd0T6xvkboRZI_zoAM";
 
@@ -1109,7 +1007,7 @@
           resultsContainer.innerHTML = matches
             .map(
               (cust) => `
-              <div class="dropdown-item" onclick="selectCustomerFromDropdown(${cust.id})">
+              <div class="dropdown-item" onclick=selectCustomerFromDropdown(${cust.id})>
                 <div>
                   <div class="dropdown-item-main">${escapeHtml(cust.name)}</div>
                   <div class="dropdown-item-sub">${escapeHtml(cust.company)} • ${escapeHtml(cust.email)}</div>
@@ -1125,7 +1023,9 @@
       }
 
       function selectCustomerFromDropdown(customerId) {
+        //alert(customerId);
         activeCustomer = MOCK_DATABASE.find((c) => c.id === customerId);
+        //alert(activeCustomer.id);
         document.getElementById("customerDropdownResults").hidden = true;
         document.getElementById("customerSearchInput").value =
           `${activeCustomer.name} (${activeCustomer.company})`;
@@ -1152,463 +1052,464 @@
         showScreen("screen-vehicles");
       }
 
-      /**
-       * Processes inputs on the vehicle search field.
-       * Filters the active customer's vehicle fleet by year, make, model, or plate,
-       * caps the results to the top 8 matches, and renders them to a dropdown list.
-       */
       function onVehicleSearchInput() {
-        // Terminate execution early if there is no active customer context loaded
         if (!activeCustomer) return;
 
-        // Capture, normalize to lowercase, and strip whitespace from the search term
+        //alert("onVehicleSearchInput");
+
         const query = document
           .getElementById("vehicleSearchInput")
           .value.toLowerCase()
           .trim();
 
-        // Locate the DOM node where matching vehicle entries will be outputted
         const resultsContainer = document.getElementById(
           "vehicleDropdownResults",
         );
 
-        // Filter vehicles belonging to the customer and limit performance overhead by slicing
         const matches = activeCustomer.cars
           .filter(
             (car) =>
-              // Evaluate if the query string matches the vehicle's manufacturing year, make, model, or license plate
               car.make.toLowerCase().includes(query) ||
               car.model.toLowerCase().includes(query) ||
               car.plate.toLowerCase().includes(query) ||
               car.year.toString().includes(query),
           )
-          .slice(0, 8); // Restrict dropdown performance and footprint to the first 8 matching elements
+          .slice(0, 8);
 
-        // Populate UI container based on whether matching results were discovered
         if (matches.length === 0) {
-          // Render a fallback notice indicating that search parameters returned zero results
           resultsContainer.innerHTML = `<div class="dropdown-item"><span class="dropdown-item-sub">No matching vehicles found</span></div>`;
         } else {
-          // Commented out diagnostic alert snippet
           //alert("Length: " + matches.length);
-
-          // Construct HTML template literals for each matched item and inject them into the DOM
           resultsContainer.innerHTML = matches
             .map(
               (car) => `
-        <div class="dropdown-item" onclick="${selectVehicleFromDropdown(car.id)}">
-          <div>
-            <div class="dropdown-item-main">${car.year} ${escapeHtml(car.make)} ${escapeHtml(car.model)}</div>
-            <div class="dropdown-item-sub">Plate: ${escapeHtml(car.plate)}</div>
-          </div>
-          <span class="dropdown-item-sub">${escapeHtml(car.status)}</span>
-        </div>
-      `,
+                <div class="dropdown-item" onclick=selectVehicleFromDropdown('${car.id}')>
+                <div>
+                  <div class="dropdown-item-main">${car.year} ${escapeHtml(car.make)} ${escapeHtml(car.model)}</div>
+                  <div class="dropdown-item-sub">Plate: ${escapeHtml(car.plate)}</div>
+                </div>
+                <span class="dropdown-item-sub">${escapeHtml(car.status)}</span>
+              </div>
+            `,
             )
-            .join(""); // Flatten the resulting array of HTML string templates into a unified string block
+            .join("");
         }
 
-        // Modify visibility status to display the results panel to the user
         resultsContainer.hidden = false;
       }
 
-      // External utility function to map and normalize raw server database rows into a standardized telemetry object
-      // ==========================================
-      // 1. DATA MAPPING HELPER
-      // ==========================================
-      /**
-       * Maps and normalizes raw server database rows into a standardized telemetry object.
-       */
-      // ==========================================
-// 1. DATA MAPPER (Updated to Match Database)
-// ==========================================
-function mapTelemetryData(rawData) {
-  if (!rawData || !Array.isArray(rawData)) return [];
+      function filterVehicles() {}
 
-  return rawData.map((row) => ({
-    id: row.Id || row.id || "N/A",
-    vehicleId: row.VehicleId || row.vehicle_id || "N/A",
-    time: row.Timestamp || row.timestamp || row.created_at || "N/A",
-    speed: parseFloat(row.Speed || 0),
-    rpm: parseFloat(row.Revolutions_Per_Minute || row.Engine_RPM || 0),
-    maf: parseFloat(row.Mass_Air_Flow || 0),
-    coolantTemp: parseFloat(row.Coolant_Temperature || 0),
-    fuel: parseFloat(row.Fuel_Level || 0),
-    voltage: parseFloat(row.Voltage || 0),
-    evapEmission: parseFloat(row.Evaporative_Emission_Control || 0),
-    engineTiming: parseFloat(row.Engine_Timing || row.Injector_Timing || 0),
-    engineTemp: parseFloat(row.Engine_Temperature || 0),
-    mpg: parseFloat(row.Miles_Per_Gallon || 0),
-    intakeTemp: parseFloat(row.Intake_Air_Temperature || 0),
-    throttlePos: parseFloat(row.Throttle_Position || 0),
-    engineLoad: parseFloat(row.Engine_Load || 0),
-    atmoTemp: parseFloat(row.Atmospheric_Temperature || 0),
-    baroPressure: parseFloat(row.Barometric_Pressure || 0),
-    createdAt: row.created_at || "N/A",
-  }));
-}
+      function selectVehicleFromDropdown(carId) {
+        //alert("CarID: "+carId);
+        activeCar = activeCustomer?.cars?.find((c) => c.id === carId);
+        //alert("activeCar: "+activeCar.make);
 
-// ==========================================
-// 2. SEARCH & RENDER DROPDOWN
-// ==========================================
-function onVehicleSearchInput() {
-  if (!activeCustomer || !activeCustomer.cars) return;
+        if (!activeCar) return;
 
-  const query = document
-    .getElementById("vehicleSearchInput")
-    .value.toLowerCase()
-    .trim();
+        document.getElementById("vehicleDropdownResults").hidden = true;
 
-  const resultsContainer = document.getElementById("vehicleDropdownResults");
+        document.getElementById("vehicleSearchInput").value =
+          `${activeCar.make || ""} ${activeCar.model || ""} (${activeCar.plate || ""})`.trim();
 
-  const matches = activeCustomer.cars.filter((car) => {
-    const nameMatch = `${car.make || ""} ${car.model || ""}`
-      .toLowerCase()
-      .includes(query);
-    const plateMatch = car.plate ? car.plate.toLowerCase().includes(query) : false;
-    const idMatch = car.id ? car.id.toLowerCase().includes(query) : false;
+        const carPlateEl = document.getElementById("summaryCarPlate");
+        if (carPlateEl) carPlateEl.textContent = activeCar.plate || "N/A";
 
-    return nameMatch || plateMatch || idMatch;
-  });
+        const carStatus = document.getElementById("summaryCarStatus");
+        if (carStatus) carStatus.textContent = activeCar.status || "N/A";
 
-  if (matches.length === 0) {
-    resultsContainer.innerHTML = `<div class="dropdown-item" style="padding:0.75rem;">No matching vehicles found</div>`;
-  } else {
-    resultsContainer.innerHTML = matches
-      .map(
-        (car) => `
-    <div class="dropdown-item" onclick="selectVehicleFromDropdown('${car.id}')" style="cursor:pointer; padding:0.75rem; border-bottom:1px solid #334155;">
-      <div style="font-weight:600;">${escapeHtml(car.make || "")} ${escapeHtml(car.model || "")}</div>
-      <div style="font-size:0.85rem; color:#94a3b8;">Plate: ${escapeHtml(car.plate || "N/A")} | ID: ${escapeHtml(car.id)}</div>
-    </div>
-  `,
-      )
-      .join("");
-  }
+        const carMileage = document.getElementById("summaryCarMileage");
+        if (carMileage) carMileage.textContent = activeCar.mileage || "N/A";
 
-  resultsContainer.hidden = false;
-}
+        const carTitleEl = document.getElementById("summaryCarTitle");
 
-// ==========================================
-// 3. SELECT VEHICLE (UI Summary Update)
-// ==========================================
-function selectVehicleFromDropdown(carId) {
-  if (!activeCustomer) {
-    activeCustomer = MOCK_DATABASE.find(
-      (customer) =>
-        customer.cars && customer.cars.some((car) => car.id === carId),
-    );
-  }
+        if (carTitleEl) {
+          carTitleEl.textContent =
+            `${activeCar.year || ""} ${activeCar.make || ""} ${activeCar.model || ""}`.trim();
+        }
 
-  if (!activeCustomer || !activeCustomer.cars) return;
+        //alert("activeCar.year: " + activeCar.year);
+        //alert("activeCar.make: " + activeCar.make);
+        //alert("activeCar.model: " + activeCar.model);
+        //alert("activeCar.plate: " + activeCar.plate);
 
-  activeCar = activeCustomer.cars.find((car) => car.id === carId);
-  if (!activeCar) return;
-
-  const dropdown = document.getElementById("vehicleDropdownResults");
-  if (dropdown) dropdown.hidden = true;
-
-  const searchInput = document.getElementById("vehicleSearchInput");
-  if (searchInput) {
-    searchInput.value = `${activeCar.plate || activeCar.id}`;
-  }
-
-  const summaryPlate = document.getElementById("summaryCarPlate");
-  if (summaryPlate) summaryPlate.textContent = activeCar.plate || "N/A";
-
-  const summaryMac = document.getElementById("summaryCarMac");
-  if (summaryMac) summaryMac.textContent = activeCar.id || "N/A";
-
-  const summaryCard = document.getElementById("selectedVehicleSummary");
-  if (summaryCard) summaryCard.hidden = false;
-}
-
-// ==========================================
-// 4. CONFIRM SELECTION & FETCH TELEMETRY
-// ==========================================
-async function confirmVehicleSelection() {
-  if (!activeCar) return;
-
-  // Populate header overview card
-  const titleEl = document.getElementById("telemetryCarTitle");
-  const ownerEl = document.getElementById("telemetryCarOwner");
-  const plateEl = document.getElementById("telemetryPlate");
-  const statusEl = document.getElementById("telemetryStatus");
-
-  if (titleEl) {
-    const year = activeCar.year || "";
-    const make = activeCar.make || "";
-    const model = activeCar.model || "Vehicle";
-    titleEl.textContent = `${year} ${make} ${model}`.trim();
-  }
-
-  if (ownerEl) {
-    const ownerName = activeCustomer?.name || "Unknown Owner";
-    ownerEl.textContent = `Owner: ${ownerName} | ID: ${activeCar.id}`;
-  }
-
-  if (plateEl) {
-    plateEl.textContent = activeCar.plate || activeCar.id;
-  }
-
-  if (statusEl) {
-    statusEl.textContent = activeCar.status || "Active";
-  }
-
-  const tableBody = document.getElementById("telemetryTableBody");
-  if (tableBody) {
-  tableBody.innerHTML = `<tr><td colspan="16" style="text-align:center; padding:2rem; color:#94a3b8;">Fetching database records for Vehicle ID ${activeCar.id}...</td></tr>`;
-}
-
-  // 1. Target URL
-  const targetUrl = `https://anywashng.com/api/download_sensors_VID.php?VehicleId=${encodeURIComponent(activeCar.id)}`;
-  
-  // 2. Wrap via CORS Proxy to bypass browser block
-  const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
-
-  try {
-    const response = await fetch(proxyUrl, {
-      method: "GET",
-      headers: {
-        "X-API-KEY": API_KEY // Passed via header as required by your PHP gateway check
+        document.getElementById("selectedVehicleSummary").hidden = false;
       }
-    });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
+      async function selectVehicleFromDropdownA(carId) {
+        //alert("CarId = " + carId);
+        // Find car by ID or MAC address matching
 
-    const result = await response.json();
+        activeCar = activeCustomer?.cars?.find((c) => c.id === carId);
 
-    if (result.status === "success" || Array.isArray(result)) {
-      const data = result.data || result;
-      activeCar.telemetry = mapTelemetryData(data);
-    } else {
-      console.warn("API response was not successful:", result);
-      activeCar.telemetry = [];
-    }
-  } catch (err) {
-    console.error("Failed to fetch sensor data:", err);
-    activeCar.telemetry = [];
-  }
+        if (!activeCar) return;
 
-  // Render metrics and table with new data
-  runTelemetryAnalysis();
+        //const newfilterVehicles = filterVehicles;
 
-  if (typeof showScreen === "function") {
-    showScreen("screen-telemetry");
-  }
-}
+        // 1. SAFELY UPDATE INPUT & DROPDOWN UI
+        const dropdownResults = document.getElementById(
+          "vehicleDropdownResults",
+        );
+        if (dropdownResults) dropdownResults.hidden = true;
 
-// ==========================================
-// 5. FILTERING & TABLE RENDER
-// ==========================================
-document.getElementById("minSpeed")?.addEventListener("input", runTelemetryAnalysis);
-document.getElementById("metricType")?.addEventListener("change", runTelemetryAnalysis);
-document.getElementById("engineStatus")?.addEventListener("change", runTelemetryAnalysis);
-document.getElementById("startDate")?.addEventListener("change", runTelemetryAnalysis);
-document.getElementById("startTime")?.addEventListener("change", runTelemetryAnalysis);
-document.getElementById("timeRange")?.addEventListener("change", runTelemetryAnalysis);
+        const searchInput = document.getElementById("vehicleSearchInput");
+        if (searchInput) {
+          searchInput.value =
+            `${activeCar.make || ""} ${activeCar.model || ""} (${activeCar.plate || ""})`.trim();
+        }
 
-// ==========================================
-// RUN ANALYSIS & UPDATE SUMMARY CARDS
-// ==========================================
-function runTelemetryAnalysis() {
-  if (!activeCar || !activeCar.telemetry) return;
+        // 2. SAFELY UPDATE HEADER DISPLAY TEXT
+        const carPlateEl = document.getElementById("carPlate");
 
-  const minSpeed = parseInt(document.getElementById("minSpeed")?.value || "0", 10);
-  const metricFilter = document.getElementById("metricType")?.value || "all";
-  const engineFilter = document.getElementById("engineStatus")?.value || "all";
-  const startDate = document.getElementById("startDate")?.value;
-  const startTime = document.getElementById("startTime")?.value;
-  const timePreset = document.getElementById("timeRange")?.value || "all";
+        if (carPlateEl) carPlateEl.textContent = activeCar.plate || "N/A";
 
-  let presetCutoff = null;
-  if (timePreset !== "all") {
-    const now = new Date();
-    const hoursMap = { "1h": 1, "24h": 24, "7d": 168, "30d": 720 };
-    if (hoursMap[timePreset]) {
-      presetCutoff = new Date(now.getTime() - hoursMap[timePreset] * 60 * 60 * 1000);
-    }
-  }
+        const carTitleEl = document.getElementById("carTitle");
+        if (carTitleEl) {
+          carTitleEl.textContent =
+            `${activeCar.year || ""} ${activeCar.make || ""} ${activeCar.model || ""}`.trim();
+        }
 
-  const filteredLogs = activeCar.telemetry.filter((log) => {
-    if (log.speed < minSpeed) return false;
+        //const carMacEl = document.getElementById("carMacAddress");
+        //if (carMacEl) carMacEl.textContent = activeCar.id || "N/A";
 
-    // Metric Filters
-    if (metricFilter === "speed" && !(log.speed > 75)) return false;
-    if (metricFilter === "temp" && !(log.engineTemp > 90)) return false;
-    if (metricFilter === "overheat" && !(log.engineTemp > 105)) return false;
-    if (metricFilter === "battery" && !(log.voltage < 12.0)) return false;
-    if (metricFilter === "rpm" && !(log.rpm > 5500)) return false;
+        // 3. SAFELY UPDATE TABLE STATUS
+        const tableBody = document.getElementById("telemetryTableBody");
+        if (tableBody) {
+          tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;">Fetching database records for MAC address ${activeCar.id}...</td></tr>`;
+        }
 
-    // Engine State
-    if (engineFilter === "running" && log.speed === 0) return false;
-    if (engineFilter === "idling" && !(log.speed === 0 && log.rpm > 0)) return false;
-    if (engineFilter === "off" && log.rpm !== 0) return false;
+        // 4. FETCH DATA FROM SERVER (Using 'VehicleId' parameter to match SQL column name)
+        const parampass =
+          "https://anywashng.com/api/download_sensors_VID.php?VehicleId=" +
+          carId;
 
-    // Date & Time
-    const logDateObj = new Date(log.time);
-    const hasValidDate = !isNaN(logDateObj.getTime());
+        try {
+          const response = await fetch(parampass, {
+            headers: {
+              "X-API-KEY": API_KEY,
+              "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+              "Content-Type": "application/json",
+            },
+          });
 
-    if (startDate) {
-      if (hasValidDate) {
-        const logDateStr = logDateObj.toISOString().split("T")[0];
-        if (logDateStr !== startDate) return false;
-      } else if (!log.time.includes(startDate)) {
-        return false;
+          const result = await response.json();
+
+          if (result.status === "success" && Array.isArray(result.data)) {
+            activeCar.telemetry = result.data.map((row) => ({
+              time:
+                row.Timestamp || row.timestamp || row.created_at || row.time,
+              speed: parseFloat(row.Speed || row.speed || 0),
+              rpm: parseFloat(row.Revolutions_Per_Minute || row.rpm || 0),
+              temp: parseFloat(row.Engine_Temperature || row.temp || 0),
+              fuel: parseFloat(row.Fuel_Level || row.fuel || 0),
+              tirePressure: parseFloat(
+                row.Tire_Pressure || row.tire_pressure || 35.0,
+              ),
+              batteryVoltage: parseFloat(
+                row.Voltage || row.battery || row.Battery_Voltage || 0,
+              ),
+              location: row.Location || row.location || "N/A",
+            }));
+          } else {
+            activeCar.telemetry = [];
+          }
+        } catch (err) {
+          console.error("Failed to fetch sensor data:", err);
+          activeCar.telemetry = [];
+        }
+
+        //alert(`${activeCar.make || ""} ${activeCar.model || ""} (${activeCar.plate || ""})`);
+        //alert(parampass);
+
+        // 5. RENDER TABLE & SWITCH SCREEN
+        //if (typeof applyTableFilters === "function") applyTableFilters();
+        //if (typeof showScreen === "function") showScreen("screen-telemetry");
       }
-    }
 
-    if (startTime) {
-      if (hasValidDate) {
-        const logTimeStr = logDateObj.toTimeString().slice(0, 5);
-        if (logTimeStr !== startTime) return false;
-      } else if (!log.time.includes(startTime)) {
-        return false;
+      // Function Alias
+      const selectVehicleFromDropdownAsync = selectVehicleFromDropdown;
+
+      // Bind live filtering controls directly to table update..okay so how do i now make it so that the table updates in real-time as the user changes the filter inputs? I want to avoid having to click a separate "Apply Filters" button. also how do i search for the carid
+      document
+        .getElementById("minSpeed")
+        ?.addEventListener("input", applyTableFilters);
+      document
+        .getElementById("metricType")
+        ?.addEventListener("change", applyTableFilters);
+      document
+        .getElementById("engineStatus")
+        ?.addEventListener("change", applyTableFilters);
+      document
+        .getElementById("startDate")
+        ?.addEventListener("change", applyTableFilters);
+
+      function applyTableFilters() {
+        if (!activeCar || !activeCar.telemetry) return;
+
+        const minSpeed = parseInt(
+          document.getElementById("minSpeed")?.value || "0",
+          10,
+        );
+        const metricFilter =
+          document.getElementById("metricType")?.value || "all";
+        const engineFilter =
+          document.getElementById("engineStatus")?.value || "all";
+        const startDate = document.getElementById("startDate")?.value;
+
+        const filteredLogs = activeCar.telemetry.filter((log) => {
+          if (log.speed < minSpeed) return false;
+
+          // Engine Filter
+          if (engineFilter === "running" && log.speed === 0 && log.rpm === 0)
+            return false;
+          if (engineFilter === "idle" && !(log.speed === 0 && log.rpm > 0))
+            return false;
+          if (engineFilter === "moving" && !(log.speed > 0)) return false;
+
+          // Metric Filter
+          if (metricFilter === "speed" && !(log.speed > 75)) return false;
+          if (metricFilter === "temp" && !(log.temp > 200)) return false;
+          if (metricFilter === "overheat" && !(log.temp > 225)) return false;
+          if (metricFilter === "tire" && !(log.tirePressure < 30)) return false;
+          if (metricFilter === "battery" && !(log.batteryVoltage < 12.0))
+            return false;
+          if (metricFilter === "rpm" && !(log.rpm > 5500)) return false;
+
+          // Date Filter
+          if (startDate && !log.time.includes(startDate)) return false;
+
+          return true;
+        });
+
+        renderTelemetryTable(filteredLogs);
       }
-    }
 
-    if (presetCutoff && hasValidDate) {
-      if (logDateObj < presetCutoff) return false;
-    }
+      function renderTelemetryTable(logs) {
+        const tableBody = document.getElementById("telemetryTableBody");
+        if (!tableBody) return;
 
-    return true;
-  });
+        if (logs.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No telemetry records found for this car ID.</td></tr>`;
+          return;
+        }
 
-  // --- Calculate Live Metrics for Top Summary Bar ---
-  updateSummaryBar(filteredLogs);
+        tableBody.innerHTML = logs
+          .map((log) => {
+            const isHighSpeed = log.speed >= 80;
+            const formattedTime = new Date(log.time).toLocaleString("en-US", {
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            });
 
-  // --- Render Filtered Table Data ---
-  renderTelemetryTable(filteredLogs);
-}
+            return `
+        <tr>
+          <td>${escapeHtml(formattedTime)}</td>
+          <td class="${isHighSpeed ? "high-speed" : ""}">${log.speed} Km/h</td>
+          <td>${log.rpm} RPM</td>
+          <td>${log.temp} °F</td>
+          <td>${log.fuel}%</td>
+          <td>${log.tirePressure || "N/A"} PSI</td>
+          <td>${escapeHtml(log.location)}</td>
+        </tr>
+      `;
+          })
+          .join("");
+      }
 
+      // "Analyze Data" button is now reserved for analysis actions
+      function runTelemetryAnalysis() {
+        if (!activeCar || !activeCar.telemetry) {
+          alert("No vehicle telemetry available for analysis.");
+          return;
+        }
 
-/**
- * Calculates and updates the dynamic summary badges based on current filtered logs.
- */
-function updateSummaryBar(logs) {
-  const totalEl = document.getElementById("statTotalLogs");
-  const speedEl = document.getElementById("statPeakSpeed");
-  const tempEl = document.getElementById("statMaxTemp");
-  const voltEl = document.getElementById("statAvgVoltage");
+        alert(
+          `Analysis completed for ${activeCar.make} ${activeCar.model}.\nTotal evaluated records: ${activeCar.telemetry.length}`,
+        );
+      }
 
-  if (!logs || logs.length === 0) {
-    if (totalEl) totalEl.textContent = "0";
-    if (speedEl) speedEl.textContent = "0 Km/h";
-    if (tempEl) tempEl.textContent = "0 °C";
-    if (voltEl) voltEl.textContent = "0.0 V";
-    return;
-  }
+      function showTelemetryScreen() {
+        if (!activeCar) return;
 
-  const maxSpeed = Math.max(...logs.map((l) => l.speed || 0));
-  const maxTemp = Math.max(...logs.map((l) => Math.max(l.engineTemp || 0, l.coolantTemp || 0)));
-  const validVoltages = logs.map((l) => l.voltage).filter((v) => v > 0);
-  const avgVoltage = validVoltages.length > 0 ? (validVoltages.reduce((a, b) => a + b, 0) / validVoltages.length) : 0;
+        document.getElementById("telemetryCarTitle").textContent =
+          `${activeCar.year} ${activeCar.make} ${activeCar.model}`;
+        document.getElementById("telemetryCarOwner").textContent =
+          `Owner: ${activeCustomer.name} (${activeCustomer.company})`;
+        document.getElementById("telemetryPlate").textContent = activeCar.plate;
+        document.getElementById("telemetryStatus").textContent =
+          activeCar.status;
 
-  if (totalEl) totalEl.textContent = logs.length.toLocaleString();
-  if (speedEl) speedEl.textContent = `${maxSpeed} Km/h`;
-  if (tempEl) tempEl.textContent = `${maxTemp} °C`;
-  if (voltEl) voltEl.textContent = `${avgVoltage.toFixed(1)} V`;
-}
+        runTelemetryAnalysis();
+        showScreen("screen-telemetry");
+      }
 
+      function runTelemetryAnalysis() {
+        if (!activeCar || !activeCar.telemetry) return;
 
-// ==========================================
-// RENDER TABLE WITH HIGHLIGHT BADGES
-// ==========================================
-function renderTelemetryTable(logs) {
-  const tableBody = document.getElementById("telemetryTableBody");
-  if (!tableBody) return;
+        // 1. Grab DOM values safely with fallbacks
+        const minSpeed = parseInt(
+          document.getElementById("minSpeed")?.value || "0",
+          10,
+        );
+        const metricFilter =
+          document.getElementById("metricType")?.value || "all";
+        const engineFilter =
+          document.getElementById("engineStatus")?.value || "all";
+        const startDate = document.getElementById("startDate")?.value; // "YYYY-MM-DD" or ""
+        const startTime = document.getElementById("startTime")?.value; // "HH:MM" or ""
+        const timePreset = document.getElementById("timeRange")?.value || "all";
 
-  if (logs.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="16" style="text-align:center; padding:2rem; color:#64748b;">No telemetry logs match your filter criteria.</td></tr>`;
-    return;
-  }
+        // Compute preset window cutoff if applicable (assumes log.time is parseable by Date)
+        let presetCutoff = null;
+        if (timePreset !== "all") {
+          const now = new Date();
+          const hoursMap = { "1h": 1, "24h": 24, "7d": 168, "30d": 720 };
+          if (hoursMap[timePreset]) {
+            presetCutoff = new Date(
+              now.getTime() - hoursMap[timePreset] * 60 * 60 * 1000,
+            );
+          }
+        }
 
-  tableBody.innerHTML = logs
-    .map((log) => {
-      const formattedTime = new Date(log.time).toLocaleString("en-US", {
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
+        // 2. Filter telemetry logs
+        const filteredLogs = activeCar.telemetry.filter((log) => {
+          // --- Speed Filter ---
+          if (log.speed < minSpeed) return false;
 
-      const isHighSpeed = log.speed >= 100;
-      const isHighRpm = log.rpm >= 5000;
-      const isEngineHot = log.engineTemp >= 105;
-      const isCoolantHot = log.coolantTemp >= 105;
-      const isLowVoltage = log.voltage && log.voltage < 12.0;
+          // --- Metric / Focus Filter ---
+          if (metricFilter === "speed" && !(log.speed > 75)) return false;
+          if (metricFilter === "temp" && !(log.temp > 200)) return false;
+          if (metricFilter === "overheat" && !(log.temp > 225)) return false;
+          if (
+            metricFilter === "tire" &&
+            log.tirePressure !== undefined &&
+            !(log.tirePressure < 30)
+          )
+            return false;
+          if (
+            metricFilter === "battery" &&
+            log.batteryVoltage !== undefined &&
+            !(log.batteryVoltage < 12.0)
+          )
+            return false;
+          if (
+            metricFilter === "rpm" &&
+            log.rpm !== undefined &&
+            !(log.rpm > 5500)
+          )
+            return false;
 
-      return `
-      <tr>
-        <td title="${escapeHtml(log.time)}">${escapeHtml(formattedTime)}</td>
-        
-        <td>
-          <span class="${isHighSpeed ? 'badge-alert badge-danger' : ''}">${log.speed} Km/h</span>
-        </td>
-        
-        <td>
-          <span class="${isHighRpm ? 'badge-alert badge-warning' : ''}">${log.rpm} RPM</span>
-        </td>
-        
-        <td>${log.maf} g/s</td>
-        
-        <td>
-          <span class="${isCoolantHot ? 'badge-alert badge-danger' : ''}">${log.coolantTemp} °C</span>
-        </td>
-        
-        <td>${log.fuel}%</td>
-        
-        <td>
-          <span class="${isLowVoltage ? 'badge-alert badge-danger' : ''}">${log.voltage ? log.voltage.toFixed(1) + " V" : "N/A"}</span>
-        </td>
-        
-        <td>${log.evapEmission}%</td>
-        <td>${log.engineTiming}°</td>
-        
-        <td>
-          <span class="${isEngineHot ? 'badge-alert badge-danger' : ''}">${log.engineTemp} °C</span>
-        </td>
-        
-        <td>${log.mpg} MPG</td>
-        <td>${log.intakeTemp} °C</td>
-        <td>${log.throttlePos}%</td>
-        <td>${log.engineLoad}%</td>
-        <td>${log.atmoTemp} kPa</td>
-        <td>${log.baroPressure} kPa</td>
-      </tr>
-    `;
-    })
-    .join("");
-}
+          // --- Engine State Filter ---
+          if (engineFilter === "running" && log.speed === 0) return false;
+          if (engineFilter === "idling" && !(log.speed === 0 && log.rpm > 0))
+            return false;
+          if (engineFilter === "off" && log.rpm !== 0) return false;
 
-function escapeHtml(str) {
-  if (!str) return "";
-  return String(str).replace(/[&<>"']/g, function (m) {
-    return {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;",
-    }[m];
-  });
-}
+          // --- Date & Time Handling ---
+          // Extract date and time components from log.time (e.g., "2026-08-07 14:30:00" or ISO string)
+          const logDateObj = new Date(log.time);
+          const hasValidDate = !isNaN(logDateObj.getTime());
 
-function initGoogleAuth() {
-  if (window.google?.accounts?.id) {
-    google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleCredentialResponse,
-    });
-    google.accounts.id.renderButton(
-      document.getElementById("buttonDiv"),
-      { theme: "outline", size: "large", type: "standard" },
-    );
-  }
-}
+          // Date Filter ("YYYY-MM-DD")
+          if (startDate) {
+            if (hasValidDate) {
+              const logDateStr = logDateObj.toISOString().split("T")[0];
+              if (logDateStr !== startDate) return false;
+            } else if (!log.time.includes(startDate)) {
+              // Fallback string matching if log.time is formatted like "2026-08-07 ..."
+              return false;
+            }
+          }
+
+          // Time Filter ("HH:MM")
+          if (startTime) {
+            if (hasValidDate) {
+              const logTimeStr = logDateObj.toTimeString().slice(0, 5); // "14:30"
+              if (logTimeStr !== startTime) return false;
+            } else if (!log.time.includes(startTime)) {
+              return false;
+            }
+          }
+
+          // Time Horizon Preset
+          if (presetCutoff && hasValidDate) {
+            if (logDateObj < presetCutoff) return false;
+          }
+
+          return true;
+        });
+
+        // 4. Update Table UI
+        const tableBody = document.getElementById("telemetryTableBody");
+        if (!tableBody) return;
+
+        if (filteredLogs.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:2rem; color:#64748b;">No telemetry logs match your filter criteria.</td></tr>`;
+          return;
+        }
+
+        tableBody.innerHTML = filteredLogs
+          .map((log) => {
+            // Format ISO string (2026-08-07T21:32:00) into clean local time
+            const formattedTime = new Date(log.time).toLocaleString("en-US", {
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+
+            // Diagnostic threshold flags
+            const isHighSpeed = log.speed >= 80;
+            const isHighRpm = log.rpm >= 5500;
+            const isOverheating = log.temp >= 220;
+            const isLowTire = log.tirePressure && log.tirePressure < 30.0;
+            const isLowBattery =
+              log.batteryVoltage && log.batteryVoltage < 12.0;
+
+            return `
+          <tr>
+            <td title="${escapeHtml(log.time)}">${escapeHtml(formattedTime)}</td>
+            <td class="${isHighSpeed ? "badge-danger" : ""}">${log.speed} Km/h</td>
+            <td class="${isHighRpm ? "badge-warning" : ""}">${log.rpm} RPM</td>
+            <td class="${isOverheating ? "badge-danger" : ""}">${log.temp} °F</td>
+            <td>${log.fuel}%</td>
+            <td class="${isLowTire ? "badge-warning" : ""}">${log.tirePressure ?? "N/A"} PSI</td>
+            <td class="${isLowBattery ? "badge-danger" : ""}">${log.batteryVoltage ? log.batteryVoltage.toFixed(1) + " V" : "N/A"}</td>
+            <td>${escapeHtml(log.location || "N/A")}</td>
+          </tr>
+        `;
+          })
+          .join("");
+      }
+      function escapeHtml(str) {
+        if (!str) return "";
+        return String(str).replace(/[&<>"']/g, function (m) {
+          return {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+          }[m];
+        });
+      }
+
+      function initGoogleAuth() {
+        if (window.google?.accounts?.id) {
+          google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleCredentialResponse,
+          });
+          google.accounts.id.renderButton(
+            document.getElementById("buttonDiv"),
+            { theme: "outline", size: "large", type: "standard" },
+          );
+        }
+      }
     </script>
   </body>
 </html>
