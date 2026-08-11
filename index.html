@@ -763,29 +763,6 @@
   </div>
 </div>
 
-<!-- Telemetry Highlights Bar -->
-<div id="telemetryHighlights" style="display: flex; gap: 1rem; margin-top: 1.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
-  <div style="flex: 1; min-width: 140px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 0.85rem 1rem; text-align: center;">
-    <span style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Total Logs</span>
-    <span id="statTotalLogs" style="font-size: 1.25rem; font-weight: 700; color: #38bdf8;">0</span>
-  </div>
-  
-  <div style="flex: 1; min-width: 140px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 0.85rem 1rem; text-align: center;">
-    <span style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Peak Speed</span>
-    <span id="statPeakSpeed" style="font-size: 1.25rem; font-weight: 700; color: #f43f5e;">0 Km/h</span>
-  </div>
-
-  <div style="flex: 1; min-width: 140px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 0.85rem 1rem; text-align: center;">
-    <span style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Max Engine Temp</span>
-    <span id="statMaxTemp" style="font-size: 1.25rem; font-weight: 700; color: #fbbf24;">0 °C</span>
-  </div>
-
-  <div style="flex: 1; min-width: 140px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 0.85rem 1rem; text-align: center;">
-    <span style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem;">Avg Voltage</span>
-    <span id="statAvgVoltage" style="font-size: 1.25rem; font-weight: 700; color: #34d399;">0.0 V</span>
-  </div>
-</div>
-
   <div class="table-container" style="margin-top: 1.5rem; overflow-x: auto; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(15, 23, 42, 0.4);">
   <table id="telemetryTable" class="telemetry-table" style="width: 100%; border-collapse: collapse; font-family: inherit;">
     <thead>
@@ -1476,40 +1453,8 @@ function runTelemetryAnalysis() {
     return true;
   });
 
-  // --- Calculate Live Metrics for Top Summary Bar ---
-  updateSummaryBar(filteredLogs);
-
   // --- Render Filtered Table Data ---
   renderTelemetryTable(filteredLogs);
-}
-
-
-/**
- * Calculates and updates the dynamic summary badges based on current filtered logs.
- */
-function updateSummaryBar(logs) {
-  const totalEl = document.getElementById("statTotalLogs");
-  const speedEl = document.getElementById("statPeakSpeed");
-  const tempEl = document.getElementById("statMaxTemp");
-  const voltEl = document.getElementById("statAvgVoltage");
-
-  if (!logs || logs.length === 0) {
-    if (totalEl) totalEl.textContent = "0";
-    if (speedEl) speedEl.textContent = "0 Km/h";
-    if (tempEl) tempEl.textContent = "0 °C";
-    if (voltEl) voltEl.textContent = "0.0 V";
-    return;
-  }
-
-  const maxSpeed = Math.max(...logs.map((l) => l.speed || 0));
-  const maxTemp = Math.max(...logs.map((l) => Math.max(l.engineTemp || 0, l.coolantTemp || 0)));
-  const validVoltages = logs.map((l) => l.voltage).filter((v) => v > 0);
-  const avgVoltage = validVoltages.length > 0 ? (validVoltages.reduce((a, b) => a + b, 0) / validVoltages.length) : 0;
-
-  if (totalEl) totalEl.textContent = logs.length.toLocaleString();
-  if (speedEl) speedEl.textContent = `${maxSpeed} Km/h`;
-  if (tempEl) tempEl.textContent = `${maxTemp} °C`;
-  if (voltEl) voltEl.textContent = `${avgVoltage.toFixed(1)} V`;
 }
 
 
@@ -1610,6 +1555,42 @@ function initGoogleAuth() {
   }
 }
     </script>
-    <script src="dashboard-enhancements.js" defer></script>
+    <script>
+/* JaFaFa dashboard enhancement module.
+ * Loaded by index.html in the dashboard enhancement branch.
+ * Provides vehicle search/recent selection, human-readable timestamps/units,
+ * connection status, loading states, and sortable telemetry columns.
+ */
+(() => {
+  "use strict";
+  const state={recent:[],sortKey:"time",sortDir:-1,metric:"all",alert:"all"};
+  const $=id=>document.getElementById(id);
+  const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  const n=v=>Number.isFinite(Number(v))?Number(v):0;
+  const time=v=>{if(v==null||v==="")return null;const x=Number(v);const d=Number.isFinite(x)&&x>1e9?new Date(x<1e11?x*1000:x):new Date(v);return Number.isNaN(d.getTime())?null:d};
+  const prettyTime=v=>{const d=time(v);return d?`${d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})} • ${d.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit",second:"2-digit"})}`:"N/A"};
+  const fmt=(v,d=0)=>n(v).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+  const units={speed:"Km/h",rpm:"RPM",maf:"g/s",coolantTemp:"°C",fuel:"%",voltage:"V",evapEmission:"%",engineTiming:"°",engineTemp:"°C",mpg:"MPG",intakeTemp:"°C",throttlePos:"%",engineLoad:"%",atmoTemp:"kPa",baroPressure:"kPa"};
+  const cols=[["time","Timestamp"],["speed","Speed"],["rpm","Engine RPM"],["maf","Mass Air Flow"],["coolantTemp","Coolant Temp"],["fuel","Fuel Level"],["voltage","Voltage"],["evapEmission","EVAP Control"],["engineTiming","Injector Timing"],["engineTemp","Engine Temp"],["mpg","MPG"],["intakeTemp","Intake Air Temp"],["throttlePos","Throttle Pos"],["engineLoad","Engine Load"],["atmoTemp","Atmo Pressure"],["baroPressure","Baro Pressure"]];
+  let logs=[];
+  function styles(){const s=document.createElement("style");s.textContent=`.jf-status{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .6rem;border-radius:999px;font-size:.72rem;font-weight:700}.jf-status:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}.jf-status.online{color:#4ade80;background:#14532d55}.jf-status.idle{color:#facc15;background:#713f1255}.jf-status.warning{color:#fb923c;background:#7c2d1255}.jf-status.critical{color:#fb7185;background:#88133755}.jf-chips{display:flex;gap:.5rem;flex-wrap:wrap;margin:.7rem 0 1rem}.jf-chip{border:1px solid #334155;background:#0f172a;color:#cbd5e1;border-radius:999px;padding:.4rem .7rem;cursor:pointer}.jf-state{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;padding:.8rem 1rem;margin:1rem 0;border:1px solid #334155;border-radius:10px;background:#0f172a88}.jf-empty{text-align:center;padding:2rem 1rem;color:#64748b}`;document.head.appendChild(s)}
+  function vehicleUX(){const i=$("vehicleSearchInput"),screen=$("screen-vehicles");if(!i||!screen||screen.dataset.jfEnh)return;screen.dataset.jfEnh=1;i.placeholder="Search plate, VIN, MAC, make, or model…";const stateBox=document.createElement("div");stateBox.id="jfVehicleState";stateBox.className="jf-state";stateBox.hidden=true;screen.querySelector(".view-header")?.after(stateBox);const chips=document.createElement("div");chips.id="jfRecentVehicles";chips.className="jf-chips";screen.querySelector(".dropdown-wrapper")?.after(chips);const old=window.selectVehicleFromDropdown;window.selectVehicleFromDropdown=id=>{old?.(id);remember();renderState()};i.oninput=()=>searchVehicles();i.onfocus=()=>searchVehicles();renderRecent()}
+  function searchVehicles(){if(typeof activeCustomer==="undefined"||!activeCustomer?.cars)return;const i=$("vehicleSearchInput"),box=$("vehicleDropdownResults"),q=i.value.toLowerCase().trim();const matches=activeCustomer.cars.filter(c=>[c.plate,c.vin,c.VIN,c.mac,c.MAC,c.id,c.make,c.model,c.year].filter(Boolean).join(" ").toLowerCase().includes(q)).slice(0,12);box.innerHTML=matches.length?matches.map(c=>`<div class="dropdown-item" data-jf-car="${esc(c.id)}"><div><div class="dropdown-item-main">${esc(c.year||"")} ${esc(c.make||"")} ${esc(c.model||"")}</div><div class="dropdown-item-sub">Plate: ${esc(c.plate||"N/A")} · VIN: ${esc(c.vin||c.VIN||"N/A")} · MAC: ${esc(c.mac||c.MAC||c.id||"N/A")}</div></div><span class="dropdown-item-sub">${esc(c.status||"Active")}</span></div>`).join(""):`<div class="dropdown-item"><span class="dropdown-item-sub">No matching vehicles found</span></div>`;box.querySelectorAll("[data-jf-car]").forEach(e=>e.onclick=()=>window.selectVehicleFromDropdown(e.dataset.jfCar));box.hidden=false}
+  function remember(){if(typeof activeCar==="undefined"||!activeCar)return;const custId=activeCustomer?.id;const entry={car:activeCar,custId,label:activeCar.plate||`${activeCar.make||"Vehicle"} ${activeCar.model||""}`};state.recent=[entry,...state.recent.filter(e=>!(e.car.id===activeCar.id&&e.custId===custId))].slice(0,5);renderRecent()}
+  function renderRecent(){const b=$("jfRecentVehicles");if(!b)return;b.innerHTML=state.recent.length?`<span style="color:#94a3b8;font-size:.75rem;align-self:center">Recent:</span>`+state.recent.map((e,i)=>`<button class="jf-chip" data-jf-r="${i}">${esc(e.label)}</button>`).join(""):"";b.querySelectorAll("[data-jf-r]").forEach(el=>el.onclick=()=>{const e=state.recent[Number(el.dataset.jfR)];if(!e)return;if(typeof MOCK_DATABASE!=="undefined"&&e.custId!=null){const c=MOCK_DATABASE.find(x=>x.id===e.custId);if(c)activeCustomer=c}window.selectVehicleFromDropdown(e.car.id)})}
+  function renderState(){const b=$("jfVehicleState");if(!b||typeof activeCar==="undefined"||!activeCar)return;b.hidden=false;b.innerHTML=`<div><small style="color:#94a3b8">Active vehicle</small><br><strong>${esc(activeCar.year||"")} ${esc(activeCar.make||"")} ${esc(activeCar.model||"")}</strong> · ${esc(activeCar.plate||activeCar.id||"N/A")}</div><div><span class="jf-status online">Selected</span> <button class="btn-back" id="jfChangeVehicle">Change Vehicle</button></div>`;$("jfChangeVehicle").onclick=()=>{activeCar=null;b.hidden=true;$("selectedVehicleSummary")?.setAttribute("hidden","");$("vehicleSearchInput").value="";$("vehicleSearchInput").focus()}}
+  function alertLevel(l){return n(l.speed)>=100||n(l.rpm)>=5000||n(l.coolantTemp)>=105||n(l.engineTemp)>=105||n(l.voltage)>0&&n(l.voltage)<12?"alert":"normal"}
+  function cellAlert(k,l){if(k==="speed")return n(l.speed)>=100;if(k==="rpm")return n(l.rpm)>=5000;if(k==="coolantTemp")return n(l.coolantTemp)>=105;if(k==="engineTemp")return n(l.engineTemp)>=105;if(k==="voltage")return n(l.voltage)>0&&n(l.voltage)<12;return false}
+  const decimals={voltage:1,maf:1,mpg:1,throttlePos:1,engineLoad:1,coolantTemp:1,engineTemp:1,intakeTemp:1,atmoTemp:1,baroPressure:1,engineTiming:1};
+  function passes(l){if(state.metric==="speed"&&n(l.speed)<75)return false;if(state.metric==="rpm"&&n(l.rpm)<5500)return false;if(state.metric==="temp"&&Math.max(n(l.engineTemp),n(l.coolantTemp))<90)return false;if(state.metric==="fuel"&&n(l.fuel)>25)return false;if(state.alert!=="all"&&alertLevel(l)!==state.alert)return false;return true}
+
+  function render(rows){logs=Array.isArray(rows)?rows:[];const screen=$("screen-telemetry"),table=$("telemetryTable");if(!screen||!table)return;const body=$("telemetryTableBody"),display=logs.filter(passes).sort((a,b)=>{const av=state.sortKey==="time"?(time(a.time)?.getTime()||0):n(a[state.sortKey]),bv=state.sortKey==="time"?(time(b.time)?.getTime()||0):n(b[state.sortKey]);return av<bv?-state.sortDir:av>bv?state.sortDir:0});const u=$("jfLast");if(u)u.textContent=`Updated ${new Date().toLocaleTimeString()}`;const st=$("jfStatus");if(st){const newest=display.reduce((m,l)=>{const t=time(l.time)?.getTime();return t&&t>m?t:m},0),age=newest?(Date.now()-newest)/60000:Infinity;const [c,t]=!display.length?["critical","Critical"]:age<=5?["online","Online"]:age<=30?["idle","Idle"]:age<=120?["warning","Warning"]:["critical","Critical"];st.className=`jf-status ${c}`;st.textContent=t}if(!display.length){body.innerHTML=`<tr><td colspan="16"><div class="jf-empty">🔎<br><strong>No telemetry logs available</strong><br>Try another vehicle or refresh the data.</div></td></tr>`;return}body.innerHTML=display.map(l=>`<tr>${cols.map(([k])=>{if(k==="time")return`<td title="${esc(l.time)}">${esc(prettyTime(l.time))}</td>`;const value=n(l[k]),bad=cellAlert(k,l);return`<td><span class="${bad?"badge-alert badge-danger":""}">${fmt(value,decimals[k]??0)}${units[k]?` ${units[k]}`:""}</span></td>`}).join("")}</tr>`).join("")}
+  function telemetryUX(){const screen=$("screen-telemetry"),table=$("telemetryTable");if(!screen||!table||screen.dataset.jfEnh)return;screen.dataset.jfEnh=1;const statusWrap=$("telemetryStatus")?.parentElement;if(statusWrap&&!$("jfStatus")){const s=document.createElement("span");s.id="jfStatus";s.className="jf-status idle";s.textContent="Idle";statusWrap.appendChild(s)}table.querySelectorAll("thead th").forEach((th,i)=>th.onclick=()=>{const k=cols[i]?.[0];if(!k)return;state.sortDir=state.sortKey===k?-state.sortDir:-1;state.sortKey=k;render(logs)})}
+  function hooks(){if(window.__jfHooked)return;window.__jfHooked=1;const oldRender=window.renderTelemetryTable;if(typeof oldRender==="function")window.renderTelemetryTable=r=>render(r);const oldConfirm=window.confirmVehicleSelection;if(typeof oldConfirm==="function")window.confirmVehicleSelection=async()=>{telemetryUX();const b=$("telemetryTableBody");if(b)b.innerHTML=`<tr><td colspan="16"><div class="jf-empty">Loading telemetry…</div></td></tr>`;await oldConfirm()}}
+  function init(){styles();vehicleUX();telemetryUX();hooks();new MutationObserver(()=>{vehicleUX();telemetryUX()}).observe(document.body,{subtree:true,attributes:true,attributeFilter:["hidden"]})}
+  document.readyState==="loading"?document.addEventListener("DOMContentLoaded",init):init();
+})();
+
+    </script>
 </body>
 </html>
