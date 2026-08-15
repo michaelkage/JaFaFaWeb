@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'pass-a-c-fixes.js'
+      - '.jafafa-pass-ac'
 permissions:
   contents: write
 jobs:
@@ -24,12 +25,12 @@ jobs:
               text=text.replace('</body>', '<script>\n'+js+'\n</script>\n</body>', 1)
               p.write_text(text,encoding='utf-8')
       - name: Remove temporary implementation files
-        run: rm -f pass-a-c-fixes.js .github/workflows/consolidate-pass-ac.yml
+        run: rm -f pass-a-c-fixes.js .jafafa-pass-ac .github/workflows/consolidate-pass-ac.yml
       - name: Commit consolidated index
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html pass-a-c-fixes.js .github/workflows/consolidate-pass-ac.yml
+          git add index.html pass-a-c-fixes.js .jafafa-pass-ac .github/workflows/consolidate-pass-ac.yml
           git diff --cached --quiet && exit 0
           git commit -m 'Fix telemetry architecture and polish fleet UX'
           git push
