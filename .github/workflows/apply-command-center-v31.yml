@@ -1,0 +1,58 @@
+name: Apply JaFaFa command center polish v3.1
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  polish:
+    if: "!contains(github.event.head_commit.message, 'command center polish v3.1')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add fleet intelligence polish
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          css=r'''
+          .jf-intel{display:grid;gap:12px;margin:18px 0}.jf-intel-head{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap}.jf-intel-head h2{margin:0;font-size:1rem}.jf-intel-head p{margin:4px 0 0;color:var(--muted);font-size:.7rem}.jf-intel-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.jf-intel-stat{padding:16px;border:1px solid var(--line);border-radius:14px;background:rgba(7,14,26,.7)}.jf-intel-stat strong{display:block;font-size:1.7rem;letter-spacing:-.05em}.jf-intel-stat span{display:block;color:var(--muted);font-size:.6rem;text-transform:uppercase;letter-spacing:.09em;margin-top:4px}.jf-intel-health{padding:15px;border:1px solid var(--line);border-radius:14px;background:rgba(7,14,26,.7)}.jf-intel-health-row{display:flex;justify-content:space-between;gap:10px;font-size:.7rem;margin-bottom:7px}.jf-intel-health-row span{color:var(--muted)}.jf-intel-healthbar{height:9px;border-radius:99px;background:rgba(148,163,184,.12);overflow:hidden}.jf-intel-healthbar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--cyan),var(--cyan2));transition:width .7s ease}.jf-happening{display:grid;gap:7px}.jf-happening-item{display:flex;gap:8px;align-items:flex-start;font-size:.72rem;color:#cbd5e1}.jf-happening-item i{font-style:normal}.jf-explain{padding:14px;border:1px solid var(--line);border-radius:14px;background:rgba(7,14,26,.55);margin-top:12px}.jf-explain strong{display:block;margin-bottom:6px}.jf-explain li{color:var(--muted);font-size:.68rem;margin:5px 0}.jf-explain li.good{color:#86efac}.jf-explain li.warn{color:#fde68a}.jf-alert-enhanced{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start}.jf-alert-enhanced .sev{font-size:.62rem;font-weight:900;letter-spacing:.08em}.jf-alert-enhanced .meta{color:var(--muted);font-size:.64rem;line-height:1.5}.jf-stale-note{font-size:.62rem;color:var(--muted);margin-top:5px}.jf-command-results mark{background:rgba(56,189,248,.2);color:var(--cyan2);border-radius:3px;padding:0 2px}@media(max-width:900px){.jf-intel-stats{grid-template-columns:repeat(3,1fr)}}@media(max-width:620px){.jf-intel-stats{grid-template-columns:1fr 1fr}.jf-intel-stat strong{font-size:1.35rem}}
+          '''
+          js=r'''
+          (()=>{if(window.__JF_V31__)return;window.__JF_V31__=true;const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)],esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+          const fmt=d=>{const x=new Date(d);if(!Number.isFinite(x.getTime()))return'—';return x.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})+' · '+x.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'})};
+          const rel=d=>{const s=Math.max(0,(Date.now()-new Date(d).getTime())/1000);if(s<10)return'just now';if(s<60)return Math.floor(s)+'s ago';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago'};
+          function records(){let db=window.MOCK_DATABASE;return Array.isArray(db)?db.flatMap(c=>(c.cars||[]).map(v=>({c,v}))):[]}
+          function latest(v){const a=Array.isArray(v?.telemetry)?v.telemetry:[];return a.reduce((x,y)=>!x||new Date(y.time||y.timestamp)>new Date(x.time||x.timestamp)?y:x,null)}
+          function state(v){const t=latest(v);if(!t)return'offline';const age=Date.now()-new Date(t.time||t.timestamp).getTime();if(age<10000)return'live';if(age<30000)return'recent';if(age<120000)return'stale';return'offline'}
+          function health(v){const t=latest(v);if(!t)return null;let score=100;const n=k=>Number(t[k]);if(Number.isFinite(n('ctemp'))){if(n('ctemp')>=110)score-=30;else if(n('ctemp')>=105)score-=15}if(Number.isFinite(n('voltage'))&&n('voltage')>0&&n('voltage')<12)score-=10;if(Number.isFinite(n('speed'))&&n('speed')>=120)score-=6;if(Number.isFinite(n('rpm'))&&n('rpm')>=5000)score-=5;return Math.max(0,Math.min(100,score))}
+          function ensure(){const main=$('.main-content')||$('main');if(!main)return;let box=$('#jf-intel');if(!box){box=document.createElement('section');box.id='jf-intel';box.className='jf-intel';const first=$('.dashboard-hero,.hero,.view-header');if(first)first.insertAdjacentElement('afterend',box);else main.prepend(box)}const isCustomer=!!$('#app')&&!$('.admin-nav');const rs=records();if(!rs.length){box.innerHTML='<div class="jf-empty"><strong>Welcome to JaFaFa.</strong>Your fleet is ready for its first vehicle.</div>';return}const states=rs.map(x=>state(x.v)),online=states.filter(x=>x==='live'||x==='recent').length,warning=rs.filter(x=>(health(x.v)||100)<90).length,critical=rs.filter(x=>(health(x.v)||100)<70).length,avg=Math.round(rs.map(x=>health(x.v)).filter(x=>x!=null).reduce((a,b)=>a+b,0)/(rs.filter(x=>health(x.v)!=null).length||1));if(isCustomer){const good=rs.filter(x=>(health(x.v)||100)>=90).length;box.innerHTML='<div class="jf-intel-head"><div><div class="eyebrow">Today</div><h2>What\'s happening?</h2><p>Your vehicle telemetry, translated into plain language.</p></div></div><div class="jf-intel-stats"><div class="jf-intel-stat"><strong>'+rs.length+'</strong><span>Vehicles</span></div><div class="jf-intel-stat"><strong>'+online+'</strong><span>Online</span></div><div class="jf-intel-stat"><strong>'+warning+'</strong><span>Attention</span></div><div class="jf-intel-stat"><strong>'+critical+'</strong><span>Critical</span></div><div class="jf-intel-stat"><strong>'+avg+'%</strong><span>Fleet health</span></div></div><div class="jf-explain"><strong>'+(critical?'Critical attention required':warning?'Good — minor attention recommended':'Your vehicles are looking good.')+'</strong><ul>'+(good?'<li class="good">✓ '+good+' vehicle'+(good===1?' is':'s are')+' operating normally</li>':'')+(online?' <li class="good">✓ Telemetry connection is stable for '+online+' vehicle'+(online===1?'':'s')+'</li>':'<li class="warn">⚠ No vehicles are reporting live telemetry</li>')+(warning?'<li class="warn">⚠ '+warning+' vehicle'+(warning===1?' needs':'s need')+' attention</li>':'<li class="good">✓ No health warnings detected</li>')+'</ul></div>'}else{box.innerHTML='<div class="jf-intel-head"><div><div class="eyebrow">Fleet command</div><h2>Fleet Status</h2><p>Most important operational signals at a glance.</p></div><span class="jf-system-pill"><i class="jf-pulse"></i> '+(critical?'SYSTEM ALERTS ACTIVE':warning?'SYSTEM ATTENTION REQUIRED':'ALL SYSTEMS OPERATIONAL')+'</span></div><div class="jf-intel-stats"><div class="jf-intel-stat"><strong>'+rs.length+'</strong><span>Vehicles</span></div><div class="jf-intel-stat"><strong>'+online+'</strong><span>Online</span></div><div class="jf-intel-stat"><strong>'+warning+'</strong><span>Warning</span></div><div class="jf-intel-stat"><strong>'+critical+'</strong><span>Critical</span></div><div class="jf-intel-stat"><strong>'+avg+'%</strong><span>Fleet health</span></div></div><div class="jf-intel-health"><div class="jf-intel-health-row"><b>FLEET HEALTH</b><b>'+avg+'%</b></div><div class="jf-intel-healthbar"><i style="width:'+avg+'%"></i></div></div>'}}
+          function harden(){
+            $$('form').forEach(f=>{if(f.dataset.jfSubmit)return;f.dataset.jfSubmit='1';f.addEventListener('submit',()=>{const b=f.querySelector('button[type="submit"],button.btn,button.btn-action');if(b){b.disabled=true;const old=b.textContent;b.textContent='Working…';setTimeout(()=>{b.disabled=false;b.textContent=old},1800)}})});
+            $$('input,select').forEach(x=>{if(x.dataset.jfPersist)return;x.dataset.jfPersist='1';const k='jafafa-filter:'+location.pathname+':'+(x.id||x.name||x.placeholder||'field');const old=localStorage.getItem(k);if(old!==null&&!x.value)x.value=old;x.addEventListener('change',()=>localStorage.setItem(k,x.value));x.addEventListener('input',()=>{if(x.id&&/search|filter/i.test(x.id))localStorage.setItem(k,x.value)})});
+            $$('button,[role="button"]').forEach(b=>{if(!b.getAttribute('aria-label')&&!b.textContent.trim())b.setAttribute('aria-label','JaFaFa action')});
+          }
+          function init(){ensure();harden();setTimeout(ensure,500);setInterval(ensure,5000)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();})();
+          '''
+          for name in ('index.html','customer.html'):
+              p=Path(name);t=p.read_text(encoding='utf-8')
+              if 'JaFaFa command center polish v3.1' in t:continue
+              t=t.replace('</style>','/* JaFaFa command center polish v3.1 */'+css+'\n</style>',1)
+              t=t.replace('</body>','<script data-jafafa-v31="polish">'+js+'</script>\n</body>',1)
+              p.write_text(t,encoding='utf-8')
+          PY
+      - name: Validate
+        run: python - <<'PY'
+          from pathlib import Path
+          for n in ('index.html','customer.html'):
+              t=Path(n).read_text(encoding='utf-8'); assert 'data-jafafa-v31="polish"' in t; assert t.count('<script')==t.count('</script>'); print(n,'OK',len(t))
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html customer.html
+          git diff --cached --quiet || git commit -m 'feat: command center polish v3.1'
+          git push
