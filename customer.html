@@ -69,7 +69,7 @@
       border-bottom: 1px solid var(--line);
       background: rgba(3, 7, 18, 0.78);
       -webkit-backdrop-filter: blur(18px);
-      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
     }
 
     .nav {
@@ -570,7 +570,7 @@
       border-radius: 22px;
       background: rgba(7, 14, 26, 0.82);
       -webkit-backdrop-filter: blur(22px);
-      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
       box-shadow: 0 35px 120px rgba(0, 0, 0, 0.55);
     }
 
@@ -658,7 +658,7 @@
       border-radius: 12px;
       background: rgba(7, 14, 26, 0.94);
       -webkit-backdrop-filter: blur(14px);
-      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
       font-size: 0.72rem;
       opacity: 0;
       transform: translateY(12px);
@@ -723,7 +723,12 @@
         grid-template-columns: 80px 1fr 35px;
       }
     }
-  </style>
+  
+<style>
+.chart-controls{display:flex;gap:7px;flex-wrap:wrap;padding:0 0 14px}.chart-param{border:1px solid var(--line);border-radius:999px;background:rgba(3,7,18,.4);color:var(--muted);padding:6px 9px;font-size:.62rem;font-weight:800}.chart-param.active{border-color:var(--line2);color:#dff8ff;background:rgba(56,189,248,.1)}
+#customerClaimPanel{margin-top:24px}.field button{width:100%;height:40px}.alert{align-items:center}
+</style>
+</style>
 </head>
 
 <body>
@@ -904,16 +909,16 @@
           </div>
           <form id="profileForm" class="formgrid">
             <div class="field">
-              <label>Full name</label><input id="profileName" />
+              <label>Full name</label><input id="profileName" aria-label="Full name" placeholder="Full name" />
             </div>
             <div class="field">
-              <label>Email</label><input id="profileEmail" type="email" />
+              <label>Email</label><input id="profileEmail" type="email" aria-label="Email address" placeholder="Email address" />
             </div>
             <div class="field">
               <label>Phone</label><input id="profilePhone" placeholder="+234..." />
             </div>
             <div class="field">
-              <label>Customer ID</label><input id="profileId" disabled />
+              <label>Customer ID</label><input id="profileId" aria-label="Customer ID" disabled />
             </div>
             <div style="grid-column: 1/-1">
               <button class="btn">Save profile</button>
@@ -942,7 +947,7 @@
             <label>Model</label><input id="vModel" required placeholder="X5 E70" />
           </div>
           <div class="field">
-            <label>Year</label><input id="vYear" type="number" min="1900" max="2100" />
+            <label>Year</label><input id="vYear" type="number" min="1900" max="2100" aria-label="Vehicle year" placeholder="Year" />
           </div>
           <div class="field">
             <label>Registration</label><input id="vReg" placeholder="ABC-123-XY" />
@@ -958,369 +963,316 @@
     </div>
   </div>
   <div id="toast" class="toast"></div>
-  <script>
-    const KEY = "jafafa_customer_portal_v1";
-    const telemetry = () =>
-      Array.from({ length: 12 }, (_, i) => ({
-        timestamp: new Date(Date.now() - (11 - i) * 300000).toISOString(),
-        speed: Math.max(0, Math.round(30 + Math.sin(i * 0.8) * 15)),
-        rpm: Math.round(1800 + Math.sin(i * 0.7) * 450),
-        coolant: Math.round(91 + Math.sin(i * 0.45) * 4),
-        voltage: Number((13.7 + Math.sin(i * 0.6) * 0.25).toFixed(1)),
-        load: Math.round(25 + Math.sin(i * 0.55) * 12),
-      }));
-    const seed = {
-      account: {
-        id: "JF-CUS-0001",
-        name: "Customer",
-        email: "customer@jafafa.demo",
-        phone: "",
-      },
-      vehicles: [
-        {
-          id: "JF-V-0001",
-          make: "BMW",
-          model: "X5 E70",
-          year: 2010,
-          registration: "ABC-123-XY",
-          deviceId: "00:10:CC:4F:36:03",
-          health: 91,
-          status: "online",
-          telemetry: telemetry(),
-        },
-        {
-          id: "JF-V-0002",
-          make: "Toyota",
-          model: "Corolla",
-          year: 2016,
-          registration: "XYZ-456-AA",
-          deviceId: "00:10:CC:4F:36:04",
-          health: 84,
-          status: "warning",
-          telemetry: telemetry(),
-        },
-        {
-          id: "JF-V-0003",
-          make: "Mercedes-Benz",
-          model: "C200",
-          year: 2018,
-          registration: "LAG-778-KD",
-          deviceId: "00:10:CC:4F:36:05",
-          health: 96,
-          status: "online",
-          telemetry: telemetry(),
-        },
-      ],
-    };
-    let state = JSON.parse(localStorage.getItem(KEY) || "null") || seed,
-      mode = "signin",
-      selected = null;
-    const $ = (id) => document.getElementById(id);
-    function save() {
-      localStorage.setItem(KEY, JSON.stringify(state));
-    }
-    function esc(s) {
-      return String(s ?? "").replace(
-        /[&<>"']/g,
-        (c) =>
-          ({
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            '"': "&quot;",
-            "'": "&#39;",
-          })[c],
-      );
-    }
-    function latest(v) {
-      return (
-        [...(v.telemetry || [])].sort(
-          (a, b) => new Date(b.timestamp) - new Date(a.timestamp),
-        )[0] || null
-      );
-    }
-    function toast(t) {
-      $("toast").textContent = t;
-      $("toast").classList.add("show");
-      setTimeout(() => $("toast").classList.remove("show"), 2200);
-    }
-    function meta(v) {
-      return (
-        v.status === "offline" ? ["OFFLINE", "off"]
-          : v.status === "warning" ? ["WARNING", "warn"]
-            : ["ONLINE", ""]
-      );
-    }
-    function card(v) {
-      const t = latest(v),
-        [s, c] = meta(v);
-      return `<article class="card vehicle"><div class="vehiclehead"><div><h3>${esc(v.make)} ${esc(v.model)}</h3><div class="reg">${esc(v.registration || "No registration")} · ${esc(v.year || "Year N/A")}</div></div><div class="status"><i class="dot ${c}"></i>${s}</div></div><div class="health"><div class="healthline"><span>Vehicle health</span><b>${v.health}/100</b></div><div class="track"><div class="fill" style="width:${v.health}%"></div></div></div><div class="metrics"><div class="metric"><small>Speed</small><b>${t?.speed ?? "—"} km/h</b></div><div class="metric"><small>RPM</small><b>${t?.rpm ?? "—"}</b></div><div class="metric"><small>Voltage</small><b>${t?.voltage ?? "—"} V</b></div></div><div class="vehiclefoot"><button class="btn" onclick="openVehicle('${v.id}')">View vehicle →</button></div></article>`;
-    }
-    function renderDashboard() {
-      const n = state.account.name || "Customer";
-      $("heroName").textContent = ", " + esc(n.split(" ")[0]);
-      $("navName").textContent = n;
-      $("avatar").textContent = n.charAt(0).toUpperCase();
-      $("statVehicles").textContent = state.vehicles.length;
-      $("statOnline").textContent = state.vehicles.filter(
-        (v) => v.status === "online",
-      ).length;
-      $("statWarnings").textContent = state.vehicles.filter(
-        (v) => v.status === "warning",
-      ).length;
-      $("statHealth").textContent =
-        state.vehicles.length ?
-          Math.round(
-            state.vehicles.reduce((a, v) => a + v.health, 0) /
-            state.vehicles.length,
-          )
-          : "—";
-      $("dashboardVehicles").innerHTML =
-        state.vehicles.map(card).join("") ||
-        empty("Your garage is empty. Add your first vehicle.");
-      const w = state.vehicles.filter((v) => v.status === "warning");
-      $("dashboardAlerts").innerHTML =
-        w.length ?
-          `<div class="alert"><div>🟠</div><div><b>Vehicle health warning</b><span>${w.length} vehicle${w.length > 1 ? "s" : ""} currently need attention.</span></div></div>`
-          : `<div class="notice">No active warnings. Your fleet is looking good.</div>`;
-    }
-    function renderVehicles() {
-      $("vehicleList").innerHTML =
-        state.vehicles.map(card).join("") ||
-        empty("Your garage is empty. Add a vehicle to get started.");
-    }
-    function empty(t) {
-      return `<div class="card panel"><span style="color:var(--muted);font-size:.75rem">${t}</span></div>`;
-    }
-    function openVehicle(id) {
-      selected = state.vehicles.find((v) => v.id === id);
-      if (!selected) return;
-      renderDetail();
-      navigate("vehicleDetail");
-    }
-    function renderDetail() {
-      const v = selected,
-        t = latest(v),
-        [s, c] = meta(v);
-      $("detailName").textContent = `${v.make} ${v.model}`;
-      $("detailReg").textContent =
-        `${v.registration || "No registration"} · Device ${v.deviceId}`;
-      $("detailStatus").innerHTML = `<i class="dot ${c}"></i> ${s}`;
-      $("detailMetrics").innerHTML = [
-        ["Speed", `${t?.speed ?? "—"} km/h`],
-        ["RPM", t?.rpm ?? "—"],
-        ["Coolant", `${t?.coolant ?? "—"} °C`],
-        ["Voltage", `${t?.voltage ?? "—"} V`],
-        ["Engine load", `${t?.load ?? "—"} %`],
-        ["Device", v.deviceId],
-      ]
-        .map(
-          (x) =>
-            `<div class="card metric"><small>${x[0]}</small><b>${esc(x[1])}</b></div>`,
-        )
-        .join("");
-      $("detailHealth").textContent = v.health;
-      $("detailHealthLabel").textContent =
-        v.health >= 90 ? "EXCELLENT"
-          : v.health >= 80 ? "GOOD"
-            : "NEEDS ATTENTION";
-      $("healthBars").innerHTML = [
-        ["Engine", Math.min(100, v.health + 2)],
-        ["Cooling", Math.max(0, v.health - 3)],
-        ["Electrical", Math.min(100, v.health + 4)],
-        ["Performance", v.health],
-      ]
-        .map(
-          (c) =>
-            `<div class="barrow"><span>${c[0]}</span><div class="track"><div class="fill" style="width:${c[1]}%"></div></div><b>${c[1]}</b></div>`,
-        )
-        .join("");
-      $("detailAlerts").innerHTML =
-        v.status === "warning" ?
-          `<div class="alert"><div>🟠</div><div><b>Vehicle health warning</b><span>Telemetry indicates this vehicle needs attention.</span></div></div>`
-          : `<div class="notice">No active alerts for this vehicle.</div>`;
-      renderChart(v.telemetry || []);
-      $("logCount").textContent = `${v.telemetry?.length || 0} samples`;
-      $("logBody").innerHTML = (v.telemetry || [])
-        .slice()
-        .reverse()
-        .map(
-          (x) =>
-            `<tr><td>${new Date(x.timestamp).toLocaleTimeString()}</td><td>${x.speed}</td><td>${x.rpm}</td><td>${x.coolant} °C</td><td>${x.voltage} V</td><td>${x.load}%</td></tr>`,
-        )
-        .join("");
-    }
-    function renderChart(d) {
-      const vals = d.map((x) => x.rpm),
-        min = Math.min(...vals) - 100,
-        max = Math.max(...vals) + 100,
-        w = 900,
-        h = 250,
-        pts = vals
-          .map(
-            (v, i) =>
-              `${35 + (i / (vals.length - 1 || 1)) * 830},${h - 25 - ((v - min) / (max - min)) * 180}`,
-          )
-          .join(" ");
-      $("detailChart").innerHTML =
-        `<div class="chartlabel">RPM · last 12 samples</div><svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><line class="gridline" x1="35" y1="55" x2="865" y2="55"/><line class="gridline" x1="35" y1="115" x2="865" y2="115"/><line class="gridline" x1="35" y1="175" x2="865" y2="175"/><polyline class="line" points="${pts}"/></svg>`;
-    }
-    function navigate(v) {
-      document
-        .querySelectorAll(".view")
-        .forEach((x) => x.classList.remove("active"));
-      $(v).classList.add("active");
-      document
-        .querySelectorAll(".navlinks button")
-        .forEach((x) => x.classList.toggle("active", x.dataset.view === v));
-      if (v === "dashboard") renderDashboard();
-      if (v === "vehicles") renderVehicles();
-      if (v === "account") renderAccount();
-      scrollTo({ top: 0, behavior: "smooth" });
-    }
-    function renderAccount() {
-      $("profileName").value = state.account.name || "";
-      $("profileEmail").value = state.account.email || "";
-      $("profilePhone").value = state.account.phone || "";
-      $("profileId").value = state.account.id;
-    }
-    function handleGoogleCredential(response) {
-      try {
-        const parts = response.credential.split(".");
-        if (parts.length < 2) throw new Error("Invalid Google credential");
-        const payload = JSON.parse(
-          atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
-        );
-        state.account = {
-          id: state.account?.id || "JF-CUS-" + String(Date.now()).slice(-6),
-          name: payload.name || payload.email?.split("@")[0] || "Customer",
-          email: payload.email || "",
-          phone: state.account?.phone || "",
-          googleSub: payload.sub || "",
+    <script>
+      /*
+       * JaFaFa Customer Portal — shared-data implementation.
+       * The page remains frontend/demo-only, but follows the same authorization
+       * relationship that the future backend must enforce:
+       * authenticated customer -> approved vehicle -> vehicle telemetry.
+       */
+      const DB_KEY = "jafafa_fleet_suite_v3";
+      const CLAIM_KEY = "jafafa_vehicle_claims_v1";
+      const SESSION_KEY = "jafafa_customer_session_v2";
+      const LEGACY_KEY = "jafafa_customer_portal_v1";
+      const GOOGLE_CLIENT_ID = "618464687927-3qhsv0r9012cn0e50g963vk4n71pb54r.apps.googleusercontent.com";
+      const $ = (id) => document.getElementById(id);
+      const clone = (v) => JSON.parse(JSON.stringify(v));
+      const uid = (p) => `${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
+      const now = () => new Date().toISOString();
+      const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]);
+
+      const canonicalTelemetry = (raw, vehicleId) => {
+        const r = raw || {};
+        const first = (...xs) => xs.find((x) => x !== null && x !== undefined && x !== "") ?? null;
+        const time = first(r.time, r.timestamp, r.Timestamp, r.created_at, "");
+        return {
+          id: String(first(r.id, r.Id, `${vehicleId}-${time}`, uid("TEL"))),
+          vehicleId: String(first(r.vehicleId, r.VehicleId, vehicleId)),
+          time,
+          timestamp: time,
+          speed: num(first(r.speed, r.Speed)),
+          rpm: num(first(r.rpm, r.Revolutions_Per_Minute, r.Engine_RPM)),
+          maf: num(first(r.maf, r.Mass_Air_Flow)),
+          ctemp: num(first(r.ctemp, r.coolant, r.Coolant_Temperature, r.coolantTemp)),
+          coolant: num(first(r.coolant, r.ctemp, r.Coolant_Temperature, r.coolantTemp)),
+          fuel: num(first(r.fuel, r.Fuel_Level)),
+          voltage: num(first(r.voltage, r.Voltage)),
+          evap: num(first(r.evap, r.Evaporative_Emission_Control)),
+          timing: num(first(r.timing, r.Engine_Timing, r.Injector_Timing)),
+          etemp: num(first(r.etemp, r.Engine_Temperature, r.engineTemp)),
+          mpg: num(first(r.mpg, r.Miles_Per_Gallon)),
+          iat: num(first(r.iat, r.Intake_Temperature)),
+          throttle: num(first(r.throttle, r.Throttle)),
+          load: num(first(r.load, r.Load)),
+          atemp: num(first(r.atemp, r.Ambient_Temperature)),
+          bpressure: num(first(r.bpressure, r.Barometric_Pressure)),
         };
-        save();
-        toast("Signed in with Google");
-        enter();
-      } catch (error) {
-        console.error("JaFaFa Google sign-in failed", error);
-        toast("Google sign-in could not be completed");
+      };
+      function num(v) { if (v === null || v === undefined || v === "") return null; const n = Number(v); return Number.isFinite(n) ? n : null; }
+
+      const demoTelemetry = () => Array.from({length:12}, (_,i) => canonicalTelemetry({
+        timestamp:new Date(Date.now()-(11-i)*300000).toISOString(), speed:Math.max(0,Math.round(30+Math.sin(i*.8)*15)), rpm:Math.round(1800+Math.sin(i*.7)*450), coolant:Math.round(91+Math.sin(i*.45)*4), voltage:Number((13.7+Math.sin(i*.6)*.25).toFixed(1)), load:Math.round(25+Math.sin(i*.55)*12), maf:Number((15+Math.sin(i*.6)*3).toFixed(1)), throttle:Math.round(20+Math.sin(i*.5)*8), iat:Math.round(32+Math.sin(i*.4)*3)
+      }, "demo"));
+
+      const legacySeed = {
+        account:{id:"JF-CUS-0001",name:"Customer",email:"customer@jafafa.demo",phone:"",authProvider:"password",createdAt:now(),status:"Active",vehicleIds:[]},
+        vehicles:[
+          {id:"JF-V-0001",make:"BMW",model:"X5 E70",year:2010,registration:"ABC-123-XY",deviceId:"00:10:CC:4F:36:03",health:91,status:"online",telemetry:demoTelemetry()},
+          {id:"JF-V-0002",make:"Toyota",model:"Corolla",year:2016,registration:"XYZ-456-AA",deviceId:"00:10:CC:4F:36:04",health:84,status:"warning",telemetry:demoTelemetry()},
+          {id:"JF-V-0003",make:"Mercedes-Benz",model:"C200",year:2018,registration:"LAG-778-KD",deviceId:"00:10:CC:4F:36:05",health:96,status:"online",telemetry:demoTelemetry()},
+        ]
+      };
+
+      function readDb() {
+        try { const db = JSON.parse(localStorage.getItem(DB_KEY) || "null"); if (Array.isArray(db)) return db; } catch {}
+        return null;
       }
-    }
-    function initGoogleSignIn() {
-      if (!window.google?.accounts?.id)
-        return setTimeout(initGoogleSignIn, 250);
-      window.google.accounts.id.initialize({
-        client_id:
-          "618464687927-3qhsv0r9012cn0e50g963vk4n71pb54r.apps.googleusercontent.com",
-        callback: handleGoogleCredential,
-        auto_select: false,
-        cancel_on_tap_outside: true,
-      });
-      window.google.accounts.id.renderButton($("googleSignIn"), {
-        theme: "outline",
-        size: "large",
-        type: "standard",
-        text: "continue_with",
-        shape: "rectangular",
-        logo_alignment: "left",
-        width: 390,
-      });
-    }
-    function enter() {
-      $("authView").classList.add("hidden");
-      $("app").classList.remove("hidden");
-      renderDashboard();
-      renderAccount();
-    }
-    function setAuth(m) {
-      mode = m;
-      const s = m === "signup";
-      $("nameField").classList.toggle("hidden", !s);
-      $("authEyebrow").textContent =
-        s ? "Create your account" : "Customer Portal";
-      $("authTitle").textContent =
-        s ? "Create your JaFaFa account." : "Welcome back.";
-      $("authText").textContent =
-        s ?
-          "Create an account to manage your vehicles and view their telemetry."
-          : "Sign in to see your vehicles, health status and alerts.";
-      $("authSubmit").textContent = s ? "Create account" : "Sign in";
-      $("switchText").textContent =
-        s ? "Already have an account?" : "Don't have an account?";
-      $("switchAuth").textContent = s ? "Sign in" : "Create one";
-      $("authPassword").autocomplete =
-        s ? "new-password" : "current-password";
-    }
-    $("authForm").addEventListener("submit", (e) => {
-      e.preventDefault();
-      if (mode === "signup") {
-        state.account = {
-          id: "JF-CUS-" + String(Date.now()).slice(-6),
-          name: $("authName").value.trim() || "Customer",
-          email: $("authEmail").value.trim(),
-          phone: "",
-        };
-        save();
-        toast("Account created");
-        enter();
-      } else {
-        if (!$("authEmail").value || !$("authPassword").value) return;
-        state.account.email = $("authEmail").value.trim();
-        save();
-        toast("Signed in");
-        enter();
+      function writeDb(db) { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+      function normalizeDb(db) {
+        const source = Array.isArray(db) ? db : [];
+        source.forEach(c => {
+          c.id = String(c.id || uid("CUS"));
+          c.name = c.name || "Customer"; c.email = c.email || ""; c.phone = c.phone || "";
+          c.avatar = c.avatar || ""; c.authProvider = c.authProvider || "password"; c.createdAt = c.createdAt || now(); c.status = c.status || "Active";
+          c.vehicleIds = Array.isArray(c.vehicleIds) ? c.vehicleIds.map(String) : [];
+          c.cars = Array.isArray(c.cars) ? c.cars : [];
+          c.cars.forEach(v => {
+            v.id = String(v.id || v.vehicleId || v.obdId || uid("JF-V")); v.vehicleId = v.vehicleId || v.id; v.obdId = v.obdId || v.id;
+            v.customerId = String(c.id); v.createdAt = v.createdAt || now(); v.telemetry = Array.isArray(v.telemetry) ? v.telemetry.map(x => canonicalTelemetry(x,v.id)) : [];
+            v.registration = v.registration || v.plate || ""; v.plate = v.plate || v.registration || "";
+            if (!c.vehicleIds.includes(v.id)) c.vehicleIds.push(v.id);
+          });
+        });
+        return source;
       }
-    });
-    $("switchAuth").onclick = () =>
-      setAuth(mode === "signup" ? "signin" : "signup");
-    $("logout").onclick = () => {
-      $("app").classList.add("hidden");
-      $("authView").classList.remove("hidden");
-      $("authForm").reset();
-      setAuth("signin");
-    };
-    document
-      .querySelectorAll("[data-view]")
-      .forEach((b) =>
-        b.addEventListener("click", () => navigate(b.dataset.view)),
-      );
-    $("addVehicleBtn").onclick = () =>
-      $("vehicleModal").classList.remove("hidden");
-    $("closeVehicle").onclick = () =>
-      $("vehicleModal").classList.add("hidden");
-    $("vehicleForm").addEventListener("submit", (e) => {
-      e.preventDefault();
-      state.vehicles.push({
-        id: "JF-V-" + String(Date.now()).slice(-6),
-        make: $("vMake").value.trim(),
-        model: $("vModel").value.trim(),
-        year: $("vYear").value,
-        registration: $("vReg").value.trim(),
-        deviceId: $("vDevice").value.trim(),
-        health: 100,
-        status: "online",
-        telemetry: telemetry(),
-      });
-      save();
-      $("vehicleForm").reset();
-      $("vehicleModal").classList.add("hidden");
-      renderVehicles();
-      renderDashboard();
-      toast("Vehicle added");
-    });
-    $("profileForm").addEventListener("submit", (e) => {
-      e.preventDefault();
-      state.account.name = $("profileName").value.trim();
-      state.account.email = $("profileEmail").value.trim();
-      state.account.phone = $("profilePhone").value.trim();
-      save();
-      renderAccount();
-      renderDashboard();
-      toast("Profile saved");
-    });
-    setAuth("signin");
-    initGoogleSignIn();
-  </script>
+
+      function migrateLegacy() {
+        let db = readDb();
+        if (db) return normalizeDb(db);
+        let legacy = null;
+        try { legacy = JSON.parse(localStorage.getItem(LEGACY_KEY) || "null"); } catch {}
+        if (legacy?.account) {
+          const c = {...legacy.account, id:String(legacy.account.id || uid("CUS")), vehicleIds:[], cars:[]};
+          (legacy.vehicles || []).forEach(old => {
+            const v = {...old, id:String(old.id || old.deviceId || uid("JF-V")), vehicleId:String(old.id || old.deviceId || uid("JF-V")), obdId:old.deviceId || old.id, customerId:c.id, status:old.status === "online" ? "Active" : old.status || "Active", telemetry:(old.telemetry || []).map(x=>canonicalTelemetry(x,old.id))};
+            c.cars.push(v); c.vehicleIds.push(v.id);
+          });
+          db = [c]; writeDb(db); return db;
+        }
+        db = [];
+        writeDb(db); return db;
+      }
+
+      let db = migrateLegacy();
+      let account = null, mode = "signin", selected = null, selectedParam = "rpm";
+      const claims = () => { try { return JSON.parse(localStorage.getItem(CLAIM_KEY) || "[]"); } catch { return []; } };
+      const writeClaims = (x) => localStorage.setItem(CLAIM_KEY, JSON.stringify(x));
+
+      function customerById(id) { return db.find(c => String(c.id) === String(id)) || null; }
+      function customerByEmail(email) { const e=String(email||"").trim().toLowerCase(); return db.find(c => String(c.email||"").trim().toLowerCase()===e) || null; }
+      function allVehicles() { return db.flatMap(c => (c.cars||[]).map(v => ({...v, customerId:String(c.id)}))); }
+      function vehicleById(id) { const hit=allVehicles().find(x=>String(x.id)===String(id)); return hit || null; }
+      function ownedVehicles() {
+        if (!account) return [];
+        const c = customerById(account.id); if (!c) return [];
+        const ids = new Set((c.vehicleIds || []).map(String));
+        return c.cars.filter(v => ids.has(String(v.id)) && String(v.customerId)===String(c.id) && v.status !== "Deleted" && String(v.status).toLowerCase() !== "pending");
+      }
+      function currentClaims() { return claims().filter(x => String(x.customerId) === String(account?.id)); }
+
+      function saveDb() { db = normalizeDb(db); writeDb(db); }
+      function latest(v) { return (v?.telemetry||[]).slice().sort((a,b)=>new Date(b.time||b.timestamp)-new Date(a.time||a.timestamp))[0] || null; }
+      function analyze(v) {
+        const t=latest(v), time=t ? new Date(t.time||t.timestamp) : null, age=time && !Number.isNaN(time.getTime()) ? Math.max(0,Date.now()-time.getTime()) : Infinity;
+        const connection=!t?"offline":age<=120000?"online":age<=900000?"recent":"offline";
+        if (window.analyzeVehicleTelemetry) return window.analyzeVehicleTelemetry(v.telemetry||[]);
+        const coolant=num(t?.ctemp ?? t?.coolant), voltage=num(t?.voltage), rpm=num(t?.rpm), speed=num(t?.speed);
+        const overall=(coolant!==null&&coolant>110)||(voltage!==null&&voltage<11.5)?"critical":connection==="offline"||(coolant!==null&&coolant>=105)||(voltage!==null&&voltage<12)||(rpm!==null&&rpm>5000)?"warning":"healthy";
+        return {latest:t,connection,cooling:coolant===null?"unknown":coolant>110?"overheating":coolant>=105?"warm":"normal",electrical:voltage===null?"unknown":voltage<12?"low-voltage":"normal",overall,age};
+      }
+      function health(v) {
+        if (!v) return null;
+        if (typeof v.health === "number" && !v.telemetry?.length) return Math.round(v.health);
+        const t=latest(v); if (!t) return typeof v.health === "number" ? Math.round(v.health) : null;
+        let score=100; const coolant=num(t.ctemp ?? t.coolant), voltage=num(t.voltage), rpm=num(t.rpm), speed=num(t.speed);
+        if (coolant!==null) { if(coolant>110) score-=30; else if(coolant>=105) score-=10; }
+        if (voltage!==null && voltage<12) score-=20;
+        if (rpm!==null && rpm>5000) score-=10;
+        if (speed!==null && speed>=100) score-=5;
+        if (analyze(v).connection==="offline") score-=10;
+        return Math.max(0,Math.min(100,Math.round(score)));
+      }
+      function healthCategories(v) {
+        const t=latest(v)||{}; const h=health(v) ?? 0; const c=num(t.ctemp ?? t.coolant), vol=num(t.voltage), load=num(t.load), maf=num(t.maf), iat=num(t.iat);
+        return [
+          ["Engine",Math.max(0,Math.min(100,h + (num(t.rpm)>5000?-8:2)))],
+          ["Cooling",Math.max(0,Math.min(100,h + (c!==null&&c<105?3:-8)))],
+          ["Electrical",Math.max(0,Math.min(100,h + (vol!==null&&vol>=12?4:-12)))],
+          ["Air / Intake",Math.max(0,Math.min(100,h + (iat!==null&&iat<50?3:-5) + (maf!==null?2:0)))],
+          ["Performance",Math.max(0,Math.min(100,h + (load!==null&&load<85?2:-8)))],
+          ["Connectivity",analyze(v).connection==="online"?100:analyze(v).connection==="recent"?85:40]
+        ];
+      }
+      function meta(v) { const a=analyze(v); return a.connection==="offline"?["OFFLINE","off"]:(a.overall==="warning"?["WARNING","warn"]:[a.connection==="recent"?"RECENT":"ONLINE",""]); }
+      function toast(t){$("toast").textContent=t;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2400);}
+
+      function card(v){
+        const t=latest(v), [s,c]=meta(v), h=health(v);
+        return `<article class="card vehicle"><div class="vehiclehead"><div><h3>${esc(v.make)} ${esc(v.model)}</h3><div class="reg">${esc(v.registration||v.plate||"No registration")} · ${esc(v.year||"Year N/A")}</div></div><div class="status"><i class="dot ${c}"></i>${s}</div></div><div class="health"><div class="healthline"><span>Vehicle health</span><b>${h===null?"—":h+"/100"}</b></div><div class="track"><div class="fill" style="width:${h??0}%"></div></div></div><div class="metrics"><div class="metric"><small>Speed</small><b>${t?.speed??"—"} km/h</b></div><div class="metric"><small>RPM</small><b>${t?.rpm??"—"}</b></div><div class="metric"><small>Voltage</small><b>${t?.voltage??"—"} V</b></div></div><div class="vehiclefoot"><button class="btn" onclick="openVehicle('${esc(v.id)}')">View vehicle →</button></div></article>`;
+      }
+      function renderDashboard(){
+        const n=account?.name||"Customer", vs=ownedVehicles(); const online=vs.filter(v=>analyze(v).connection==="online").length, warnings=vs.filter(v=>analyze(v).overall!=="healthy").length, offline=vs.filter(v=>analyze(v).connection==="offline").length;
+        $("heroName").textContent=", "+esc(n.split(" ")[0]); $("navName").textContent=n; $("avatar").textContent=(n.charAt(0)||"C").toUpperCase();
+        $("statVehicles").textContent=vs.length; $("statOnline").textContent=online; $("statWarnings").textContent=warnings; $("statHealth").textContent=vs.length?Math.round(vs.map(health).filter(x=>x!==null).reduce((a,x)=>a+x,0)/(vs.map(health).filter(x=>x!==null).length||1)):"—";
+        $("dashboardVehicles").innerHTML=vs.map(card).join("")||empty("No vehicles are currently assigned to your account.");
+        const active=vs.flatMap(v=>customerAlerts(v));
+        $("dashboardAlerts").innerHTML=active.length?active.slice(0,5).map(alertHtml).join(""):"<div class=\"notice\">No active alerts. Your fleet is looking good.</div>";
+      }
+      function empty(t){return `<div class="card panel"><span style="color:var(--muted);font-size:.75rem">${esc(t)}</span></div>`;}
+      function customerAlerts(v){
+        const stored=claims; let arr=[]; try { const raw=JSON.parse(localStorage.getItem("jafafa_alerts_v1")||"[]"); arr=raw.filter(a=>String(a.vehicleId)===String(v.id)&&!a.resolved); } catch {}
+        if(!arr.length && analyze(v).overall!=="healthy") arr=[{id:"derived",severity:analyze(v).overall==="critical"?"critical":"warning",title:"Vehicle health warning",message:"Current telemetry indicates this vehicle needs attention."}];
+        return arr.map(a=>({...a,vehicle:v}));
+      }
+      function alertHtml(a){const icon=a.severity==="critical"?"🔴":a.severity==="warning"?"🟠":"🔵";return `<div class="alert"><div>${icon}</div><div><b>${esc(a.title)}</b><span>${esc(a.message||"")}</span></div></div>`;}
+
+      function renderVehicles(){
+        $("vehicleList").innerHTML=ownedVehicles().map(card).join("")||empty("Your garage is empty. Add a vehicle or request a vehicle claim below.");
+        renderClaimPanel();
+      }
+      function renderClaimPanel(){
+        let panel=$("customerClaimPanel"); if(!panel){panel=document.createElement("div");panel.id="customerClaimPanel";panel.className="section card panel";$("vehicles").appendChild(panel);}
+        const pending=currentClaims().filter(c=>c.status==="PENDING");
+        panel.innerHTML=`<div class="sectionhead"><h2>Vehicle claiming</h2><span>Ownership requires approval</span></div><div class="notice">Enter the JaFaFa OBD / Vehicle ID supplied with your device. A claim request is sent to an administrator; entering an ID never grants access by itself.</div><div class="formgrid"><div class="field"><label>JaFaFa OBD / Vehicle ID</label><input id="claimVehicleId" placeholder="00:10:CC:4F:36:03" /></div><div class="field" style="display:flex;align-items:end"><button class="btn" type="button" id="claimVehicleBtn">Request vehicle claim</button></div></div>${pending.length?`<div style="margin-top:14px"><div class="eyebrow">Pending requests</div>${pending.map(c=>{const v=vehicleById(c.vehicleId);return `<div class="alert"><div>🟡</div><div><b>${esc(v?`${v.make} ${v.model}`:"Vehicle request")}</b><span>Request submitted ${new Date(c.requestedAt).toLocaleString()} · PENDING</span></div></div>`}).join("")}</div>`:""}`;
+        $("claimVehicleBtn").onclick=()=>requestClaim($("claimVehicleId").value.trim());
+      }
+      function requestClaim(vehicleId){
+        if(!vehicleId||!account)return toast("Enter a vehicle ID.");
+        const v=vehicleById(vehicleId); if(!v)return toast("That vehicle ID was not found.");
+        if(String(v.customerId)===String(account.id) && customerById(account.id)?.vehicleIds?.includes(String(v.id))) return toast("This vehicle is already assigned to you.");
+        const list=claims(); if(list.some(c=>String(c.vehicleId)===String(v.id)&&String(c.customerId)===String(account.id)&&c.status==="PENDING")) return toast("A claim is already pending.");
+        list.unshift({id:uid("CLAIM"),vehicleId:String(v.id),customerId:String(account.id),requestedAt:now(),status:"PENDING"}); writeClaims(list); toast("Claim request submitted"); renderClaimPanel();
+      }
+
+      function openVehicle(id){
+        const allowed=ownedVehicles().find(v=>String(v.id)===String(id));
+        if(!allowed){toast("You do not have access to that vehicle.");return;}
+        selected=allowed; renderDetail(); navigate("vehicleDetail");
+      }
+      window.openVehicle=openVehicle;
+      function renderDetail(){
+        const v=selected, t=latest(v), [s,c]=meta(v), h=health(v);
+        $("detailName").textContent=`${v.make} ${v.model}`; $("detailReg").textContent=`${v.registration||v.plate||"No registration"} · Device ${v.obdId||v.id}`; $("detailStatus").innerHTML=`<i class="dot ${c}"></i> ${s}`;
+        const values=[
+          ["Speed",`${t?.speed??"—"} km/h`],["RPM",t?.rpm??"—"],["Coolant",`${t?.ctemp??t?.coolant??"—"} °C`],["Voltage",`${t?.voltage??"—"} V`],["Throttle",`${t?.throttle??"—"} %`],["Engine Load",`${t?.load??"—"} %`],["MAF",`${t?.maf??"—"} g/s`],["IAT",`${t?.iat??"—"} °C`],["Device",v.obdId||v.id]
+        ];
+        $("detailMetrics").innerHTML=values.map(x=>`<div class="card metric"><small>${esc(x[0])}</small><b>${esc(x[1])}</b></div>`).join("");
+        $("detailHealth").textContent=h===null?"—":h; $("detailHealthLabel").textContent=h===null?"NO DATA":h>=90?"EXCELLENT":h>=80?"GOOD":"NEEDS ATTENTION";
+        $("healthBars").innerHTML=healthCategories(v).map(x=>`<div class="barrow"><span>${esc(x[0])}</span><div class="track"><div class="fill" style="width:${x[1]}%"></div></div><b>${x[1]}</b></div>`).join("");
+        const alerts=customerAlerts(v); $("detailAlerts").innerHTML=alerts.length?alerts.map(alertHtml).join(""):"<div class=\"notice\">No active alerts for this vehicle.</div>";
+        renderChart(v.telemetry||[]); renderLog(v.telemetry||[]);
+      }
+      const PARAMS={rpm:["RPM",""],speed:["Speed","km/h"],ctemp:["Coolant","°C"],voltage:["Voltage","V"],maf:["MAF","g/s"],throttle:["Throttle","%"],load:["Engine Load","%"],iat:["Intake Temperature","°C"]};
+      function renderChart(data){
+        const rows=data.slice().sort((a,b)=>new Date(a.time)-new Date(b.time)), vals=rows.map(x=>num(x[selectedParam])).filter(x=>x!==null), label=PARAMS[selectedParam]?.[0]||selectedParam, unit=PARAMS[selectedParam]?.[1]||"";
+        const points=rows.map(x=>num(x[selectedParam])); let svg="";
+        if(vals.length>1){const min=Math.min(...vals),max=Math.max(...vals),range=max-min||1,w=900,h=230;const pts=points.map((v,i)=>v===null?null:`${35+(i/(points.length-1||1))*830},${h-25-((v-min)/range)*170}`).filter(Boolean).join(" ");svg=`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><line class="gridline" x1="35" y1="45" x2="865" y2="45"/><line class="gridline" x1="35" y1="105" x2="865" y2="105"/><line class="gridline" x1="35" y1="165" x2="865" y2="165"/><polyline class="line" points="${pts}"/></svg>`;} else svg=`<div class="notice">Not enough ${label.toLowerCase()} samples to draw a history chart.</div>`;
+        $("detailChart").innerHTML=`<div class="chart-controls">${Object.entries(PARAMS).map(([k,[name]])=>`<button type="button" class="chart-param ${k===selectedParam?'active':''}" data-param="${k}">${name}</button>`).join("")}</div><div class="chartlabel">${esc(label)}${unit?' · '+esc(unit):''}</div>${svg}`;
+        $("detailChart").querySelectorAll("[data-param]").forEach(b=>b.onclick=()=>{selectedParam=b.dataset.param;renderChart(selected.telemetry||[]);});
+      }
+      function renderLog(data){const rows=data.slice().sort((a,b)=>new Date(b.time)-new Date(a.time));$("logCount").textContent=`Showing ${rows.length.toLocaleString()} of ${rows.length.toLocaleString()} logs`;$("logBody").innerHTML=rows.map(x=>`<tr><td>${new Date(x.time||x.timestamp).toLocaleString()}</td><td>${x.speed??"—"}</td><td>${x.rpm??"—"}</td><td>${x.ctemp??x.coolant??"—"} °C</td><td>${x.voltage??"—"} V</td><td>${x.load??"—"}%</td></tr>`).join("");}
+
+      function navigate(v){document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));$(v)?.classList.add("active");document.querySelectorAll(".navlinks button").forEach(x=>x.classList.toggle("active",x.dataset.view===v));if(v==="dashboard")renderDashboard();if(v==="vehicles")renderVehicles();if(v==="account")renderAccount();if(v==="vehicleDetail"&&selected)renderDetail();scrollTo({top:0,behavior:"smooth"});}
+      function renderAccount(){$("profileName").value=account?.name||"";$("profileEmail").value=account?.email||"";$("profilePhone").value=account?.phone||"";$("profileId").value=account?.id||"";}
+
+      async function digest(value){
+        if(window.crypto?.subtle){const data=new TextEncoder().encode(value),hash=await crypto.subtle.digest("SHA-256",data);return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("");}
+        return btoa(unescape(encodeURIComponent(value)));
+      }
+      function persistSession(){localStorage.setItem(SESSION_KEY,JSON.stringify({customerId:String(account.id)}));}
+      function clearSession(){localStorage.removeItem(SESSION_KEY);account=null;selected=null;}
+      function enter(c){account=c;persistSession();$("authView").classList.add("hidden");$("app").classList.remove("hidden");renderDashboard();renderAccount();}
+      function setAuth(m){mode=m;const signup=m==="signup";$("nameField").classList.toggle("hidden",!signup);$("authEyebrow").textContent=signup?"Create your account":"Customer Portal";$("authTitle").textContent=signup?"Create your JaFaFa account.":"Welcome back.";$("authText").textContent=signup?"Create an account to manage your vehicles and view their telemetry.":"Sign in to see your vehicles, health status and alerts.";$("authSubmit").textContent=signup?"Create account":"Sign in";$("switchText").textContent=signup?"Already have an account?":"Don't have an account?";$("switchAuth").textContent=signup?"Sign in":"Create one";$("authPassword").autocomplete=signup?"new-password":"current-password";}
+
+      async function handlePasswordAuth(e){
+        e.preventDefault(); const email=$("authEmail").value.trim().toLowerCase(), password=$("authPassword").value;
+        if(password.length<6)return toast("Password must be at least 6 characters.");
+        db=normalizeDb(readDb()||db); let c=customerByEmail(email);
+        if(mode==="signup"){
+          if(c)return toast("An account already exists for that email.");
+          c={id:uid("CUS"),name:$("authName").value.trim()||"Customer",email,phone:"",avatar:"",authProvider:"password",createdAt:now(),status:"Active",vehicleIds:[],cars:[],passwordHash:await digest(password)};db.push(c);saveDb();toast("Account created");enter(c);showOnboarding();
+        } else {
+          if(!c)return toast("No JaFaFa customer account exists for that email.");
+          if(c.status && String(c.status).toLowerCase()==="suspended")return toast("This customer account is suspended.");
+          if(c.passwordHash && c.passwordHash!==await digest(password))return toast("Incorrect email or password.");
+          if(!c.passwordHash)c.passwordHash=await digest(password); // local demo migration for legacy/admin-created customer records
+          c.authProvider=c.authProvider||"password";saveDb();toast("Signed in");enter(c);
+        }
+      }
+      async function handleGoogleCredential(response){
+        try{
+          const parts=response.credential.split(".");if(parts.length<2)throw Error("Invalid Google credential");
+          const payload=JSON.parse(atob(parts[1].replace(/-/g,"+").replace(/_/g,"/"))), email=String(payload.email||"").toLowerCase();
+          db=normalizeDb(readDb()||db); let c=customerByEmail(email);
+          if(!c){c={id:uid("CUS"),name:payload.name||email.split("@")[0]||"Customer",email,phone:"",avatar:payload.picture||"",authProvider:"google",googleSub:payload.sub||"",createdAt:now(),status:"Active",vehicleIds:[],cars:[]};db.push(c);saveDb();toast("Google account connected");enter(c);showOnboarding();return;}
+          c.googleSub=payload.sub||c.googleSub||"";c.avatar=payload.picture||c.avatar||"";c.name=payload.name||c.name;c.authProvider="google";saveDb();toast("Signed in with Google");enter(c);
+        }catch(error){console.error("JaFaFa Google sign-in failed",error);toast("Google sign-in could not be completed");}
+      }
+      function initGoogleSignIn(){if(!window.google?.accounts?.id)return setTimeout(initGoogleSignIn,250);window.google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:handleGoogleCredential,auto_select:false,cancel_on_tap_outside:true});window.google.accounts.id.renderButton($("googleSignIn"),{theme:"outline",size:"large",type:"standard",text:"continue_with",shape:"rectangular",logo_alignment:"left",width:390});}
+      function showOnboarding(){
+        if($("onboardingModal"))return; const m=document.createElement("div");m.id="onboardingModal";m.className="auth hidden";m.style.cssText="position:fixed;inset:0;z-index:90;background:rgba(2,6,16,.82)";m.innerHTML=`<div class="authbox"><div class="eyebrow">Welcome to JaFaFa</div><h1>Your account is ready.</h1><p>Your customer profile has been created. You can request a vehicle claim now or continue to your dashboard.</p><div style="display:grid;gap:10px;margin-top:20px"><button class="btn" id="onboardVehicle">Add / claim a vehicle</button><button class="btn secondary" id="onboardContinue">Continue to dashboard</button></div></div>`;document.body.appendChild(m);m.classList.remove("hidden");$("onboardVehicle").onclick=()=>{m.remove();navigate("vehicles");};$("onboardContinue").onclick=()=>m.remove();
+      }
+
+      $("authForm").addEventListener("submit",handlePasswordAuth);
+      $("switchAuth").onclick=()=>setAuth(mode==="signup"?"signin":"signup");
+      $("logout").onclick=()=>{clearSession();$("app").classList.add("hidden");$("authView").classList.remove("hidden");$("authForm").reset();setAuth("signin");try{window.google?.accounts?.id.disableAutoSelect();}catch{}};
+      document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>navigate(b.dataset.view)));
+      $("addVehicleBtn").onclick=()=>$("vehicleModal").classList.remove("hidden");
+      $("closeVehicle").onclick=()=>$("vehicleModal").classList.add("hidden");
+      $("vehicleForm").addEventListener("submit",(e)=>{e.preventDefault();if(!account)return;db=normalizeDb(readDb()||db);const id=$("vDevice").value.trim();if(!id)return toast("Enter the JaFaFa device ID.");if(vehicleById(id))return toast("That vehicle ID already exists. Use claim instead.");const c=customerById(account.id);const v={id,vehicleId:id,obdId:id,customerId:String(account.id),make:$("vMake").value.trim(),model:$("vModel").value.trim(),year:Number($("vYear").value)||"",registration:$("vReg").value.trim(),plate:$("vReg").value.trim(),status:"Pending",createdAt:now(),telemetry:[]};c.cars.push(v);saveDb();const list=claims();list.unshift({id:uid("CLAIM"),vehicleId:id,customerId:String(account.id),requestedAt:now(),status:"PENDING"});writeClaims(list);$("vehicleForm").reset();$("vehicleModal").classList.add("hidden");renderVehicles();toast("Vehicle claim submitted for approval");});
+      $("profileForm").addEventListener("submit",(e)=>{e.preventDefault();if(!account)return;db=normalizeDb(readDb()||db);const c=customerById(account.id);c.name=$("profileName").value.trim();c.email=$("profileEmail").value.trim().toLowerCase();c.phone=$("profilePhone").value.trim();account=c;saveDb();persistSession();renderAccount();renderDashboard();toast("Profile saved");});
+
+      function restoreSession(){
+        try{const s=JSON.parse(localStorage.getItem(SESSION_KEY)||"null");if(!s?.customerId)return;db=normalizeDb(readDb()||db);const c=customerById(s.customerId);if(c&&String(c.status).toLowerCase()!=="suspended")enter(c);}catch{}
+      }
+      window.addEventListener("storage",e=>{if([DB_KEY,CLAIM_KEY].includes(e.key)){db=normalizeDb(readDb()||[]);if(account){const c=customerById(account.id);if(c){account=c;renderDashboard();renderVehicles();if(selected)selected=ownedVehicles().find(v=>String(v.id)===String(selected.id))||null;if(selected)renderDetail();}}}});
+      setAuth("signin");initGoogleSignIn();restoreSession();
+    </script>
+
+<style id="jf-customer-enhancements">
+.jf-cx-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 18px}.jf-cx-summary .card{min-height:90px}.jf-cx-summary b{font-size:1.55rem}.jf-cx-summary small{display:block;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}.jf-cx-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.jf-cx-bell{position:relative;border:1px solid var(--line);background:rgba(255,255,255,.035);border-radius:10px;width:40px;height:40px;color:inherit;cursor:pointer}.jf-cx-badge{position:absolute;right:-4px;top:-4px;min-width:18px;height:18px;border-radius:99px;background:#fb7185;color:white;font-size:10px;font-weight:900;display:grid;place-items:center}.jf-cx-notify{position:fixed;right:18px;top:74px;width:min(380px,calc(100vw - 28px));z-index:9998;border:1px solid var(--line);background:rgba(7,14,27,.96);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.35);padding:14px}.jf-cx-notify h3{margin:0 0 10px}.jf-cx-notify-item{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.jf-cx-notify-item:first-of-type{border-top:0}.jf-cx-notify-item small{display:block;color:var(--muted);margin-top:3px}.jf-cx-health{display:inline-flex;gap:6px;align-items:center;font-weight:800}.jf-cx-health:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor}.jf-cx-health.good{color:#67e8a5}.jf-cx-health.warn{color:#fbbf24}.jf-cx-health.bad{color:#fb7185}.jf-cx-skeleton{min-height:160px;background:rgba(148,163,184,.08)!important;position:relative;overflow:hidden}.jf-cx-skeleton:after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:jfCxShimmer 1.2s infinite}@keyframes jfCxShimmer{to{transform:translateX(100%)}}
+.jf-cx-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.jf-cx-metric{border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,.025)}.jf-cx-metric small{display:block;color:var(--muted);font-size:.68rem}.jf-cx-metric b{display:block;margin-top:4px;font-size:1.15rem}.jf-cx-claim-approved{border-color:rgba(103,232,165,.3)!important}.jf-cx-error{border:1px solid rgba(251,113,133,.25);background:rgba(251,113,133,.06);border-radius:14px;padding:14px;color:#fecdd3}
+@media(max-width:850px){.jf-cx-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.jf-cx-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.jf-cx-summary,.jf-cx-metrics{grid-template-columns:1fr 1fr}.jf-cx-notify{right:10px}}
+</style>
+<script>
+(()=>{
+'use strict';
+const DB='jafafa_fleet_suite_v3', CLAIM='jafafa_vehicle_claims_v1', q=s=>document.querySelector(s), esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const read=()=>{try{return JSON.parse(localStorage.getItem(DB)||'[]')}catch{return[]}};
+const email=v=>String(v??'').trim().toLowerCase();
+const toast=window.toast||function(msg){const t=q('#toast');if(t){t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}};
+function customer(){if(!window.account)return null;return read().find(c=>String(c.id)===String(window.account.id))||null}
+function owned(){const c=customer();if(!c)return[];const ids=new Set((c.vehicleIds||[]).map(String));return (c.cars||[]).filter(v=>ids.has(String(v.id))&&String(v.customerId)===String(c.id)&&!['pending','deleted','unassigned'].includes(String(v.status).toLowerCase()))}
+function latest(v){return(v?.telemetry||[]).slice().sort((a,b)=>new Date(b.time||b.timestamp)-new Date(a.time||a.timestamp))[0]||null}
+function health(v){if(typeof window.health==='function')return window.health(v);const t=latest(v);if(!t)return typeof v.health==='number'?v.health:null;let s=100,ct=Number(t.ctemp??t.coolant),vol=Number(t.voltage),rpm=Number(t.rpm);if(Number.isFinite(ct)){if(ct>110)s-=30;else if(ct>=105)s-=10}if(Number.isFinite(vol)&&vol<12)s-=20;if(Number.isFinite(rpm)&&rpm>5000)s-=10;return Math.max(0,Math.min(100,s))}
+function claims(){try{return JSON.parse(localStorage.getItem(CLAIM)||'[]')}catch{return[]}}
+function alerts(){let a=[];try{a=JSON.parse(localStorage.getItem('jafafa_alerts_v1')||'[]')}catch{}return a.filter(x=>!x.resolved&&owned().some(v=>String(v.id)===String(x.vehicleId)))}
+function addBell(){const nav=q('.userchip');if(!nav||q('#jfCxBell'))return;const b=document.createElement('button');b.id='jfCxBell';b.className='jf-cx-bell';b.type='button';b.innerHTML='🔔<span class="jf-cx-badge" hidden></span>';nav.insertBefore(b,nav.firstChild);b.onclick=toggleNotify;updateBell()}
+function updateBell(){const b=q('#jfCxBell .jf-cx-badge');if(!b)return;const n=alerts().length+claims().filter(c=>String(c.customerId)===String(window.account?.id)&&c.status==='APPROVED').length;b.textContent=n;b.hidden=!n}
+function toggleNotify(){let p=q('#jfCxNotify');if(p){p.remove();return}p=document.createElement('div');p.id='jfCxNotify';p.className='jf-cx-notify';const a=alerts();const approved=claims().filter(c=>String(c.customerId)===String(window.account?.id)&&c.status==='APPROVED').slice(0,5);p.innerHTML='<h3>Notifications</h3>'+[...a.map(x=>`<div class="jf-cx-notify-item"><div>${x.severity==='critical'?'🔴':x.severity==='warning'?'🟠':'🔵'}</div><div><b>${esc(x.title)}</b><small>${esc(x.message||'Vehicle alert')}</small></div></div>`),...approved.map(x=>`<div class="jf-cx-notify-item"><div>✅</div><div><b>Vehicle claim approved</b><small>Vehicle ${esc(x.vehicleId)} is now assigned to you.</small></div></div>`)].join('')||'<div class="notice">You are all caught up.</div>';document.body.appendChild(p)}
+function improveDashboard(){if(!window.account||!q('#dashboardVehicles'))return;let wrap=q('#jfCxSummary');if(!wrap){wrap=document.createElement('div');wrap.id='jfCxSummary';wrap.className='jf-cx-summary';q('#dashboardVehicles').parentNode.insertBefore(wrap,q('#dashboardVehicles'))}const vs=owned(),on=vs.filter(v=>{const t=latest(v);return t&&Date.now()-new Date(t.time||t.timestamp).getTime()<=120000}).length,hs=vs.map(health).filter(Number.isFinite),avg=hs.length?Math.round(hs.reduce((a,b)=>a+b,0)/hs.length):null;wrap.innerHTML=[['Vehicles',vs.length],['Online',on],['Alerts',alerts().length],['Fleet health',avg===null?'—':avg+'/100']].map(x=>`<div class="card stat"><b>${esc(x[1])}</b><small>${esc(x[0])}</small></div>`).join('');updateBell()}
+function improveCards(){document.querySelectorAll('.vehicle.card').forEach(card=>{if(card.dataset.cxEnhanced)return;card.dataset.cxEnhanced='1';const h=card.querySelector('.healthline b')?.textContent||'';const n=parseInt(h);const s=document.createElement('div');s.className='jf-cx-health '+(Number.isFinite(n)?n>=90?'good':n>=70?'warn':'bad':'');s.textContent=Number.isFinite(n)?(n>=90?'Excellent':n>=70?'Needs attention':'Critical'):'No health data';const foot=card.querySelector('.vehiclefoot');if(foot)foot.prepend(s)})}
+function improveDetail(){const box=q('#detailMetrics');if(!box||box.dataset.cxEnhanced)return;box.dataset.cxEnhanced='1';const detail=box.closest('.view')||box.parentElement;if(!detail)return;const t=latest(window.selected);if(!t)return;const extra=document.createElement('div');extra.className='jf-cx-metrics';extra.innerHTML=[['Fuel',t.fuel,' %'],['IAT',t.iat,' °C'],['MAF',t.maf,' g/s'],['Load',t.load,' %']].map(x=>`<div class="jf-cx-metric"><small>${x[0]}</small><b>${x[1]??'—'}${x[1]===null||x[1]===undefined?'':x[2]}</b></div>`).join('');detail.insertBefore(extra,box.nextSibling)}
+function patchProfile(){const form=q('#profileForm');if(!form||form.dataset.cxPatched)return;form.dataset.cxPatched='1';form.addEventListener('submit',e=>{const current=customer();if(!current)return;const field=q('#profileEmail');const next=email(field?.value);const duplicate=read().find(x=>String(x.id)!==String(current.id)&&email(x.email)===next);if(duplicate){e.preventDefault();e.stopImmediatePropagation();toast('That email is already used by another customer.');if(field){field.focus();field.classList.add('jf-enh-focus');setTimeout(()=>field.classList.remove('jf-enh-focus'),1400)}return}},true)}
+function patchVehicleForm(){const form=q('#vehicleForm');if(!form||form.dataset.cxPatched)return;form.dataset.cxPatched='1';form.addEventListener('submit',e=>{const field=q('#vDevice');if(!field)return;const raw=String(field.value||'').trim();const normalized=raw.toUpperCase().replace(/[\s-]+/g,':');field.value=normalized;const existing=read().flatMap(c=>c.cars||[]).find(v=>String(v.id).toUpperCase().replace(/[\s-]+/g,':')===normalized);if(existing){e.preventDefault();e.stopImmediatePropagation();toast('That vehicle ID already exists. Request a claim instead.');field.focus();field.classList.add('jf-enh-focus');setTimeout(()=>field.classList.remove('jf-enh-focus'),1400)}},true)}
+function refresh(){try{if(!window.account)return;improveDashboard();improveCards();addBell();patchProfile();patchVehicleForm();}catch(e){console.error('JaFaFa customer enhancement',e)}}
+window.addEventListener('storage',e=>{if(e.key===DB||e.key===CLAIM||e.key==='jafafa_alerts_v1'){setTimeout(refresh,50);if(q('#jfCxNotify'))q('#jfCxNotify').remove();toast('Your JaFaFa data was updated')}});
+const ob=new MutationObserver(()=>{if(window.account)refresh()});ob.observe(document.body,{childList:true,subtree:true});
+setInterval(refresh,1800);setTimeout(refresh,500);
+window.JaFaFaPlatform=window.JaFaFaPlatform||{};Object.assign(window.JaFaFaPlatform,{getOwnedVehicles:owned,getCustomer:customer,getHealth:health,getAlerts:alerts});
+})();
+</script>
+
 </body>
 
 </html>
