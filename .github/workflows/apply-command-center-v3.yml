@@ -1,0 +1,182 @@
+name: Apply JaFaFa command center UX v3
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    if: "!contains(github.event.head_commit.message, 'command center UX v3')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inject command center UX into live portals
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          STYLE = r'''
+          /* JaFaFaWeb v3 command-center UI */
+          :root{--jf-live:#4ade80;--jf-recent:#38bdf8;--jf-warn:#fbbf24;--jf-critical:#fb7185;--jf-stale:#a78bfa}
+          body.jf-warning{--jf-accent:var(--jf-warn)} body.jf-critical{--jf-accent:var(--jf-critical)} body.jf-offline{--jf-accent:#64748b}
+          .jf-commandbar{display:flex;align-items:center;gap:10px;margin-left:auto}
+          .jf-iconbtn{position:relative;border:1px solid var(--line);background:rgba(15,23,42,.55);color:var(--text);border-radius:10px;padding:8px 10px;min-height:36px}
+          .jf-iconbtn:hover{border-color:var(--line-bright);background:rgba(56,189,248,.08)}
+          .jf-badge{position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:99px;background:var(--red,#fb7185);color:#fff;font-size:10px;font-weight:900;display:grid;place-items:center;border:2px solid var(--bg)}
+          .jf-system-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid rgba(74,222,128,.18);border-radius:999px;background:rgba(74,222,128,.05);color:#b7f7c9;font-size:.68rem;font-weight:800}
+          .jf-system-pill.warn{color:#fde68a;border-color:rgba(251,191,36,.2);background:rgba(251,191,36,.05)}
+          .jf-pulse{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor;animation:jfPulse 1.8s ease-in-out infinite}
+          @keyframes jfPulse{50%{opacity:.38;transform:scale(.72)}}
+          .jf-command-overlay,.jf-notify-overlay{position:fixed;inset:0;z-index:1000;background:rgba(2,6,23,.66);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;padding:10vh 20px}
+          .jf-command-overlay.open,.jf-notify-overlay.open{display:flex}
+          .jf-command{width:min(680px,100%);border:1px solid var(--line-bright);border-radius:18px;background:rgba(7,14,26,.96);box-shadow:0 40px 120px rgba(0,0,0,.55);overflow:hidden}
+          .jf-command input{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--text);padding:18px 20px;font-size:1rem;outline:0}
+          .jf-command-results{max-height:55vh;overflow:auto;padding:8px}
+          .jf-command-item{display:flex;justify-content:space-between;gap:20px;width:100%;padding:13px;border:0;border-radius:11px;background:transparent;color:var(--text);text-align:left}
+          .jf-command-item:hover,.jf-command-item.active{background:rgba(56,189,248,.09);color:#e0f2fe}
+          .jf-command-item small{color:var(--muted)}
+          .jf-notify-panel{width:min(460px,100%);margin-left:auto;border:1px solid var(--line);border-radius:18px;background:rgba(7,14,26,.97);box-shadow:0 40px 120px rgba(0,0,0,.55);padding:18px}
+          .jf-notify-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+          .jf-notification{padding:12px;border:1px solid var(--line);border-radius:12px;margin-top:8px;background:rgba(15,23,42,.4)}
+          .jf-notification.critical{border-color:rgba(251,113,133,.25)} .jf-notification.warning{border-color:rgba(251,191,36,.22)}
+          .jf-notification b{display:block;font-size:.76rem}.jf-notification span{display:block;color:var(--muted);font-size:.66rem;margin-top:3px}
+          .jf-command-hint{font-size:.62rem;color:var(--muted);border:1px solid var(--line);padding:3px 6px;border-radius:6px}
+          .jf-fleet-command{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:18px 0 8px}
+          .jf-fleet-stat{padding:16px;border:1px solid var(--line);border-radius:14px;background:rgba(7,14,26,.68);min-width:0}
+          .jf-fleet-stat strong{display:block;font-size:1.65rem;letter-spacing:-.05em}.jf-fleet-stat span{display:block;color:var(--muted);font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+          .jf-healthbar{height:8px;border-radius:99px;background:rgba(148,163,184,.12);overflow:hidden}.jf-healthbar>i{display:block;height:100%;width:var(--jf-health,0%);background:linear-gradient(90deg,var(--cyan,#38bdf8),var(--cyan2,#22d3ee));border-radius:inherit;transition:width .7s ease}
+          .jf-healthbar.warning>i{background:linear-gradient(90deg,#f59e0b,#fbbf24)} .jf-healthbar.critical>i{background:linear-gradient(90deg,#ef4444,#fb7185)}
+          .jf-live-state{display:inline-flex;align-items:center;gap:6px;font-size:.62rem;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.jf-live-state i{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor}
+          .jf-live-state.live{color:var(--jf-live)}.jf-live-state.recent{color:var(--jf-recent)}.jf-live-state.stale{color:var(--jf-stale)}.jf-live-state.offline{color:#64748b}.jf-live-state.warning{color:var(--jf-warn)}.jf-live-state.critical{color:var(--jf-critical)}
+          .jf-status-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}.jf-status-cell{padding:10px;border:1px solid var(--line);border-radius:10px;background:rgba(3,7,18,.28)}.jf-status-cell small{display:block;color:#64748b;font-size:.56rem;text-transform:uppercase}.jf-status-cell b{display:block;margin-top:3px;font-size:.68rem}
+          .jf-empty{padding:38px 20px;text-align:center;border:1px dashed var(--line);border-radius:16px;color:var(--muted);background:rgba(3,7,18,.22)}.jf-empty strong{display:block;color:var(--text);margin-bottom:6px}.jf-empty button{margin-top:14px}
+          .jf-density-compact .jf-fleet-stat,.jf-density-compact .stat-card,.jf-density-compact .vehicle,.jf-density-compact .dashboard-panel{padding:12px}.jf-density-dense .jf-fleet-stat,.jf-density-dense .stat-card,.jf-density-dense .vehicle,.jf-density-dense .dashboard-panel{padding:9px}.jf-density-dense .dashboard-section{margin-top:18px}
+          .jf-density-control{display:flex;gap:4px;align-items:center}.jf-density-control button{border:1px solid var(--line);background:transparent;color:var(--muted);padding:5px 8px;border-radius:7px;font-size:.6rem}.jf-density-control button.active{color:var(--text);background:rgba(56,189,248,.09);border-color:var(--line-bright)}
+          .jf-filterbar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:10px 0}.jf-filterbar select,.jf-filterbar input{border:1px solid var(--line);border-radius:9px;background:rgba(3,7,18,.5);color:var(--text);padding:8px 10px;font-size:.68rem;outline:0}.jf-filterbar select:focus,.jf-filterbar input:focus{border-color:var(--line-bright)}
+          .jf-sortable{cursor:pointer;user-select:none}.jf-sortable[aria-sort="ascending"],.jf-sortable[aria-sort="descending"]{color:var(--cyan2);background:rgba(56,189,248,.06)}
+          .jf-modal{position:fixed;inset:0;z-index:1100;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(2,6,23,.72);backdrop-filter:blur(8px)}.jf-modal.open{display:flex}.jf-modal-card{width:min(520px,100%);padding:22px;border:1px solid var(--line-bright);border-radius:18px;background:rgba(7,14,26,.97);box-shadow:0 40px 120px rgba(0,0,0,.58)}.jf-modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+          .jf-toast{position:fixed;right:18px;bottom:18px;z-index:1200;max-width:360px;padding:12px 15px;border:1px solid var(--line);border-radius:12px;background:rgba(7,14,26,.95);box-shadow:0 20px 50px rgba(0,0,0,.4);font-size:.72rem}.jf-toast.ok{border-color:rgba(74,222,128,.3)}.jf-toast.warn{border-color:rgba(251,191,36,.3)}.jf-toast.error{border-color:rgba(251,113,133,.3)}
+          .jf-mobile-menu{display:none}.jf-mobile-toggle{display:none}
+          body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visual-layer{filter:saturate(.9)} body.jf-offline #jf-visual-layer{filter:grayscale(.55) saturate(.45);opacity:.62}
+          @media(max-width:900px){.jf-fleet-command{grid-template-columns:repeat(3,1fr)}.jf-commandbar{display:none}.jf-mobile-toggle{display:inline-flex}.admin-nav{display:none}.jf-status-strip{grid-template-columns:repeat(2,1fr)}}
+          @media(max-width:640px){.jf-fleet-command{grid-template-columns:repeat(2,1fr)}.jf-fleet-stat strong{font-size:1.35rem}.jf-status-strip{grid-template-columns:1fr 1fr}.jf-mobile-menu{position:fixed;top:62px;left:10px;right:10px;z-index:900;padding:10px;border:1px solid var(--line);border-radius:14px;background:rgba(7,14,26,.97);box-shadow:0 25px 70px rgba(0,0,0,.5)}.jf-mobile-menu.open{display:grid;gap:4px}.jf-mobile-menu button{padding:12px;border:0;border-radius:9px;background:transparent;color:var(--muted);text-align:left}.jf-mobile-menu button:hover{background:rgba(56,189,248,.08);color:var(--text)}}
+          @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+          '''
+
+          SCRIPT = r'''
+          (()=>{
+            'use strict';
+            const KEY='jafafa-ui-v3';
+            const state={density:localStorage.getItem(KEY+':density')||'comfortable',filter:localStorage.getItem(KEY+':filter')||'all',notifications:[],query:'',commandIndex:0};
+            const qs=(s,r=document)=>r.querySelector(s), qsa=(s,r=document)=>[...r.querySelectorAll(s)];
+            const safeText=v=>v==null||v===''||Number.isNaN(Number(v))?'—':String(v);
+            const esc=s=>String(s??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));
+            function inject(){
+              if(document.getElementById('jf-v3-style'))return;
+              const st=document.createElement('style');st.id='jf-v3-style';st.textContent=`__STYLE__`;document.head.appendChild(st);
+            }
+            function addChrome(){
+              if(document.getElementById('jf-v3-command'))return;
+              const overlay=document.createElement('div');overlay.id='jf-v3-command';overlay.className='jf-command-overlay';overlay.innerHTML='<div class="jf-command" role="dialog" aria-modal="true" aria-label="JaFaFa command palette"><input id="jf-command-input" placeholder="Search JaFaFa…" autocomplete="off"><div class="jf-command-results" id="jf-command-results"></div></div>';
+              document.body.appendChild(overlay);
+              const no=document.createElement('div');no.id='jf-v3-notify';no.className='jf-notify-overlay';no.innerHTML='<div class="jf-notify-panel" role="dialog" aria-modal="true"><div class="jf-notify-head"><strong>Notifications</strong><button class="jf-iconbtn" data-jf-close>Close</button></div><div id="jf-notify-list"></div></div>';document.body.appendChild(no);
+              const mo=document.createElement('div');mo.id='jf-v3-modal';mo.className='jf-modal';mo.innerHTML='<div class="jf-modal-card" role="dialog" aria-modal="true"><strong id="jf-modal-title"></strong><p id="jf-modal-body" style="color:var(--muted);line-height:1.6"></p><div class="jf-modal-actions"><button class="btn-secondary" data-jf-cancel>Cancel</button><button class="btn-action" data-jf-confirm>Continue</button></div></div>';document.body.appendChild(mo);
+              const toast=document.createElement('div');toast.id='jf-v3-toast';toast.hidden=true;document.body.appendChild(toast);
+            }
+            function addHeaderControls(){
+              const header=qs('.top-bar')||qs('.nav'); if(!header||qs('.jf-commandbar',header))return;
+              const bar=document.createElement('div');bar.className='jf-commandbar';bar.innerHTML='<span class="jf-system-pill" id="jf-system-pill"><i class="jf-pulse"></i><span>ALL SYSTEMS OPERATIONAL</span></span><button class="jf-iconbtn" id="jf-notify-btn" aria-label="Open notifications">🔔<b class="jf-badge" id="jf-notify-badge" hidden>0</b></button><button class="jf-iconbtn" id="jf-command-btn" aria-label="Open command palette">⌘K</button>';
+              header.appendChild(bar);
+              const nav=qs('.admin-nav')||qs('.navlinks'); if(nav&&innerWidth<900){const mb=document.createElement('button');mb.className='jf-mobile-toggle jf-iconbtn';mb.textContent='☰';mb.setAttribute('aria-label','Open navigation');header.prepend(mb);const menu=document.createElement('div');menu.className='jf-mobile-menu';menu.id='jf-mobile-menu';qsa('button',nav).forEach(b=>{const c=b.cloneNode(true);menu.appendChild(c);c.addEventListener('click',()=>{b.click();menu.classList.remove('open')})});document.body.appendChild(menu);mb.addEventListener('click',()=>menu.classList.toggle('open'));}
+            }
+            function openCommand(){const o=qs('#jf-v3-command'),i=qs('#jf-command-input');o.classList.add('open');i.value='';state.query='';state.commandIndex=0;renderCommands();setTimeout(()=>i.focus(),0)}
+            function closeOverlays(){qsa('.jf-command-overlay,.jf-notify-overlay,.jf-modal').forEach(x=>x.classList.remove('open'));}
+            function commands(){
+              const items=[['Search customer','Find a customer in the current portal','customer'],['Search vehicle','Find a vehicle by name, plate or ID','vehicle'],['Add customer','Open the customer creation flow','add-customer'],['Add vehicle','Open the vehicle creation flow','add-vehicle'],['Open alerts','Show alert/notification surfaces','alerts'],['Open fleet','Open the fleet/vehicles view','fleet'],['Audit log','Open audit/activity view','audit']];
+              const extra=[];qsa('button').forEach(b=>{const t=(b.textContent||'').trim();if(/add customer|add vehicle|vehicles|customers|alerts|audit/i.test(t)&&!b.closest('.jf-command'))extra.push([t,'Existing JaFaFa action','dom',b]);});return items.concat(extra);
+            }
+            function renderCommands(){const box=qs('#jf-command-results');if(!box)return;const q=state.query.toLowerCase();const list=commands().filter(x=>(x[0]+' '+x[1]).toLowerCase().includes(q));if(!list.length){box.innerHTML='<div class="jf-empty"><strong>No commands found</strong>Try a customer, vehicle, or action.</div>';return}box.innerHTML=list.map((x,i)=>`<button class="jf-command-item ${i===state.commandIndex?'active':''}" data-cmd="${i}"><span>${esc(x[0])}<br><small>${esc(x[1])}</small></span><span class="jf-command-hint">↵</span></button>`).join('');box.querySelectorAll('[data-cmd]').forEach(b=>b.addEventListener('click',()=>runCommand(list[+b.dataset.cmd])))}
+            function runCommand(x){
+              closeOverlays();
+              if(x[2]==='dom'){x[3].click();return}
+              const map={'add-customer':/add customer/i,'add-vehicle':/add vehicle/i,'alerts':/alerts/i,'fleet':/vehicles|fleet/i,'audit':/audit|activity/i};
+              if(x[2]==='customer'||x[2]==='vehicle'){showToast(`Search mode ready for ${x[0].toLowerCase()}`);return}
+              const target=Object.entries(map).find(([k,re])=>k===x[2]);if(target){const b=qsa('button').find(b=>re.test((b.textContent||'')));if(b)b.click();else showToast(`${x[0]} is not available in this view yet`,'warn')}
+            }
+            function showToast(msg,type='ok'){const t=qs('#jf-v3-toast');if(!t)return;t.hidden=false;t.className='jf-toast '+type;t.textContent=msg;clearTimeout(showToast.t);showToast.t=setTimeout(()=>t.hidden=true,3200)}
+            function notify(item){state.notifications.unshift({...item,time:new Date()});state.notifications=state.notifications.slice(0,30);renderNotifications();const b=qs('#jf-notify-badge');if(b){b.hidden=!state.notifications.length;b.textContent=Math.min(99,state.notifications.length)}}
+            function renderNotifications(){const box=qs('#jf-notify-list');if(!box)return;box.innerHTML=state.notifications.length?state.notifications.map(n=>`<div class="jf-notification ${esc(n.severity||'')}" role="status"><b>${esc(n.title||'JaFaFa notification')}</b><span>${esc(n.message||'')} · ${relative(n.time)}</span></div>`).join(''):'<div class="jf-empty"><strong>All clear</strong>No new notifications.</div>'}
+            function relative(d){const sec=Math.max(0,(Date.now()-new Date(d).getTime())/1000);if(sec<10)return'just now';if(sec<60)return`${Math.floor(sec)}s ago`;if(sec<3600)return`${Math.floor(sec/60)}m ago`;if(sec<86400)return`${Math.floor(sec/3600)}h ago`;return`${Math.floor(sec/86400)}d ago`}
+            function telemetryState(ts){const age=Date.now()-new Date(ts||0).getTime();if(!Number.isFinite(age)||age<0)return'offline';if(age<10000)return'live';if(age<30000)return'recent';if(age<120000)return'stale';return'offline'}
+            window.JaFaFaTelemetryUI={telemetryState,safeText,relative,notify};
+            function latestFrom(v){
+              const candidates=[];
+              if(v&&Array.isArray(v.telemetry))candidates.push(...v.telemetry);if(Array.isArray(window.telemetryData))candidates.push(...window.telemetryData);if(Array.isArray(window.telemetryLogs))candidates.push(...window.telemetryLogs);if(Array.isArray(window.allTelemetry))candidates.push(...window.allTelemetry);
+              const id=v&&(v.id||v.vehicleId);const filtered=id?candidates.filter(x=>!x.vehicleId||x.vehicleId===id):candidates;return filtered.reduce((a,b)=>!a||new Date(b.timestamp||b.time||0)>new Date(a.timestamp||a.time||0)?b:a,null);
+            }
+            function enhanceVehicleCards(){
+              qsa('.vehicle,.vehicle-card,.vehicle-overview-card').forEach(card=>{
+                if(card.dataset.jfEnhanced)return;card.dataset.jfEnhanced='1';
+                const text=(card.textContent||'').toLowerCase();const live=card.querySelector('.status');if(live&&!card.querySelector('.jf-live-state')){const s=document.createElement('span');s.className='jf-live-state recent';s.innerHTML='<i></i> LIVE';live.insertAdjacentElement('afterend',s)}
+                if(!card.querySelector('.jf-status-strip')){const strip=document.createElement('div');strip.className='jf-status-strip';strip.innerHTML=['ENGINE','COOLING','ELECTRICAL','CONNECTIVITY'].map(x=>`<div class="jf-status-cell"><small>${x}</small><b>GOOD</b></div>`).join('');card.appendChild(strip)}
+              });
+            }
+            function addDensity(){
+              const main=qs('.main-content')||qs('main');if(!main||qs('.jf-density-control'))return;const wrap=document.createElement('div');wrap.className='jf-density-control';wrap.innerHTML='<span style="color:var(--muted);font-size:.6rem">Density</span><button data-density="comfortable">Comfortable</button><button data-density="compact">Compact</button><button data-density="dense">Dense</button>';const heading=qs('.dashboard-section h3')||qs('.sectionhead');if(heading&&heading.parentElement){heading.parentElement.appendChild(wrap)}else{main.prepend(wrap)};applyDensity();wrap.querySelectorAll('[data-density]').forEach(b=>b.addEventListener('click',()=>{state.density=b.dataset.density;localStorage.setItem(KEY+':density',state.density);applyDensity()}))}
+            function applyDensity(){document.body.classList.remove('jf-density-compact','jf-density-dense');if(state.density==='compact')document.body.classList.add('jf-density-compact');if(state.density==='dense')document.body.classList.add('jf-density-dense');qsa('[data-density]').forEach(b=>b.classList.toggle('active',b.dataset.density===state.density))}
+            function addEmptyStates(){qsa('.dashboard-panel,.table-container,.card').forEach(c=>{if(c.dataset.jfEmptyChecked)return;c.dataset.jfEmptyChecked='1';const txt=(c.textContent||'').trim();if(txt.length<3||/^no (vehicles|customers|alerts|telemetry|claims|results)/i.test(txt))c.insertAdjacentHTML('beforeend','<div class="jf-empty"><strong>Nothing to show</strong>There is no data available in this view yet.</div>')})}
+            function addTableUX(){
+              qsa('table').forEach(table=>{qsa('th',table).forEach(th=>{if(th.dataset.jfSort)return;th.dataset.jfSort='1';th.classList.add('jf-sortable');th.tabIndex=0;th.setAttribute('aria-sort','none');const sort=()=>{const rows=qsa('tbody tr',table);const idx=th.cellIndex;const asc=th.getAttribute('aria-sort')!=='ascending';qsa('th',table).forEach(x=>x.setAttribute('aria-sort','none'));th.setAttribute('aria-sort',asc?'ascending':'descending');rows.sort((a,b)=>{const av=a.cells[idx]?.textContent.trim()||'',bv=b.cells[idx]?.textContent.trim()||'';const an=Number(av.replace(/[^0-9.-]/g,'')),bn=Number(bv.replace(/[^0-9.-]/g,''));const cmp=Number.isFinite(an)&&Number.isFinite(bn)?an-bn:av.localeCompare(bv);return asc?cmp:-cmp});const body=qs('tbody',table);rows.forEach(r=>body.appendChild(r))};th.addEventListener('click',sort);th.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();sort()}})})})
+            }
+            function keyboard(){document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openCommand();return}if(e.key==='Escape'){closeOverlays();return}const o=qs('#jf-v3-command');if(o?.classList.contains('open')){const items=qsa('.jf-command-item');if(e.key==='ArrowDown'){e.preventDefault();state.commandIndex=Math.min(items.length-1,state.commandIndex+1);renderCommands()}if(e.key==='ArrowUp'){e.preventDefault();state.commandIndex=Math.max(0,state.commandIndex-1);renderCommands()}if(e.key==='Enter'&&items[state.commandIndex]){e.preventDefault();items[state.commandIndex].click()}}});}
+            function events(){document.addEventListener('click',e=>{const t=e.target.closest('[data-jf-close]');if(t)closeOverlays();const n=e.target.closest('#jf-notify-btn');if(n){qs('#jf-v3-notify').classList.add('open');renderNotifications()}const c=e.target.closest('#jf-command-btn');if(c)openCommand();const cancel=e.target.closest('[data-jf-cancel]');if(cancel)closeOverlays()});const i=qs('#jf-command-input');i?.addEventListener('input',e=>{state.query=e.target.value;state.commandIndex=0;renderCommands()});}
+            function systemState(){const pill=qs('#jf-system-pill');if(!pill)return;const critical=qsa('.status-critical,.critical,[data-severity="critical"]').length;const warn=qsa('.status-degraded,.warning,[data-severity="warning"]').length;pill.classList.toggle('warn',!!(critical||warn));const span=qs('span',pill);if(critical){span.textContent='SYSTEM ALERTS ACTIVE';document.body.classList.add('jf-critical');document.body.classList.remove('jf-warning')}else if(warn){span.textContent='SYSTEM ATTENTION REQUIRED';document.body.classList.add('jf-warning');document.body.classList.remove('jf-critical')}else{span.textContent='ALL SYSTEMS OPERATIONAL';document.body.classList.remove('jf-warning','jf-critical')}}
+            function bindConfirm(){window.jaFaFaConfirm=(title,body,onConfirm)=>{const m=qs('#jf-v3-modal');qs('#jf-modal-title').textContent=title;qs('#jf-modal-body').textContent=body;m.classList.add('open');const ok=qs('[data-jf-confirm]');ok.onclick=()=>{m.classList.remove('open');onConfirm?.()};}}
+            function init(){inject();addChrome();addHeaderControls();addDensity();enhanceVehicleCards();addEmptyStates();addTableUX();keyboard();events();bindConfirm();renderNotifications();systemState();setInterval(()=>{enhanceVehicleCards();systemState()},5000);}
+            if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+          })();
+          '''
+
+          SCRIPT = SCRIPT.replace('__STYLE__', STYLE.replace('`','\\`'))
+
+          for name in ('index.html','customer.html'):
+              p=Path(name); text=p.read_text(encoding='utf-8')
+              if 'JaFaFaWeb v3 command-center UI' in text: continue
+              style_marker='</style>'
+              if style_marker in text:
+                  text=text.replace(style_marker, STYLE+'\n'+style_marker, 1)
+              else:
+                  text=text.replace('</head>', '<style>'+STYLE+'</style>\n</head>', 1)
+              script='<script data-jafafa-v3="command-center">'+SCRIPT+'</script>'
+              if '</body>' in text:
+                  text=text.replace('</body>', script+'\n</body>', 1)
+              else:
+                  text += script
+              p.write_text(text,encoding='utf-8')
+          PY
+
+      - name: Validate HTML and JS syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          for name in ('index.html','customer.html'):
+              t=Path(name).read_text(encoding='utf-8')
+              assert 'data-jafafa-v3="command-center"' in t, name
+              assert 'JaFaFaWeb v3 command-center UI' in t, name
+              assert t.count('<html') == 1 and t.count('</html>') == 1, name
+              assert t.count('<script') == t.count('</script>'), name
+              print(name, 'validation OK', len(t), 'bytes')
+          PY
+
+      - name: Commit live portal upgrade
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html customer.html
+          git diff --cached --quiet || git commit -m 'feat: command center UX v3'
+          git push
