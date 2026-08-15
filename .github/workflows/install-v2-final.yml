@@ -1,0 +1,35 @@
+name: Install JaFaFaWeb 2.0 Master Layer
+on:
+  push:
+    paths:
+      - '.jafafa-v2-final-trigger'
+permissions:
+  contents: write
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Append V2 master layer to single index
+        run: |
+          printf '\n<script>\n' >> index.html
+          cat jafafa-v2-master.js >> index.html
+          printf '\n</script>\n' >> index.html
+      - name: Validate
+        run: |
+          grep -q 'JaFaFaWeb 2.0 Master Plan' index.html
+          grep -q 'normalizeTelemetryRecord' index.html
+          grep -q 'screen-v2-master' index.html
+          test "$(grep -o '<html' index.html | wc -l)" -eq 1
+          test "$(grep -o '</html>' index.html | wc -l)" -eq 1
+      - name: Remove source and trigger
+        run: rm -f jafafa-v2-master.js .jafafa-v2-final-trigger
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git rm -f jafafa-v2-master.js .jafafa-v2-final-trigger || true
+          git diff --cached --quiet && exit 0
+          git commit -m 'Consolidate JaFaFaWeb 2.0 master layer into index'
+          git push
