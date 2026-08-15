@@ -1,0 +1,36 @@
+name: JaFaFa v5 cleanup
+
+on:
+  push:
+    paths: ['.jafafa-v5-trigger']
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate script
+        run: python3 -m py_compile v5-cleanup.py
+      - name: Apply v5 cleanup
+        run: python3 v5-cleanup.py
+      - name: Validate HTML structure
+        run: |
+          test "$(grep -o '<html' index.html | wc -l)" -eq 1
+          test "$(grep -o '</html>' index.html | wc -l)" -eq 1
+          test "$(grep -o '<html' customer.html | wc -l)" -eq 1
+          test "$(grep -o '</html>' customer.html | wc -l)" -eq 1
+          git diff --check
+      - name: Remove temporary files
+        run: rm -f v5-cleanup.py .jafafa-v5-trigger .github/workflows/apply-v5-cleanup.yml
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html customer.html
+          git add -A v5-cleanup.py .jafafa-v5-trigger .github/workflows/apply-v5-cleanup.yml || true
+          git diff --cached --quiet && exit 0
+          git commit -m 'Clean CSS and unify telemetry health engine [jafafa-v5]'
+          git push
