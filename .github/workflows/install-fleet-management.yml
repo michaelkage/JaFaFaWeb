@@ -1,0 +1,43 @@
+name: Install Fleet Management UI
+
+on:
+  push:
+    paths:
+      - '.jafafa-install-fleet'
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inject Fleet Management script
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+          tag = '<script src="./fleet-management.js"></script>'
+          if tag not in text:
+              marker = '</body>'
+              if marker not in text:
+                  raise SystemExit('Could not find </body> in index.html')
+              text = text.replace(marker, tag + '\n' + marker, 1)
+              p.write_text(text, encoding='utf-8')
+
+      - name: Remove install marker
+        run: rm -f .jafafa-install-fleet
+
+      - name: Commit installed UI
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html fleet-management.js .jafafa-install-fleet
+          git diff --cached --quiet && exit 0
+          git commit -m 'Add customer and vehicle fleet management'
+          git push
