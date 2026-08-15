@@ -1,0 +1,101 @@
+name: Validate JaFaFaWeb
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate HTML structure and local references
+        shell: python
+        run: |
+          from html.parser import HTMLParser
+          from pathlib import Path
+          from urllib.parse import urlparse
+          import re
+
+          files = [Path('index.html'), Path('customer.html')]
+
+          class Parser(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.scripts = []
+                  self.links = []
+                  self.html_count = 0
+                  self.html_close = 0
+                  self.style_count = 0
+                  self.style_close = 0
+
+              def handle_starttag(self, tag, attrs):
+                  attrs = dict(attrs)
+                  if tag == 'html': self.html_count += 1
+                  if tag == 'script' and attrs.get('src'): self.scripts.append(attrs['src'])
+                  if tag == 'link' and attrs.get('href'): self.links.append(attrs['href'])
+                  if tag == 'style': self.style_count += 1
+
+              def handle_endtag(self, tag):
+                  if tag == 'html': self.html_close += 1
+                  if tag == 'style': self.style_close += 1
+
+          for path in files:
+              text = path.read_text(encoding='utf-8')
+              parser = Parser()
+              parser.feed(text)
+              assert parser.html_count == 1 and parser.html_close == 1, f'{path}: invalid html boundary'
+              assert parser.style_count == parser.style_close, f'{path}: unbalanced style tags'
+
+              for ref in parser.scripts + parser.links:
+                  if ref.startswith(('#', '/', '//')):
+                      continue
+                  parsed = urlparse(ref)
+                  if parsed.scheme or parsed.netloc:
+                      continue
+                  target = (path.parent / parsed.path).resolve()
+                  assert target.exists(), f'{path}: missing local asset {ref}'
+
+              print(f'{path}: HTML structure OK')
+
+      - name: Check JavaScript syntax
+        shell: python
+        run: |
+          import re
+          import subprocess
+          import tempfile
+          from pathlib import Path
+
+          for path in (Path('index.html'), Path('customer.html')):
+              text = path.read_text(encoding='utf-8')
+              blocks = re.findall(r'<script(?:\s[^>]*)?>([\s\S]*?)</script>', text, flags=re.I)
+              for i, code in enumerate(blocks, 1):
+                  if not code.strip():
+                      continue
+                  with tempfile.NamedTemporaryFile('w', suffix='.js', encoding='utf-8', delete=False) as f:
+                      f.write(code)
+                      temp = f.name
+                  result = subprocess.run(['node', '--check', temp], text=True, capture_output=True)
+                  Path(temp).unlink(missing_ok=True)
+                  if result.returncode:
+                      print(result.stdout)
+                      print(result.stderr)
+                      raise SystemExit(f'{path}: JavaScript syntax error in inline script #{i}')
+              print(f'{path}: JavaScript syntax OK')
+
+      - name: Check for obsolete deployment triggers
+        shell: bash
+        run: |
+          if find . -maxdepth 1 -type f \( -name '.jafafa-*trigger' -o -name '.jafafa-install-*' \) | grep -q .; then
+            echo 'Obsolete JaFaFa deployment trigger files detected:'
+            find . -maxdepth 1 -type f \( -name '.jafafa-*trigger' -o -name '.jafafa-install-*' \)
+            exit 1
+          fi
+          echo 'No obsolete deployment trigger files found.'
