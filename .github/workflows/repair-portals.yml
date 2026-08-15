@@ -1,0 +1,65 @@
+name: Repair JaFaFa portal syntax
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repair syntax and CSS
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          def css_clean(text):
+              def block(m):
+                  css=m.group(2)
+                  css=re.sub(r'(?<!-webkit-)backdrop-filter\s*:\s*([^;{}]+);', lambda x:f'-webkit-backdrop-filter: {x.group(1).strip()};\nbackdrop-filter: {x.group(1).strip()};', css)
+                  css=re.sub(r'(?<!-webkit-)user-select\s*:\s*([^;{}]+);', lambda x:f'-webkit-user-select: {x.group(1).strip()};\nuser-select: {x.group(1).strip()};', css)
+                  css=re.sub(r'(?m)^([ \t]*)(-webkit-backdrop-filter|backdrop-filter|-webkit-user-select|user-select)\s*:\s*([^;]+);\s*\n\1\2\s*:\s*\3;', lambda x:f'{x.group(1)}{x.group(2)}: {x.group(3)};', css)
+                  css=re.sub(r'(-webkit-backdrop-filter|backdrop-filter|-webkit-user-select|user-select):([^;]+);\1:\2;', lambda x:f'{x.group(1)}:{x.group(2)};', css)
+                  return m.group(1)+css+m.group(3)
+              return re.sub(r'(<style(?:\s[^>]*)?>)(.*?)(</style>)', block, text, flags=re.S|re.I)
+
+          p=Path('index.html'); t=p.read_text(encoding='utf-8')
+          t=t.replace('healthy=scores.length?Math.round(scores.reduce((sum,a)=>sum+a,0)/scores.length):0);host.innerHTML=', 'healthy=scores.length?Math.round(scores.reduce((sum,a)=>sum+a,0)/scores.length):0;host.innerHTML=')
+          t=t.replace('<b>${online}</b><span>Live</span>', '<b>${live}</b><span>Live</span>')
+          t=t.replace("function init(){load();deriveAlerts();inject();nav();screen();}\n  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,40));else setTimeout(init,40);\n}\ndetectOwnershipConflicts(MOCK_DATABASE);)();", "function init(){load();deriveAlerts();detectOwnershipConflicts(db);inject();nav();screen();}\n  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init,40));else setTimeout(init,40);\n})();")
+          t=css_clean(t)
+          p.write_text(t,encoding='utf-8')
+
+          p=Path('customer.html'); t=p.read_text(encoding='utf-8')
+          t=t.replace('\n<style>\n.chart-controls','\n.chart-controls',1)
+          t=t.replace('\n</style>\n</style>\n</head>','\n</style>\n</head>',1)
+          t=t.replace('v.customerId = String(c.id); v.createdAt = v.createdAt || now();','v.customerId = v.customerId ? String(v.customerId) : String(c.id); v.createdAt = v.createdAt || now();',1)
+          t=t.replace('const connection=!t?"offline":age<=120000?"online":age<=900000?"recent":"offline";\n        if (window.analyzeVehicleTelemetry) return window.analyzeVehicleTelemetry(v.telemetry||[]);\n        const coolant=num(t?.ctemp ?? t?.coolant), voltage=num(t?.voltage), rpm=num(t?.rpm), speed=num(t?.speed);\n        const overall=(coolant!==null&&coolant>110)||(voltage!==null&&voltage<11.5)?"critical":connection==="offline"||(coolant!==null&&coolant>=105)||(voltage!==null&&voltage<12)||(rpm!==null&&rpm>5000)?"warning":"healthy";\n        return {latest:t,connection,cooling:coolant===null?"unknown":coolant>110?"overheating":coolant>=105?"warm":"normal",electrical:voltage===null?"unknown":voltage<12?"low-voltage":"normal",overall,age};', 'return analyzeVehicleTelemetry(v?.telemetry || []);',1)
+          t=css_clean(t)
+          p.write_text(t,encoding='utf-8')
+          PY
+      - name: Validate portal structure
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for f in ('index.html','customer.html'):
+              s=Path(f).read_text(encoding='utf-8')
+              assert s.count('<style') == s.count('</style>'), f+' style tags'
+              assert s.count('<script') == s.count('</script>'), f+' script tags'
+          print('portal structure OK')
+          PY
+      - name: Commit repaired portals
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html customer.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'fix: repair portal syntax and CSS compatibility [skip portal-repair]'
+          git push
