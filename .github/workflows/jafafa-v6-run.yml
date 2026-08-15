@@ -10,11 +10,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Apply cleanup
-        run: python .github/v6_cleanup.py
+        run: python .github/v6b.py
       - name: Commit cleanup
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html customer.html .github/v6_cleanup.py
+          git add -A
           git commit -m 'Apply telemetry consistency cleanup [jafafa-v6]' || exit 0
           git push
