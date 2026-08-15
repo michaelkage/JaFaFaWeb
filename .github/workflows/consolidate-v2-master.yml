@@ -1,0 +1,44 @@
+name: Consolidate JaFaFaWeb 2.0 Master Plan
+on:
+  push:
+    paths:
+      - '.jafafa-install-v2-master'
+permissions:
+  contents: write
+jobs:
+  install:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Consolidate master telemetry layer into index.html
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('index.html')
+          text=p.read_text(encoding='utf-8')
+          js=Path('jafafa-v2-master.js').read_text(encoding='utf-8')
+          marker='JaFaFaWeb 2.0 Master Plan — application-facing telemetry core/dashboard layer.'
+          if marker not in text:
+              text=text.replace('</body>', '<script>\n'+js+'\n</script>\n</body>', 1)
+              p.write_text(text,encoding='utf-8')
+      - name: Remove temporary installer files
+        run: rm -f jafafa-v2-master.js .jafafa-install-v2-master .github/workflows/consolidate-v2-master.yml
+      - name: Validate consolidated HTML
+        run: python - <<'PY'
+          from pathlib import Path
+          text=Path('index.html').read_text(encoding='utf-8')
+          required=['JaFaFaWeb 2.0 Master Plan','normalizeTelemetryRecord','analyzeTelemetry','healthFromAnalysis','screen-v2-master','FLEET HEALTH']
+          missing=[x for x in required if x not in text]
+          if missing: raise SystemExit('Missing: '+', '.join(missing))
+          if text.count('<html')!=1 or text.count('</html>')!=1: raise SystemExit('Invalid html document boundary')
+          print('Master plan layer consolidated successfully')
+          PY
+      - name: Commit consolidated index
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html jafafa-v2-master.js .jafafa-install-v2-master .github/workflows/consolidate-v2-master.yml
+          git diff --cached --quiet && exit 0
+          git commit -m 'Implement JaFaFaWeb 2.0 master telemetry architecture'
+          git push
