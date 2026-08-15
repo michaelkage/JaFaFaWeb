@@ -11,14 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Consolidate master customer/admin integration into index.html
+      - name: Consolidate master telemetry layer into index.html
         shell: python
         run: |
           from pathlib import Path
           p = Path('index.html')
           text = p.read_text(encoding='utf-8')
           js = Path('jafafa-v2-master.js').read_text(encoding='utf-8')
-          marker = 'JaFaFaWeb 2.0 — Plans 1–6 integration layer.'
+          marker = 'JaFaFaWeb 2.0 Master Plan — application-facing telemetry core/dashboard layer.'
           if marker not in text:
               if '</body>' not in text:
                   raise SystemExit('No </body> tag found')
@@ -29,12 +29,13 @@ jobs:
         run: |
           from pathlib import Path
           text = Path('index.html').read_text(encoding='utf-8')
-          required = ['JaFaFaWeb 2.0 — Plans 1–6 integration layer.','JaFaFaPlatform','jafafa_vehicle_claims_v1','Access Requests']
+          required = ['JaFaFaWeb 2.0 Master Plan','normalizeTelemetryRecord','analyzeTelemetry','healthFromAnalysis','screen-v2-master','FLEET HEALTH']
           missing = [x for x in required if x not in text]
           if missing:
               raise SystemExit('Missing: ' + ', '.join(missing))
           if text.count('<html') != 1 or text.count('</html>') != 1:
               raise SystemExit('Invalid html document boundary')
+          print('Master plan layer consolidated successfully')
       - name: Remove temporary source and trigger files
         run: rm -f jafafa-v2-master.js .jafafa-install-v2-master
       - name: Commit consolidated index
@@ -44,5 +45,5 @@ jobs:
           git add index.html
           git rm -f jafafa-v2-master.js .jafafa-install-v2-master || true
           git diff --cached --quiet && exit 0
-          git commit -m 'Implement JaFaFaWeb 2.0 admin customer integration'
+          git commit -m 'Implement JaFaFaWeb 2.0 master telemetry architecture'
           git push
