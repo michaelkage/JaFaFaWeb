@@ -1,0 +1,44 @@
+name: Consolidate Fleet Suite
+
+on:
+  push:
+    paths:
+      - '.jafafa-consolidate-fleet'
+
+permissions:
+  contents: write
+
+jobs:
+  consolidate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Consolidate fleet suite into index.html
+        shell: python
+        run: |
+          from pathlib import Path
+          index = Path('index.html')
+          suite = Path('fleet-suite.js').read_text(encoding='utf-8')
+          text = index.read_text(encoding='utf-8')
+          marker = '</body>'
+          if marker not in text:
+              raise SystemExit('Could not find </body> in index.html')
+          if 'JaFaFa Admin Fleet Suite' not in text:
+              text = text.replace(marker, '<script>\n' + suite + '\n</script>\n' + marker, 1)
+          index.write_text(text, encoding='utf-8')
+
+      - name: Remove external fleet modules and marker
+        run: |
+          rm -f fleet-suite.js fleet-management.js .jafafa-consolidate-fleet
+
+      - name: Commit consolidated portal
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html fleet-suite.js fleet-management.js .jafafa-consolidate-fleet
+          git diff --cached --quiet && exit 0
+          git commit -m 'Consolidate fleet management into index.html'
+          git push
