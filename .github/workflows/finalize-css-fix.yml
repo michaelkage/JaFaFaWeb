@@ -1,0 +1,43 @@
+name: Finalize CSS compatibility fix
+on:
+  push:
+    paths:
+      - '.jafafa-finalize-css'
+permissions:
+  contents: write
+jobs:
+  fix:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Normalize CSS declarations
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('.jf-detail-card{width:min(760px,100%);backdrop-filter:blur(10px)}.jf-detail-card{width:min(760px,100%);', '.jf-detail-card{width:min(760px,100%);')
+          def webkit(prop):
+              pattern=rf'(?<![\\w-])-webkit-{prop}:\\s*([^;]+);(?:{prop}:\\s*[^;]+;)?'
+              return re.sub(pattern, rf'-webkit-{prop}:\\1;{prop}:\\1;', s)
+          s=webkit('user-select')
+          s=webkit('backdrop-filter')
+          # Add prefixes to any remaining unprefixed declarations, without matching the prefixed property name.
+          s=re.sub(r'(?<![\\w-])user-select:\\s*([^;]+);', r'-webkit-user-select:\\1;user-select:\\1;', s)
+          s=re.sub(r'(?<![\\w-])backdrop-filter:\\s*([^;]+);', r'-webkit-backdrop-filter:\\1;backdrop-filter:\\1;', s)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify critical HTML boundary
+        run: |
+          grep -q '</style></head>' index.html
+          ! grep -q 'backdrop-filter:blur(10px)}</style>' index.html || true
+      - name: Remove temporary repair files and commit
+        run: |
+          rm -f .jafafa-finalize-css .github/workflows/fix-index-css.yml .github/workflows/finalize-css-fix.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html .jafafa-finalize-css .github/workflows/fix-index-css.yml .github/workflows/finalize-css-fix.yml
+          git commit -m 'Finalize CSS compatibility fixes' || exit 0
+          git push
