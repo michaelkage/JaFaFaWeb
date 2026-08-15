@@ -1,0 +1,34 @@
+name: Install Telemetry Intelligence
+on:
+  push:
+    paths:
+      - '.jafafa-install-telemetry'
+permissions:
+  contents: write
+jobs:
+  install:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inject telemetry intelligence into index.html
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('index.html')
+          text=p.read_text(encoding='utf-8')
+          tag='<script>\n'+Path('telemetry-intelligence.js').read_text(encoding='utf-8')+'\n</script>'
+          if 'JaFaFaWeb 2.0 — Telemetry Intelligence layer' not in text:
+              if '</body>' not in text: raise SystemExit('No body close tag')
+              text=text.replace('</body>',tag+'\n</body>',1)
+              p.write_text(text,encoding='utf-8')
+      - name: Remove temporary files
+        run: rm -f telemetry-intelligence.js .jafafa-install-telemetry .github/workflows/install-telemetry-intelligence.yml
+      - name: Commit consolidated portal
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html telemetry-intelligence.js .jafafa-install-telemetry .github/workflows/install-telemetry-intelligence.yml
+          git diff --cached --quiet && exit 0
+          git commit -m 'Add JaFaFaWeb 2.0 telemetry intelligence'
+          git push
