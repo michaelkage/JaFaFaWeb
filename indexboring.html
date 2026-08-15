@@ -542,12 +542,33 @@
         font-weight: 700;
       }
 
-    </style>
+    
+.admin-nav{display:flex;gap:.35rem;margin-left:auto;margin-right:1rem;flex-wrap:wrap}
+.admin-nav button{background:transparent;border:1px solid transparent;color:#94a3b8;padding:.45rem .7rem;border-radius:7px;cursor:pointer;font-weight:600;font-size:.78rem}
+.admin-nav button:hover{color:#38bdf8;border-color:#334155;background:#0f172a}
+.management-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.management-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.management-grid .full{grid-column:1/-1}
+.management-card label{display:block;color:#94a3b8;font-size:.78rem;font-weight:700;margin-bottom:.4rem}
+.management-card input,.management-card select{width:100%;padding:.75rem .85rem;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#f8fafc;outline:none}
+.management-card input:focus,.management-card select:focus{border-color:#38bdf8}
+.management-actions{display:flex;justify-content:flex-end;gap:.6rem;margin-top:1rem}
+.management-list{display:grid;gap:.7rem}
+.management-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.9rem 1rem;border:1px solid #334155;border-radius:9px;background:#0f172a}
+.management-row-title{font-weight:700}.management-row-sub{color:#94a3b8;font-size:.78rem;margin-top:.2rem}.management-row-actions{display:flex;gap:.4rem}
+.btn-secondary{background:#0f172a;border:1px solid #475569;color:#cbd5e1;padding:.55rem .8rem;border-radius:7px;cursor:pointer;font-weight:600}
+.dashboard-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem}
+.stat-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:1.1rem}.stat-card span{color:#94a3b8;font-size:.8rem}.stat-card strong{display:block;font-size:1.8rem;margin-top:.25rem;color:#38bdf8}
+.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem 1.25rem;color:#cbd5e1}
+.detail-grid div{padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.05)}.detail-grid b{color:#94a3b8;display:block;font-size:.72rem;margin-bottom:.15rem}
+@media(max-width:760px){.top-bar{flex-wrap:wrap;gap:.7rem}.admin-nav{order:3;width:100%;margin:0}.management-grid,.dashboard-stats,.detail-grid{grid-template-columns:1fr}.management-row{align-items:flex-start;flex-direction:column}}
+
+</style>
   </head>
   <body>
     <div id="view-unauthenticated" class="auth-container">
       <div class="card">
-        <h1>Customer Portal</h1>
+        <h1>Telemetry Hub Admin</h1>
         <p>
           Sign in with your Google Account to access customer data and telemetry
           logs.
@@ -579,9 +600,98 @@
           </div>
           <button class="btn-logout" onclick="handleSignOut()">Sign Out</button>
         </div>
-      </header>
+      
+<nav class="admin-nav">
+<button onclick="showScreen('screen-admin-dashboard')">Dashboard</button>
+<button onclick="showScreen('screen-customers')">Customers</button>
+<button onclick="showScreen('screen-add-customer')">+ Customer</button>
+<button onclick="showScreen('screen-vehicles')">Vehicles</button>
+<button onclick="openAddVehicleForCustomer()">+ Vehicle</button>
+</nav>
+</header>
       <main class="main-content">
-        <section id="screen-customers">
+        
+<section id="screen-admin-dashboard">
+<div class="view-header"><h2>Admin Dashboard</h2><p>Manage customers, vehicles, and telemetry.</p></div>
+<div class="dashboard-stats">
+<div class="stat-card"><span>Total Customers</span><strong id="adminCustomerCount">0</strong></div>
+<div class="stat-card"><span>Total Vehicles</span><strong id="adminVehicleCount">0</strong></div>
+<div class="stat-card"><span>Active Vehicles</span><strong id="adminActiveVehicleCount">0</strong></div>
+</div>
+<div class="management-card"><h3>Quick Actions</h3><p style="color:#94a3b8;margin:.4rem 0 1rem">Create records or open the existing customer/vehicle workflow.</p>
+<div class="management-actions" style="justify-content:flex-start">
+<button class="btn-action" onclick="showScreen('screen-add-customer')">+ Add Customer</button>
+<button class="btn-secondary" onclick="showScreen('screen-add-vehicle')">+ Add Vehicle</button>
+<button class="btn-secondary" onclick="showScreen('screen-customers')">Customer Lookup</button>
+</div></div>
+</section>
+
+<section id="screen-add-customer" hidden>
+<div class="breadcrumb"><button class="btn-back" onclick="showScreen('screen-admin-dashboard')">← Dashboard</button></div>
+<div class="view-header"><h2>Add Customer</h2><p>Create a customer record.</p></div>
+<form class="management-card" onsubmit="createCustomer(event)"><div class="management-grid">
+<div><label>Full Name *</label><input id="newCustomerName" required></div>
+<div><label>Email *</label><input id="newCustomerEmail" type="email" required></div>
+<div><label>Phone</label><input id="newCustomerPhone"></div>
+<div><label>Company</label><input id="newCustomerCompany"></div>
+<div><label>Tier</label><select id="newCustomerTier"><option>Standard</option><option>Pro</option><option>Enterprise</option></select></div>
+<div><label>Status</label><select id="newCustomerStatus"><option>Active</option><option>Inactive</option></select></div>
+</div><div class="management-actions"><button type="button" class="btn-secondary" onclick="showScreen('screen-admin-dashboard')">Cancel</button><button class="btn-action">Create Customer</button></div></form>
+</section>
+
+<section id="screen-customer-details" hidden>
+<div class="breadcrumb"><button class="btn-back" onclick="showScreen('screen-customers')">← Customers</button></div>
+<div class="view-header"><h2 id="adminCustomerDetailsTitle">Customer</h2><p id="adminCustomerDetailsSubtitle"></p></div>
+<div class="management-card"><div id="adminCustomerDetails" class="detail-grid"></div>
+<div class="management-actions" style="justify-content:flex-start"><button class="btn-action" onclick="openEditCustomer()">Edit Customer</button><button class="btn-secondary" onclick="openAddVehicleForCustomer()">+ Add Vehicle</button></div></div>
+<div class="management-card"><h3 style="margin-bottom:1rem">Registered Vehicles</h3><div id="adminCustomerVehicles" class="management-list"></div></div>
+</section>
+
+<section id="screen-edit-customer" hidden>
+<div class="breadcrumb"><button class="btn-back" onclick="showScreen('screen-customer-details')">← Customer</button></div>
+<div class="view-header"><h2>Edit Customer</h2><p>Update customer information.</p></div>
+<form class="management-card" onsubmit="saveCustomerEdits(event)"><div class="management-grid">
+<div><label>Full Name *</label><input id="editCustomerName" required></div>
+<div><label>Email *</label><input id="editCustomerEmail" type="email" required></div>
+<div><label>Phone</label><input id="editCustomerPhone"></div>
+<div><label>Company</label><input id="editCustomerCompany"></div>
+<div><label>Tier</label><select id="editCustomerTier"><option>Standard</option><option>Pro</option><option>Enterprise</option></select></div>
+<div><label>Status</label><select id="editCustomerStatus"><option>Active</option><option>Inactive</option></select></div>
+</div><div class="management-actions"><button type="button" class="btn-secondary" onclick="showScreen('screen-customer-details')">Cancel</button><button class="btn-action">Save Changes</button></div></form>
+</section>
+
+<section id="screen-add-vehicle" hidden>
+<div class="breadcrumb"><button class="btn-back" onclick="showScreen('screen-admin-dashboard')">← Dashboard</button></div>
+<div class="view-header"><h2>Add Vehicle</h2><p>Register a vehicle and attach it to a customer.</p></div>
+<form class="management-card" onsubmit="createVehicle(event)"><div class="management-grid">
+<div class="full"><label>Customer *</label><select id="newVehicleCustomer" required></select></div>
+<div><label>Vehicle ID / Device ID *</label><input id="newVehicleId" required></div>
+<div><label>VIN</label><input id="newVehicleVin"></div>
+<div><label>Make *</label><input id="newVehicleMake" required></div>
+<div><label>Model *</label><input id="newVehicleModel" required></div>
+<div><label>Year *</label><input id="newVehicleYear" type="number" required></div>
+<div><label>License Plate</label><input id="newVehiclePlate"></div>
+<div><label>Mileage</label><input id="newVehicleMileage" placeholder="0 mi"></div>
+<div><label>Status</label><select id="newVehicleStatus"><option>Active</option><option>Inactive</option><option>Maintenance</option></select></div>
+</div><div class="management-actions"><button type="button" class="btn-secondary" onclick="showScreen('screen-admin-dashboard')">Cancel</button><button class="btn-action">Add Vehicle</button></div></form>
+</section>
+
+<section id="screen-edit-vehicle" hidden>
+<div class="breadcrumb"><button class="btn-back" onclick="showScreen('screen-customer-details')">← Customer</button></div>
+<div class="view-header"><h2>Edit Vehicle</h2><p>Update vehicle information.</p></div>
+<form class="management-card" onsubmit="saveVehicleEdits(event)"><div class="management-grid">
+<div><label>Vehicle ID / Device ID</label><input id="editVehicleId" disabled></div>
+<div><label>VIN</label><input id="editVehicleVin"></div>
+<div><label>Make *</label><input id="editVehicleMake" required></div>
+<div><label>Model *</label><input id="editVehicleModel" required></div>
+<div><label>Year *</label><input id="editVehicleYear" type="number" required></div>
+<div><label>License Plate</label><input id="editVehiclePlate"></div>
+<div><label>Mileage</label><input id="editVehicleMileage"></div>
+<div><label>Status</label><select id="editVehicleStatus"><option>Active</option><option>Inactive</option><option>Maintenance</option></select></div>
+</div><div class="management-actions"><button type="button" class="btn-secondary" onclick="showScreen('screen-customer-details')">Cancel</button><button class="btn-action">Save Changes</button></div></form>
+</section>
+
+<section id="screen-customers">
           <div class="view-header">
             <h2>Customer Lookup</h2>
             <p>
@@ -671,13 +781,10 @@
                 <span id="summaryCustCarsCount"></span>
               </div>
             </div>
-            <button
-              class="btn-action"
-              style="width: 100%; text-align: center"
-              onclick="confirmCustomerSelection()"
-            >
-              View Vehicles for this Customer →
-            </button>
+            <div class="management-actions" style="justify-content:stretch">
+<button class="btn-action" style="flex:1" onclick="confirmCustomerSelection()">View Vehicles →</button>
+<button class="btn-secondary" style="flex:1" onclick="openCustomerDetails()">Manage Customer</button>
+</div>
           </div>
         </section>
         <section id="screen-vehicles" hidden>
@@ -2119,6 +2226,7 @@
       ];
       let activeCustomer = null;
       let activeCar = null;
+      loadMockDatabase();
 
 /*
   These values remember the current table state.
@@ -2131,9 +2239,9 @@ let telemetrySortDirection = "asc";
       /* Screen navigation: hides all dashboard screens and shows the requested one. */
 function showScreen(screenIdToShow) {
         const screens = [
-          "screen-customers",
-          "screen-vehicles",
-          "screen-telemetry",
+          "screen-admin-dashboard","screen-customers","screen-customer-details",
+          "screen-edit-customer","screen-add-customer","screen-vehicles",
+          "screen-add-vehicle","screen-edit-vehicle","screen-telemetry",
         ];
         screens.forEach((id) => {
           const el = document.getElementById(id);
@@ -2171,7 +2279,7 @@ function handleCredentialResponse(response) {
         document.getElementById("view-authenticated").hidden = false;
         document.getElementById("customerSearchInput").value = "";
         document.getElementById("selectedCustomerSummary").hidden = true;
-        showScreen("screen-customers");
+        refreshAdminDashboard();populateVehicleCustomerSelect();showScreen("screen-admin-dashboard");
       }
       /* Google logout: hides the dashboard and returns to the login screen. */
 function handleSignOut() {
@@ -2179,7 +2287,23 @@ function handleSignOut() {
         document.getElementById("view-authenticated").hidden = true;
         document.getElementById("view-unauthenticated").hidden = false;
       }
-      /* Customer search: finds customers matching what the user has typed. */
+      
+function saveMockDatabase(){localStorage.setItem("telemetryHubDatabase",JSON.stringify(MOCK_DATABASE))}
+function loadMockDatabase(){try{const s=localStorage.getItem("telemetryHubDatabase");if(s){const p=JSON.parse(s);if(Array.isArray(p)){MOCK_DATABASE.length=0;p.forEach(c=>MOCK_DATABASE.push(c))}}}catch(e){console.warn(e)}}
+function refreshAdminDashboard(){const v=MOCK_DATABASE.flatMap(c=>c.cars||[]);document.getElementById("adminCustomerCount").textContent=MOCK_DATABASE.length;document.getElementById("adminVehicleCount").textContent=v.length;document.getElementById("adminActiveVehicleCount").textContent=v.filter(x=>x.status==="Active").length}
+function populateVehicleCustomerSelect(){const s=document.getElementById("newVehicleCustomer");if(!s)return;s.innerHTML=MOCK_DATABASE.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}${c.company?" — "+escapeHtml(c.company):""}</option>`).join("");if(activeCustomer)s.value=String(activeCustomer.id)}
+function createCustomer(e){e.preventDefault();const c={id:Date.now(),name:newCustomerName.value.trim(),email:newCustomerEmail.value.trim(),phone:newCustomerPhone.value.trim(),company:newCustomerCompany.value.trim(),tier:newCustomerTier.value,status:newCustomerStatus.value,cars:[]};MOCK_DATABASE.push(c);activeCustomer=c;saveMockDatabase();refreshAdminDashboard();renderAdminCustomerDetails();e.target.reset();showScreen("screen-customer-details")}
+function openCustomerDetails(){if(!activeCustomer)return;renderAdminCustomerDetails();showScreen("screen-customer-details")}
+function renderAdminCustomerDetails(){if(!activeCustomer)return;adminCustomerDetailsTitle.textContent=activeCustomer.name;adminCustomerDetailsSubtitle.textContent=`${activeCustomer.company||"Individual customer"} • Customer ID ${activeCustomer.id}`;adminCustomerDetails.innerHTML=`<div><b>Email</b>${escapeHtml(activeCustomer.email||"—")}</div><div><b>Phone</b>${escapeHtml(activeCustomer.phone||"—")}</div><div><b>Company</b>${escapeHtml(activeCustomer.company||"—")}</div><div><b>Tier</b>${escapeHtml(activeCustomer.tier||"—")}</div><div><b>Status</b>${escapeHtml(activeCustomer.status||"Active")}</div><div><b>Vehicles</b>${activeCustomer.cars?.length||0}</div>`;const cars=activeCustomer.cars||[];adminCustomerVehicles.innerHTML=cars.length?cars.map(car=>`<div class="management-row"><div><div class="management-row-title">${escapeHtml(`${car.year||""} ${car.make||""} ${car.model||""}`.trim())}</div><div class="management-row-sub">${escapeHtml(car.plate||"No plate")} • ${escapeHtml(car.status||"Active")} • ID ${escapeHtml(car.id)}</div></div><div class="management-row-actions"><button class="btn-secondary" onclick="openEditVehicle('${String(car.id).replace(/'/g,"\\'")}')">Edit</button><button class="btn-action" onclick="openVehicleTelemetryFromAdmin('${String(car.id).replace(/'/g,"\\'")}')">Telemetry</button></div></div>`).join(""):"<div style='color:#94a3b8'>No vehicles registered.</div>"}
+function openEditCustomer(){if(!activeCustomer)return;editCustomerName.value=activeCustomer.name||"";editCustomerEmail.value=activeCustomer.email||"";editCustomerPhone.value=activeCustomer.phone||"";editCustomerCompany.value=activeCustomer.company||"";editCustomerTier.value=activeCustomer.tier||"Standard";editCustomerStatus.value=activeCustomer.status||"Active";showScreen("screen-edit-customer")}
+function saveCustomerEdits(e){e.preventDefault();if(!activeCustomer)return;activeCustomer.name=editCustomerName.value.trim();activeCustomer.email=editCustomerEmail.value.trim();activeCustomer.phone=editCustomerPhone.value.trim();activeCustomer.company=editCustomerCompany.value.trim();activeCustomer.tier=editCustomerTier.value;activeCustomer.status=editCustomerStatus.value;saveMockDatabase();renderAdminCustomerDetails();showScreen("screen-customer-details")}
+function openAddVehicleForCustomer(){populateVehicleCustomerSelect();showScreen("screen-add-vehicle")}
+function createVehicle(e){e.preventDefault();const c=MOCK_DATABASE.find(x=>x.id===Number(newVehicleCustomer.value));if(!c)return;const v={id:newVehicleId.value.trim(),vin:newVehicleVin.value.trim(),make:newVehicleMake.value.trim(),model:newVehicleModel.value.trim(),year:Number(newVehicleYear.value),plate:newVehiclePlate.value.trim(),mileage:newVehicleMileage.value.trim()||"0 mi",status:newVehicleStatus.value,telemetry:[]};c.cars=c.cars||[];c.cars.push(v);activeCustomer=c;activeCar=v;saveMockDatabase();refreshAdminDashboard();renderAdminCustomerDetails();e.target.reset();showScreen("screen-customer-details")}
+function openEditVehicle(id){if(!activeCustomer)return;activeCar=activeCustomer.cars.find(c=>String(c.id)===String(id));if(!activeCar)return;editVehicleId.value=activeCar.id||"";editVehicleVin.value=activeCar.vin||"";editVehicleMake.value=activeCar.make||"";editVehicleModel.value=activeCar.model||"";editVehicleYear.value=activeCar.year||"";editVehiclePlate.value=activeCar.plate||"";editVehicleMileage.value=activeCar.mileage||"";editVehicleStatus.value=activeCar.status||"Active";showScreen("screen-edit-vehicle")}
+function saveVehicleEdits(e){e.preventDefault();if(!activeCar)return;activeCar.vin=editVehicleVin.value.trim();activeCar.make=editVehicleMake.value.trim();activeCar.model=editVehicleModel.value.trim();activeCar.year=Number(editVehicleYear.value);activeCar.plate=editVehiclePlate.value.trim();activeCar.mileage=editVehicleMileage.value.trim();activeCar.status=editVehicleStatus.value;saveMockDatabase();renderAdminCustomerDetails();showScreen("screen-customer-details")}
+function openVehicleTelemetryFromAdmin(id){if(!activeCustomer)return;activeCar=activeCustomer.cars.find(c=>String(c.id)===String(id));if(activeCar)showTelemetryScreen()}
+
+/* Customer search: finds customers matching what the user has typed. */
 function onCustomerSearchInput() {
         const query = document
           .getElementById("customerSearchInput")

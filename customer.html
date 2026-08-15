@@ -1,57 +1,1248 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>JaFaFa — Customer Portal</title>
-<style>
-:root{--bg:#030712;--panel:#08111f;--line:rgba(148,163,184,.14);--line2:rgba(56,189,248,.28);--text:#e5eef8;--muted:#8ea0b8;--cyan:#38bdf8;--cyan2:#22d3ee;--green:#4ade80;--yellow:#fbbf24;--red:#fb7185}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 15% 0%,rgba(14,165,233,.1),transparent 28%),radial-gradient(circle at 90% 20%,rgba(34,211,238,.07),transparent 25%),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}button,input{font:inherit}button{cursor:pointer}.hidden{display:none!important}
-.top{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--line);background:rgba(3,7,18,.78);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}.nav{max-width:1250px;margin:auto;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{font-weight:950;letter-spacing:.08em}.brand span{color:var(--cyan)}.navlinks{display:flex;gap:6px}.navlinks button,.logout{border:1px solid transparent;background:transparent;color:var(--muted);padding:9px 12px;border-radius:10px;font-size:.78rem;font-weight:800}.navlinks button:hover,.navlinks button.active{color:#dff7ff;background:rgba(56,189,248,.08);border-color:var(--line2)}.userchip{display:flex;align-items:center;gap:9px;font-size:.76rem;color:var(--muted)}.avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--cyan),var(--cyan2));color:#02111b;font-weight:950}
-main{max-width:1250px;margin:auto;padding:38px 22px 70px}.view{display:none}.view.active{display:block}.eyebrow{font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan);font-weight:900}.hero{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:28px}.hero h1{font-size:clamp(2rem,5vw,3.6rem);line-height:1;margin:8px 0 10px;letter-spacing:-.05em}.hero p{color:var(--muted);max-width:650px}.btn{border:1px solid var(--line2);border-radius:11px;padding:10px 14px;background:rgba(56,189,248,.09);color:#dff8ff;font-weight:900;font-size:.76rem}.btn:hover{background:rgba(56,189,248,.16)}.btn.secondary{background:rgba(15,23,42,.65);border-color:var(--line);color:#cbd5e1}
-.grid{display:grid;gap:12px}.stats{grid-template-columns:repeat(4,1fr)}.stat,.card{border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,rgba(12,23,40,.88),rgba(7,14,26,.9));box-shadow:0 25px 80px rgba(0,0,0,.25)}.stat{padding:18px}.stat b{font-size:1.7rem}.stat span{display:block;color:var(--muted);font-size:.66rem;text-transform:uppercase;letter-spacing:.1em;margin-top:5px}.section{margin-top:30px}.sectionhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.sectionhead h2{margin:0;font-size:1rem}.sectionhead span{color:var(--muted);font-size:.7rem}.vehicles{grid-template-columns:repeat(2,1fr)}.vehicle{padding:20px;position:relative;overflow:hidden;transition:.25s transform,.25s border-color}.vehicle:hover{transform:translateY(-3px);border-color:var(--line2)}.vehiclehead{display:flex;justify-content:space-between;gap:15px}.vehicle h3{margin:0;font-size:1.05rem}.reg{color:var(--muted);font-size:.7rem;margin-top:4px}.status{display:inline-flex;align-items:center;gap:6px;font-size:.65rem;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}.dot.warn{background:var(--yellow);box-shadow:0 0 10px var(--yellow)}.dot.off{background:#64748b;box-shadow:none}.health{margin:18px 0}.healthline{display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted)}.track{height:8px;border-radius:99px;background:rgba(148,163,184,.12);overflow:hidden;margin-top:7px}.fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--cyan2));border-radius:inherit}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.metric{padding:10px;border:1px solid var(--line);border-radius:10px;background:rgba(3,7,18,.3)}.metric small{display:block;color:#64748b;font-size:.58rem;text-transform:uppercase}.metric b{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.78rem}.vehiclefoot{display:flex;justify-content:flex-end;margin-top:15px}
-.detailhero{display:flex;justify-content:space-between;align-items:end;gap:20px}.detailhero h1{margin:7px 0;font-size:2.4rem;letter-spacing:-.04em}.detailgrid{grid-template-columns:1.2fr .8fr}.telemetry{grid-template-columns:repeat(3,1fr)}.telemetry .metric{padding:16px}.telemetry .metric b{font-size:1.05rem}.panel{padding:20px}.healthscore{font-size:3rem;font-weight:950;letter-spacing:-.06em}.bars{display:grid;gap:12px;margin-top:16px}.barrow{display:grid;grid-template-columns:100px 1fr 40px;align-items:center;gap:10px;font-size:.7rem;color:var(--muted)}.barrow .track{margin:0}.alert{display:flex;gap:12px;padding:13px;border:1px solid rgba(251,191,36,.2);border-radius:12px;background:rgba(251,191,36,.05);margin-top:9px}.alert b{font-size:.75rem}.alert span{display:block;color:var(--muted);font-size:.65rem;margin-top:3px}.chart{height:260px;position:relative;overflow:hidden}.chart svg{width:100%;height:100%}.chart .gridline{stroke:rgba(148,163,184,.09);stroke-width:1}.chart .line{fill:none;stroke:var(--cyan);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.chartlabel{position:absolute;top:15px;right:15px;color:var(--muted);font-size:.65rem}.log{overflow:auto}.log table{width:100%;border-collapse:collapse;font-size:.7rem}.log th,.log td{padding:10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}.log th{color:#64748b;text-transform:uppercase;font-size:.6rem}.log td{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.field label{display:block;color:#8ea0b8;font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}.field input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#050c18;color:var(--text);outline:none}.field input:focus{border-color:var(--line2)}.profile{max-width:800px}.notice{padding:13px 15px;border:1px solid var(--line2);border-radius:12px;background:rgba(56,189,248,.05);color:#9ddff7;font-size:.72rem;margin-bottom:16px}
-.auth{min-height:100vh;display:grid;place-items:center;padding:25px;background:radial-gradient(circle at 50% 15%,rgba(56,189,248,.12),transparent 35%)}.authbox{width:min(460px,100%);padding:28px;border:1px solid var(--line2);border-radius:22px;background:rgba(7,14,26,.82);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);box-shadow:0 35px 120px rgba(0,0,0,.55)}.authbox h1{font-size:2rem;margin:10px 0}.authbox p{color:var(--muted);font-size:.78rem;line-height:1.6}.authform{display:grid;gap:12px;margin-top:22px}.authform .btn{width:100%;padding:13px}.authswitch{text-align:center;color:var(--muted);font-size:.7rem;margin-top:15px}.link{border:0;background:none;color:var(--cyan);font-weight:800}.demo{margin-top:16px;padding:10px;border:1px dashed var(--line);border-radius:10px;color:#64748b;font-size:.65rem}.toast{position:fixed;right:20px;bottom:20px;z-index:100;padding:12px 15px;border:1px solid var(--line2);border-radius:12px;background:rgba(7,14,26,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);font-size:.72rem;opacity:0;transform:translateY(12px);pointer-events:none;transition:.25s}.toast.show{opacity:1;transform:none}
-@media(max-width:850px){.stats{grid-template-columns:repeat(2,1fr)}.vehicles,.detailgrid{grid-template-columns:1fr}.navlinks{display:none}.hero,.detailhero{align-items:flex-start;flex-direction:column}.telemetry{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){main{padding:25px 14px 60px}.stats,.telemetry,.formgrid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.nav{padding:12px 14px}.userchip span{display:none}.barrow{grid-template-columns:80px 1fr 35px}}
-</style>
-</head>
-<body>
-<section id="authView" class="auth">
-<div class="authbox"><div class="brand">JA<span>FA</span>FA</div><div class="eyebrow" id="authEyebrow">Customer Portal</div><h1 id="authTitle">Welcome back.</h1><p id="authText">Sign in to see your vehicles, live telemetry, health status and alerts.</p>
-<form id="authForm" class="authform"><div class="field hidden" id="nameField"><label>Full name</label><input id="authName" autocomplete="name" placeholder="Your name"></div><div class="field"><label>Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required></div><div class="field"><label>Password</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="••••••••" required minlength="6"></div><button class="btn" id="authSubmit">Sign in</button></form>
-<div class="authswitch"><span id="switchText">Don't have an account?</span> <button class="link" id="switchAuth" type="button">Create one</button></div><div class="demo">Demo mode: authentication and vehicle data are stored locally until the JaFaFa backend is connected.</div></div>
-</section>
-<div id="app" class="hidden">
-<header class="top"><nav class="nav"><div class="brand">JA<span>FA</span>FA</div><div class="navlinks"><button data-view="dashboard" class="active">Dashboard</button><button data-view="vehicles">My Vehicles</button><button data-view="account">My Account</button></div><div class="userchip"><div class="avatar" id="avatar">M</div><span id="navName">Customer</span><button class="logout" id="logout">Sign out</button></div></nav></header>
-<main>
-<section id="dashboard" class="view active"><div class="hero"><div><div class="eyebrow">Customer dashboard</div><h1>Good to see you<span id="heroName"></span>.</h1><p>Your vehicles, health and telemetry — all in one place.</p></div><button class="btn" data-view="vehicles">Manage vehicles</button></div>
-<div class="grid stats"><div class="stat"><b id="statVehicles">0</b><span>Your vehicles</span></div><div class="stat"><b id="statOnline">0</b><span>Online now</span></div><div class="stat"><b id="statWarnings">0</b><span>Warnings</span></div><div class="stat"><b id="statHealth">—</b><span>Fleet health</span></div></div>
-<div class="section"><div class="sectionhead"><h2>Your vehicles</h2><span>Current status</span></div><div id="dashboardVehicles" class="grid vehicles"></div></div>
-<div class="section"><div class="sectionhead"><h2>Recent alerts</h2><span>Latest activity</span></div><div id="dashboardAlerts"></div></div></section>
-<section id="vehicles" class="view"><div class="hero"><div><div class="eyebrow">Your garage</div><h1>My vehicles.</h1><p>View connected vehicles and manage the details attached to your JaFaFa account.</p></div><button class="btn" id="addVehicleBtn">+ Add vehicle</button></div><div id="vehicleList" class="grid vehicles"></div></section>
-<section id="vehicleDetail" class="view"><div class="detailhero"><div><div class="eyebrow">Vehicle telemetry</div><h1 id="detailName">Vehicle</h1><div id="detailStatus" class="status"><i class="dot"></i> ONLINE</div><div id="detailReg" class="reg"></div></div><button class="btn secondary" data-view="vehicles">← My vehicles</button></div>
-<div class="section grid telemetry" id="detailMetrics"></div><div class="section grid detailgrid"><div class="card panel"><div class="sectionhead"><h2>Vehicle health</h2><span id="detailHealthLabel">GOOD</span></div><div class="healthscore" id="detailHealth">—</div><div class="bars" id="healthBars"></div></div><div class="card panel"><div class="sectionhead"><h2>Active alerts</h2></div><div id="detailAlerts"></div></div></div>
-<div class="section card panel"><div class="sectionhead"><h2>Telemetry history</h2><span>Last 12 samples</span></div><div class="chart" id="detailChart"></div></div><div class="section card panel log"><div class="sectionhead"><h2>Telemetry log</h2><span id="logCount"></span></div><table><thead><tr><th>Time</th><th>Speed</th><th>RPM</th><th>Coolant</th><th>Voltage</th><th>Load</th></tr></thead><tbody id="logBody"></tbody></table></div></section>
-<section id="account" class="view"><div class="hero"><div><div class="eyebrow">Account</div><h1>My account.</h1><p>Keep your customer information up to date.</p></div></div><div class="card panel profile"><div class="notice">Your account is currently running in local demo mode. These fields will sync to the customer record once the backend is connected.</div><form id="profileForm" class="formgrid"><div class="field"><label>Full name</label><input id="profileName"></div><div class="field"><label>Email</label><input id="profileEmail" type="email"></div><div class="field"><label>Phone</label><input id="profilePhone" placeholder="+234..."></div><div class="field"><label>Customer ID</label><input id="profileId" disabled></div><div style="grid-column:1/-1"><button class="btn">Save profile</button></div></form></div></section>
-</main></div>
-<div id="vehicleModal" class="auth hidden" style="position:fixed;inset:0;z-index:80;background:rgba(2,6,16,.72)"><div class="authbox"><div class="eyebrow">Vehicle management</div><h1>Add vehicle.</h1><p>Add the vehicle information supplied with your JaFaFa device.</p><form id="vehicleForm" class="authform"><div class="formgrid"><div class="field"><label>Make</label><input id="vMake" required placeholder="BMW"></div><div class="field"><label>Model</label><input id="vModel" required placeholder="X5 E70"></div><div class="field"><label>Year</label><input id="vYear" type="number" min="1900" max="2100"></div><div class="field"><label>Registration</label><input id="vReg" placeholder="ABC-123-XY"></div></div><div class="field"><label>JaFaFa device ID</label><input id="vDevice" required placeholder="00:10:CC:4F:36:03"></div><button class="btn">Add vehicle</button><button type="button" class="btn secondary" id="closeVehicle">Cancel</button></form></div></div>
-<div id="toast" class="toast"></div>
-<script>
-const KEY="jafafa_customer_portal_v1";
-const telemetry=()=>Array.from({length:12},(_,i)=>({timestamp:new Date(Date.now()-(11-i)*300000).toISOString(),speed:Math.max(0,Math.round(30+Math.sin(i*.8)*15)),rpm:Math.round(1800+Math.sin(i*.7)*450),coolant:Math.round(91+Math.sin(i*.45)*4),voltage:Number((13.7+Math.sin(i*.6)*.25).toFixed(1)),load:Math.round(25+Math.sin(i*.55)*12)}));
-const seed={account:{id:"JF-CUS-0001",name:"Customer",email:"customer@jafafa.demo",phone:""},vehicles:[{id:"JF-V-0001",make:"BMW",model:"X5 E70",year:2010,registration:"ABC-123-XY",deviceId:"00:10:CC:4F:36:03",health:91,status:"online",telemetry:telemetry()},{id:"JF-V-0002",make:"Toyota",model:"Corolla",year:2016,registration:"XYZ-456-AA",deviceId:"00:10:CC:4F:36:04",health:84,status:"warning",telemetry:telemetry()},{id:"JF-V-0003",make:"Mercedes-Benz",model:"C200",year:2018,registration:"LAG-778-KD",deviceId:"00:10:CC:4F:36:05",health:96,status:"online",telemetry:telemetry()}]};
-let state=JSON.parse(localStorage.getItem(KEY)||"null")||seed,mode="signin",selected=null;
-const $=id=>document.getElementById(id);function save(){localStorage.setItem(KEY,JSON.stringify(state))}function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}function latest(v){return [...(v.telemetry||[])].sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp))[0]||null}function toast(t){$("toast").textContent=t;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2200)}
-function meta(v){return v.status==="offline"?["OFFLINE","off"]:v.status==="warning"?["WARNING","warn"]:["ONLINE",""]}function card(v){const t=latest(v),[s,c]=meta(v);return `<article class="card vehicle"><div class="vehiclehead"><div><h3>${esc(v.make)} ${esc(v.model)}</h3><div class="reg">${esc(v.registration||"No registration")} · ${esc(v.year||"Year N/A")}</div></div><div class="status"><i class="dot ${c}"></i>${s}</div></div><div class="health"><div class="healthline"><span>Vehicle health</span><b>${v.health}/100</b></div><div class="track"><div class="fill" style="width:${v.health}%"></div></div></div><div class="metrics"><div class="metric"><small>Speed</small><b>${t?.speed??"—"} km/h</b></div><div class="metric"><small>RPM</small><b>${t?.rpm??"—"}</b></div><div class="metric"><small>Voltage</small><b>${t?.voltage??"—"} V</b></div></div><div class="vehiclefoot"><button class="btn" onclick="openVehicle('${v.id}')">View vehicle →</button></div></article>`}
-function renderDashboard(){const n=state.account.name||"Customer";$("heroName").textContent=", "+esc(n.split(" ")[0]);$("navName").textContent=n;$("avatar").textContent=n.charAt(0).toUpperCase();$("statVehicles").textContent=state.vehicles.length;$("statOnline").textContent=state.vehicles.filter(v=>v.status==="online").length;$("statWarnings").textContent=state.vehicles.filter(v=>v.status==="warning").length;$("statHealth").textContent=state.vehicles.length?Math.round(state.vehicles.reduce((a,v)=>a+v.health,0)/state.vehicles.length):"—";$("dashboardVehicles").innerHTML=state.vehicles.map(card).join("")||empty("Your garage is empty. Add your first vehicle.");const w=state.vehicles.filter(v=>v.status==="warning");$("dashboardAlerts").innerHTML=w.length?`<div class="alert"><div>🟠</div><div><b>Vehicle health warning</b><span>${w.length} vehicle${w.length>1?"s":""} currently need attention.</span></div></div>`:`<div class="notice">No active warnings. Your fleet is looking good.</div>`}
-function renderVehicles(){$("vehicleList").innerHTML=state.vehicles.map(card).join("")||empty("Your garage is empty. Add a vehicle to get started.")}function empty(t){return `<div class="card panel"><span style="color:var(--muted);font-size:.75rem">${t}</span></div>`}
-function openVehicle(id){selected=state.vehicles.find(v=>v.id===id);if(!selected)return;renderDetail();navigate("vehicleDetail")}function renderDetail(){const v=selected,t=latest(v),[s,c]=meta(v);$("detailName").textContent=`${v.make} ${v.model}`;$("detailReg").textContent=`${v.registration||"No registration"} · Device ${v.deviceId}`;$("detailStatus").innerHTML=`<i class="dot ${c}"></i> ${s}`;$("detailMetrics").innerHTML=[["Speed",`${t?.speed??"—"} km/h`],["RPM",t?.rpm??"—"],["Coolant",`${t?.coolant??"—"} °C`],["Voltage",`${t?.voltage??"—"} V`],["Engine load",`${t?.load??"—"} %`],["Device",v.deviceId]].map(x=>`<div class="card metric"><small>${x[0]}</small><b>${esc(x[1])}</b></div>`).join("");$("detailHealth").textContent=v.health;$("detailHealthLabel").textContent=v.health>=90?"EXCELLENT":v.health>=80?"GOOD":"NEEDS ATTENTION";$("healthBars").innerHTML=[["Engine",Math.min(100,v.health+2)],["Cooling",Math.max(0,v.health-3)],["Electrical",Math.min(100,v.health+4)],["Performance",v.health]].map(c=>`<div class="barrow"><span>${c[0]}</span><div class="track"><div class="fill" style="width:${c[1]}%"></div></div><b>${c[1]}</b></div>`).join("");$("detailAlerts").innerHTML=v.status==="warning"?`<div class="alert"><div>🟠</div><div><b>Vehicle health warning</b><span>Telemetry indicates this vehicle needs attention.</span></div></div>`:`<div class="notice">No active alerts for this vehicle.</div>`;renderChart(v.telemetry||[]);$("logCount").textContent=`${v.telemetry?.length||0} samples`;$("logBody").innerHTML=(v.telemetry||[]).slice().reverse().map(x=>`<tr><td>${new Date(x.timestamp).toLocaleTimeString()}</td><td>${x.speed}</td><td>${x.rpm}</td><td>${x.coolant} °C</td><td>${x.voltage} V</td><td>${x.load}%</td></tr>`).join("")}
-function renderChart(d){const vals=d.map(x=>x.rpm),min=Math.min(...vals)-100,max=Math.max(...vals)+100,w=900,h=250,pts=vals.map((v,i)=>`${35+(i/(vals.length-1||1))*830},${h-25-((v-min)/(max-min))*180}`).join(" ");$("detailChart").innerHTML=`<div class="chartlabel">RPM · last 12 samples</div><svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><line class="gridline" x1="35" y1="55" x2="865" y2="55"/><line class="gridline" x1="35" y1="115" x2="865" y2="115"/><line class="gridline" x1="35" y1="175" x2="865" y2="175"/><polyline class="line" points="${pts}"/></svg>`}
-function navigate(v){document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));$(v).classList.add("active");document.querySelectorAll(".navlinks button").forEach(x=>x.classList.toggle("active",x.dataset.view===v));if(v==="dashboard")renderDashboard();if(v==="vehicles")renderVehicles();if(v==="account")renderAccount();scrollTo({top:0,behavior:"smooth"})}function renderAccount(){$("profileName").value=state.account.name||"";$("profileEmail").value=state.account.email||"";$("profilePhone").value=state.account.phone||"";$("profileId").value=state.account.id}
-function enter(){$("authView").classList.add("hidden");$("app").classList.remove("hidden");renderDashboard();renderAccount()}function setAuth(m){mode=m;const s=m==="signup";$("nameField").classList.toggle("hidden",!s);$("authEyebrow").textContent=s?"Create your account":"Customer Portal";$("authTitle").textContent=s?"Create your JaFaFa account.":"Welcome back.";$("authText").textContent=s?"Create an account to manage your vehicles and view their telemetry.":"Sign in to see your vehicles, health status and alerts.";$("authSubmit").textContent=s?"Create account":"Sign in";$("switchText").textContent=s?"Already have an account?":"Don't have an account?";$("switchAuth").textContent=s?"Sign in":"Create one";$("authPassword").autocomplete=s?"new-password":"current-password"}
-$("authForm").addEventListener("submit",e=>{e.preventDefault();if(mode==="signup"){state.account={id:"JF-CUS-"+String(Date.now()).slice(-6),name:$("authName").value.trim()||"Customer",email:$("authEmail").value.trim(),phone:""};save();toast("Account created");enter()}else{if(!$("authEmail").value||!$("authPassword").value)return;state.account.email=$("authEmail").value.trim();save();toast("Signed in");enter()}});$("switchAuth").onclick=()=>setAuth(mode==="signup"?"signin":"signup");$("logout").onclick=()=>{$("app").classList.add("hidden");$("authView").classList.remove("hidden");$("authForm").reset();setAuth("signin")};document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>navigate(b.dataset.view)));
-$("addVehicleBtn").onclick=()=>$("vehicleModal").classList.remove("hidden");$("closeVehicle").onclick=()=>$("vehicleModal").classList.add("hidden");$("vehicleForm").addEventListener("submit",e=>{e.preventDefault();state.vehicles.push({id:"JF-V-"+String(Date.now()).slice(-6),make:$("vMake").value.trim(),model:$("vModel").value.trim(),year:$("vYear").value,registration:$("vReg").value.trim(),deviceId:$("vDevice").value.trim(),health:100,status:"online",telemetry:telemetry()});save();$("vehicleForm").reset();$("vehicleModal").classList.add("hidden");renderVehicles();renderDashboard();toast("Vehicle added")});$("profileForm").addEventListener("submit",e=>{e.preventDefault();state.account.name=$("profileName").value.trim();state.account.email=$("profileEmail").value.trim();state.account.phone=$("profilePhone").value.trim();save();renderAccount();renderDashboard();toast("Profile saved")});setAuth("signin");
-</script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Cross-Origin-Opener-Policy"
+      content="same-origin-allow-popups"
+    />
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <title>JaFaFa — Customer Portal</title>
+    <style>
+      :root {
+        --bg: #030712;
+        --panel: #08111f;
+        --line: rgba(148, 163, 184, 0.14);
+        --line2: rgba(56, 189, 248, 0.28);
+        --text: #e5eef8;
+        --muted: #8ea0b8;
+        --cyan: #38bdf8;
+        --cyan2: #22d3ee;
+        --green: #4ade80;
+        --yellow: #fbbf24;
+        --red: #fb7185;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background:
+          radial-gradient(
+            circle at 15% 0%,
+            rgba(14, 165, 233, 0.1),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at 90% 20%,
+            rgba(34, 211, 238, 0.07),
+            transparent 25%
+          ),
+          var(--bg);
+        color: var(--text);
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      button,
+      input {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .top {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        border-bottom: 1px solid var(--line);
+        background: rgba(3, 7, 18, 0.78);
+        -webkit-backdrop-filter: blur(18px);
+        backdrop-filter: blur(18px);
+      }
+      .nav {
+        max-width: 1250px;
+        margin: auto;
+        padding: 14px 22px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+      .brand {
+        font-weight: 950;
+        letter-spacing: 0.08em;
+      }
+      .brand span {
+        color: var(--cyan);
+      }
+      .navlinks {
+        display: flex;
+        gap: 6px;
+      }
+      .navlinks button,
+      .logout {
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--muted);
+        padding: 9px 12px;
+        border-radius: 10px;
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+      .navlinks button:hover,
+      .navlinks button.active {
+        color: #dff7ff;
+        background: rgba(56, 189, 248, 0.08);
+        border-color: var(--line2);
+      }
+      .userchip {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 0.76rem;
+        color: var(--muted);
+      }
+      .avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--cyan), var(--cyan2));
+        color: #02111b;
+        font-weight: 950;
+      }
+      main {
+        max-width: 1250px;
+        margin: auto;
+        padding: 38px 22px 70px;
+      }
+      .view {
+        display: none;
+      }
+      .view.active {
+        display: block;
+      }
+      .eyebrow {
+        font-size: 0.66rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        font-weight: 900;
+      }
+      .hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 24px;
+        margin-bottom: 28px;
+      }
+      .hero h1 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        line-height: 1;
+        margin: 8px 0 10px;
+        letter-spacing: -0.05em;
+      }
+      .hero p {
+        color: var(--muted);
+        max-width: 650px;
+      }
+      .btn {
+        border: 1px solid var(--line2);
+        border-radius: 11px;
+        padding: 10px 14px;
+        background: rgba(56, 189, 248, 0.09);
+        color: #dff8ff;
+        font-weight: 900;
+        font-size: 0.76rem;
+      }
+      .btn:hover {
+        background: rgba(56, 189, 248, 0.16);
+      }
+      .btn.secondary {
+        background: rgba(15, 23, 42, 0.65);
+        border-color: var(--line);
+        color: #cbd5e1;
+      }
+      .grid {
+        display: grid;
+        gap: 12px;
+      }
+      .stats {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      .stat,
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: linear-gradient(
+          180deg,
+          rgba(12, 23, 40, 0.88),
+          rgba(7, 14, 26, 0.9)
+        );
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+      }
+      .stat {
+        padding: 18px;
+      }
+      .stat b {
+        font-size: 1.7rem;
+      }
+      .stat span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.66rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-top: 5px;
+      }
+      .section {
+        margin-top: 30px;
+      }
+      .sectionhead {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .sectionhead h2 {
+        margin: 0;
+        font-size: 1rem;
+      }
+      .sectionhead span {
+        color: var(--muted);
+        font-size: 0.7rem;
+      }
+      .vehicles {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .vehicle {
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+        transition:
+          0.25s transform,
+          0.25s border-color;
+      }
+      .vehicle:hover {
+        transform: translateY(-3px);
+        border-color: var(--line2);
+      }
+      .vehiclehead {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+      }
+      .vehicle h3 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+      .reg {
+        color: var(--muted);
+        font-size: 0.7rem;
+        margin-top: 4px;
+      }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.65rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 10px var(--green);
+      }
+      .dot.warn {
+        background: var(--yellow);
+        box-shadow: 0 0 10px var(--yellow);
+      }
+      .dot.off {
+        background: #64748b;
+        box-shadow: none;
+      }
+      .health {
+        margin: 18px 0;
+      }
+      .healthline {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.7rem;
+        color: var(--muted);
+      }
+      .track {
+        height: 8px;
+        border-radius: 99px;
+        background: rgba(148, 163, 184, 0.12);
+        overflow: hidden;
+        margin-top: 7px;
+      }
+      .fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--cyan), var(--cyan2));
+        border-radius: inherit;
+      }
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .metric {
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(3, 7, 18, 0.3);
+      }
+      .metric small {
+        display: block;
+        color: #64748b;
+        font-size: 0.58rem;
+        text-transform: uppercase;
+      }
+      .metric b {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.78rem;
+      }
+      .vehiclefoot {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 15px;
+      }
+      .detailhero {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 20px;
+      }
+      .detailhero h1 {
+        margin: 7px 0;
+        font-size: 2.4rem;
+        letter-spacing: -0.04em;
+      }
+      .detailgrid {
+        grid-template-columns: 1.2fr 0.8fr;
+      }
+      .telemetry {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .telemetry .metric {
+        padding: 16px;
+      }
+      .telemetry .metric b {
+        font-size: 1.05rem;
+      }
+      .panel {
+        padding: 20px;
+      }
+      .healthscore {
+        font-size: 3rem;
+        font-weight: 950;
+        letter-spacing: -0.06em;
+      }
+      .bars {
+        display: grid;
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .barrow {
+        display: grid;
+        grid-template-columns: 100px 1fr 40px;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.7rem;
+        color: var(--muted);
+      }
+      .barrow .track {
+        margin: 0;
+      }
+      .alert {
+        display: flex;
+        gap: 12px;
+        padding: 13px;
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        border-radius: 12px;
+        background: rgba(251, 191, 36, 0.05);
+        margin-top: 9px;
+      }
+      .alert b {
+        font-size: 0.75rem;
+      }
+      .alert span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.65rem;
+        margin-top: 3px;
+      }
+      .chart {
+        height: 260px;
+        position: relative;
+        overflow: hidden;
+      }
+      .chart svg {
+        width: 100%;
+        height: 100%;
+      }
+      .chart .gridline {
+        stroke: rgba(148, 163, 184, 0.09);
+        stroke-width: 1;
+      }
+      .chart .line {
+        fill: none;
+        stroke: var(--cyan);
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .chartlabel {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        color: var(--muted);
+        font-size: 0.65rem;
+      }
+      .log {
+        overflow: auto;
+      }
+      .log table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.7rem;
+      }
+      .log th,
+      .log td {
+        padding: 10px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        white-space: nowrap;
+      }
+      .log th {
+        color: #64748b;
+        text-transform: uppercase;
+        font-size: 0.6rem;
+      }
+      .log td {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .formgrid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .field label {
+        display: block;
+        color: #8ea0b8;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 6px;
+      }
+      .field input {
+        width: 100%;
+        padding: 11px 12px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #050c18;
+        color: var(--text);
+        outline: none;
+      }
+      .field input:focus {
+        border-color: var(--line2);
+      }
+      .profile {
+        max-width: 800px;
+      }
+      .notice {
+        padding: 13px 15px;
+        border: 1px solid var(--line2);
+        border-radius: 12px;
+        background: rgba(56, 189, 248, 0.05);
+        color: #9ddff7;
+        font-size: 0.72rem;
+        margin-bottom: 16px;
+      }
+      .auth {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 25px;
+        background: radial-gradient(
+          circle at 50% 15%,
+          rgba(56, 189, 248, 0.12),
+          transparent 35%
+        );
+      }
+      .authbox {
+        width: min(460px, 100%);
+        padding: 28px;
+        border: 1px solid var(--line2);
+        border-radius: 22px;
+        background: rgba(7, 14, 26, 0.82);
+        -webkit-backdrop-filter: blur(22px);
+        backdrop-filter: blur(22px);
+        box-shadow: 0 35px 120px rgba(0, 0, 0, 0.55);
+      }
+      .authbox h1 {
+        font-size: 2rem;
+        margin: 10px 0;
+      }
+      .authbox p {
+        color: var(--muted);
+        font-size: 0.78rem;
+        line-height: 1.6;
+      }
+      .authform {
+        display: grid;
+        gap: 12px;
+        margin-top: 22px;
+      }
+      .authform .btn {
+        width: 100%;
+        padding: 13px;
+      }
+      .google-wrap {
+        margin-top: 14px;
+      }
+      .google-divider {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #64748b;
+        font-size: 0.62rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin: 14px 0;
+      }
+      .google-divider:before,
+      .google-divider:after {
+        content: "";
+        height: 1px;
+        background: var(--line);
+        flex: 1;
+      }
+      .google-button {
+        display: flex;
+        justify-content: center;
+        min-height: 44px;
+      }
+      .authswitch {
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.7rem;
+        margin-top: 15px;
+      }
+      .link {
+        border: 0;
+        background: none;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+      .demo {
+        margin-top: 16px;
+        padding: 10px;
+        border: 1px dashed var(--line);
+        border-radius: 10px;
+        color: #64748b;
+        font-size: 0.65rem;
+      }
+      .toast {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 100;
+        padding: 12px 15px;
+        border: 1px solid var(--line2);
+        border-radius: 12px;
+        background: rgba(7, 14, 26, 0.94);
+        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
+        font-size: 0.72rem;
+        opacity: 0;
+        transform: translateY(12px);
+        pointer-events: none;
+        transition: 0.25s;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: none;
+      }
+      @media (max-width: 850px) {
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .vehicles,
+        .detailgrid {
+          grid-template-columns: 1fr;
+        }
+        .navlinks {
+          display: none;
+        }
+        .hero,
+        .detailhero {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+        .telemetry {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 560px) {
+        main {
+          padding: 25px 14px 60px;
+        }
+        .stats,
+        .telemetry,
+        .formgrid {
+          grid-template-columns: 1fr;
+        }
+        .metrics {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .nav {
+          padding: 12px 14px;
+        }
+        .userchip span {
+          display: none;
+        }
+        .barrow {
+          grid-template-columns: 80px 1fr 35px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section id="authView" class="auth">
+      <div class="authbox">
+        <div class="brand">JA<span>FA</span>FA</div>
+        <div class="eyebrow" id="authEyebrow">Customer Portal</div>
+        <h1 id="authTitle">Welcome back.</h1>
+        <p id="authText">
+          Sign in to see your vehicles, live telemetry, health status and
+          alerts.
+        </p>
+        <form id="authForm" class="authform">
+          <div class="field hidden" id="nameField">
+            <label>Full name</label
+            ><input id="authName" autocomplete="name" placeholder="Your name" />
+          </div>
+          <div class="field">
+            <label>Email</label
+            ><input
+              id="authEmail"
+              type="email"
+              autocomplete="email"
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+          <div class="field">
+            <label>Password</label
+            ><input
+              id="authPassword"
+              type="password"
+              autocomplete="current-password"
+              placeholder="••••••••"
+              required
+              minlength="6"
+            />
+          </div>
+          <button class="btn" id="authSubmit">Sign in</button>
+        </form>
+        <div class="google-wrap">
+          <div class="google-divider"><span>or continue with</span></div>
+          <div id="googleSignIn" class="google-button"></div>
+        </div>
+        <div class="authswitch">
+          <span id="switchText">Don't have an account?</span>
+          <button class="link" id="switchAuth" type="button">Create one</button>
+        </div>
+        <div class="demo">
+          Demo mode: authentication and vehicle data are stored locally until
+          the JaFaFa backend is connected.
+        </div>
+      </div>
+    </section>
+    <div id="app" class="hidden">
+      <header class="top">
+        <nav class="nav">
+          <div class="brand">JA<span>FA</span>FA</div>
+          <div class="navlinks">
+            <button data-view="dashboard" class="active">Dashboard</button
+            ><button data-view="vehicles">My Vehicles</button
+            ><button data-view="account">My Account</button>
+          </div>
+          <div class="userchip">
+            <div class="avatar" id="avatar">M</div>
+            <span id="navName">Customer</span
+            ><button class="logout" id="logout">Sign out</button>
+          </div>
+        </nav>
+      </header>
+      <main>
+        <section id="dashboard" class="view active">
+          <div class="hero">
+            <div>
+              <div class="eyebrow">Customer dashboard</div>
+              <h1>Good to see you<span id="heroName"></span>.</h1>
+              <p>Your vehicles, health and telemetry — all in one place.</p>
+            </div>
+            <button class="btn" data-view="vehicles">Manage vehicles</button>
+          </div>
+          <div class="grid stats">
+            <div class="stat">
+              <b id="statVehicles">0</b><span>Your vehicles</span>
+            </div>
+            <div class="stat">
+              <b id="statOnline">0</b><span>Online now</span>
+            </div>
+            <div class="stat">
+              <b id="statWarnings">0</b><span>Warnings</span>
+            </div>
+            <div class="stat">
+              <b id="statHealth">—</b><span>Fleet health</span>
+            </div>
+          </div>
+          <div class="section">
+            <div class="sectionhead">
+              <h2>Your vehicles</h2>
+              <span>Current status</span>
+            </div>
+            <div id="dashboardVehicles" class="grid vehicles"></div>
+          </div>
+          <div class="section">
+            <div class="sectionhead">
+              <h2>Recent alerts</h2>
+              <span>Latest activity</span>
+            </div>
+            <div id="dashboardAlerts"></div>
+          </div>
+        </section>
+        <section id="vehicles" class="view">
+          <div class="hero">
+            <div>
+              <div class="eyebrow">Your garage</div>
+              <h1>My vehicles.</h1>
+              <p>
+                View connected vehicles and manage the details attached to your
+                JaFaFa account.
+              </p>
+            </div>
+            <button class="btn" id="addVehicleBtn">+ Add vehicle</button>
+          </div>
+          <div id="vehicleList" class="grid vehicles"></div>
+        </section>
+        <section id="vehicleDetail" class="view">
+          <div class="detailhero">
+            <div>
+              <div class="eyebrow">Vehicle telemetry</div>
+              <h1 id="detailName">Vehicle</h1>
+              <div id="detailStatus" class="status">
+                <i class="dot"></i> ONLINE
+              </div>
+              <div id="detailReg" class="reg"></div>
+            </div>
+            <button class="btn secondary" data-view="vehicles">
+              ← My vehicles
+            </button>
+          </div>
+          <div class="section grid telemetry" id="detailMetrics"></div>
+          <div class="section grid detailgrid">
+            <div class="card panel">
+              <div class="sectionhead">
+                <h2>Vehicle health</h2>
+                <span id="detailHealthLabel">GOOD</span>
+              </div>
+              <div class="healthscore" id="detailHealth">—</div>
+              <div class="bars" id="healthBars"></div>
+            </div>
+            <div class="card panel">
+              <div class="sectionhead"><h2>Active alerts</h2></div>
+              <div id="detailAlerts"></div>
+            </div>
+          </div>
+          <div class="section card panel">
+            <div class="sectionhead">
+              <h2>Telemetry history</h2>
+              <span>Last 12 samples</span>
+            </div>
+            <div class="chart" id="detailChart"></div>
+          </div>
+          <div class="section card panel log">
+            <div class="sectionhead">
+              <h2>Telemetry log</h2>
+              <span id="logCount"></span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Speed</th>
+                  <th>RPM</th>
+                  <th>Coolant</th>
+                  <th>Voltage</th>
+                  <th>Load</th>
+                </tr>
+              </thead>
+              <tbody id="logBody"></tbody>
+            </table>
+          </div>
+        </section>
+        <section id="account" class="view">
+          <div class="hero">
+            <div>
+              <div class="eyebrow">Account</div>
+              <h1>My account.</h1>
+              <p>Keep your customer information up to date.</p>
+            </div>
+          </div>
+          <div class="card panel profile">
+            <div class="notice">
+              Your account is currently running in local demo mode. These fields
+              will sync to the customer record once the backend is connected.
+            </div>
+            <form id="profileForm" class="formgrid">
+              <div class="field">
+                <label>Full name</label><input id="profileName" />
+              </div>
+              <div class="field">
+                <label>Email</label><input id="profileEmail" type="email" />
+              </div>
+              <div class="field">
+                <label>Phone</label
+                ><input id="profilePhone" placeholder="+234..." />
+              </div>
+              <div class="field">
+                <label>Customer ID</label><input id="profileId" disabled />
+              </div>
+              <div style="grid-column: 1/-1">
+                <button class="btn">Save profile</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div
+      id="vehicleModal"
+      class="auth hidden"
+      style="
+        position: fixed;
+        inset: 0;
+        z-index: 80;
+        background: rgba(2, 6, 16, 0.72);
+      "
+    >
+      <div class="authbox">
+        <div class="eyebrow">Vehicle management</div>
+        <h1>Add vehicle.</h1>
+        <p>Add the vehicle information supplied with your JaFaFa device.</p>
+        <form id="vehicleForm" class="authform">
+          <div class="formgrid">
+            <div class="field">
+              <label>Make</label><input id="vMake" required placeholder="BMW" />
+            </div>
+            <div class="field">
+              <label>Model</label
+              ><input id="vModel" required placeholder="X5 E70" />
+            </div>
+            <div class="field">
+              <label>Year</label
+              ><input id="vYear" type="number" min="1900" max="2100" />
+            </div>
+            <div class="field">
+              <label>Registration</label
+              ><input id="vReg" placeholder="ABC-123-XY" />
+            </div>
+          </div>
+          <div class="field">
+            <label>JaFaFa device ID</label
+            ><input id="vDevice" required placeholder="00:10:CC:4F:36:03" />
+          </div>
+          <button class="btn">Add vehicle</button
+          ><button type="button" class="btn secondary" id="closeVehicle">
+            Cancel
+          </button>
+        </form>
+      </div>
+    </div>
+    <div id="toast" class="toast"></div>
+    <script>
+      const KEY = "jafafa_customer_portal_v1";
+      const telemetry = () =>
+        Array.from({ length: 12 }, (_, i) => ({
+          timestamp: new Date(Date.now() - (11 - i) * 300000).toISOString(),
+          speed: Math.max(0, Math.round(30 + Math.sin(i * 0.8) * 15)),
+          rpm: Math.round(1800 + Math.sin(i * 0.7) * 450),
+          coolant: Math.round(91 + Math.sin(i * 0.45) * 4),
+          voltage: Number((13.7 + Math.sin(i * 0.6) * 0.25).toFixed(1)),
+          load: Math.round(25 + Math.sin(i * 0.55) * 12),
+        }));
+      const seed = {
+        account: {
+          id: "JF-CUS-0001",
+          name: "Customer",
+          email: "customer@jafafa.demo",
+          phone: "",
+        },
+        vehicles: [
+          {
+            id: "JF-V-0001",
+            make: "BMW",
+            model: "X5 E70",
+            year: 2010,
+            registration: "ABC-123-XY",
+            deviceId: "00:10:CC:4F:36:03",
+            health: 91,
+            status: "online",
+            telemetry: telemetry(),
+          },
+          {
+            id: "JF-V-0002",
+            make: "Toyota",
+            model: "Corolla",
+            year: 2016,
+            registration: "XYZ-456-AA",
+            deviceId: "00:10:CC:4F:36:04",
+            health: 84,
+            status: "warning",
+            telemetry: telemetry(),
+          },
+          {
+            id: "JF-V-0003",
+            make: "Mercedes-Benz",
+            model: "C200",
+            year: 2018,
+            registration: "LAG-778-KD",
+            deviceId: "00:10:CC:4F:36:05",
+            health: 96,
+            status: "online",
+            telemetry: telemetry(),
+          },
+        ],
+      };
+      let state = JSON.parse(localStorage.getItem(KEY) || "null") || seed,
+        mode = "signin",
+        selected = null;
+      const $ = (id) => document.getElementById(id);
+      function save() {
+        localStorage.setItem(KEY, JSON.stringify(state));
+      }
+      function esc(s) {
+        return String(s ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      }
+      function latest(v) {
+        return (
+          [...(v.telemetry || [])].sort(
+            (a, b) => new Date(b.timestamp) - new Date(a.timestamp),
+          )[0] || null
+        );
+      }
+      function toast(t) {
+        $("toast").textContent = t;
+        $("toast").classList.add("show");
+        setTimeout(() => $("toast").classList.remove("show"), 2200);
+      }
+      function meta(v) {
+        return (
+          v.status === "offline" ? ["OFFLINE", "off"]
+          : v.status === "warning" ? ["WARNING", "warn"]
+          : ["ONLINE", ""]
+        );
+      }
+      function card(v) {
+        const t = latest(v),
+          [s, c] = meta(v);
+        return `<article class="card vehicle"><div class="vehiclehead"><div><h3>${esc(v.make)} ${esc(v.model)}</h3><div class="reg">${esc(v.registration || "No registration")} · ${esc(v.year || "Year N/A")}</div></div><div class="status"><i class="dot ${c}"></i>${s}</div></div><div class="health"><div class="healthline"><span>Vehicle health</span><b>${v.health}/100</b></div><div class="track"><div class="fill" style="width:${v.health}%"></div></div></div><div class="metrics"><div class="metric"><small>Speed</small><b>${t?.speed ?? "—"} km/h</b></div><div class="metric"><small>RPM</small><b>${t?.rpm ?? "—"}</b></div><div class="metric"><small>Voltage</small><b>${t?.voltage ?? "—"} V</b></div></div><div class="vehiclefoot"><button class="btn" onclick="openVehicle('${v.id}')">View vehicle →</button></div></article>`;
+      }
+      function renderDashboard() {
+        const n = state.account.name || "Customer";
+        $("heroName").textContent = ", " + esc(n.split(" ")[0]);
+        $("navName").textContent = n;
+        $("avatar").textContent = n.charAt(0).toUpperCase();
+        $("statVehicles").textContent = state.vehicles.length;
+        $("statOnline").textContent = state.vehicles.filter(
+          (v) => v.status === "online",
+        ).length;
+        $("statWarnings").textContent = state.vehicles.filter(
+          (v) => v.status === "warning",
+        ).length;
+        $("statHealth").textContent =
+          state.vehicles.length ?
+            Math.round(
+              state.vehicles.reduce((a, v) => a + v.health, 0) /
+                state.vehicles.length,
+            )
+          : "—";
+        $("dashboardVehicles").innerHTML =
+          state.vehicles.map(card).join("") ||
+          empty("Your garage is empty. Add your first vehicle.");
+        const w = state.vehicles.filter((v) => v.status === "warning");
+        $("dashboardAlerts").innerHTML =
+          w.length ?
+            `<div class="alert"><div>🟠</div><div><b>Vehicle health warning</b><span>${w.length} vehicle${w.length > 1 ? "s" : ""} currently need attention.</span></div></div>`
+          : `<div class="notice">No active warnings. Your fleet is looking good.</div>`;
+      }
+      function renderVehicles() {
+        $("vehicleList").innerHTML =
+          state.vehicles.map(card).join("") ||
+          empty("Your garage is empty. Add a vehicle to get started.");
+      }
+      function empty(t) {
+        return `<div class="card panel"><span style="color:var(--muted);font-size:.75rem">${t}</span></div>`;
+      }
+      function openVehicle(id) {
+        selected = state.vehicles.find((v) => v.id === id);
+        if (!selected) return;
+        renderDetail();
+        navigate("vehicleDetail");
+      }
+      function renderDetail() {
+        const v = selected,
+          t = latest(v),
+          [s, c] = meta(v);
+        $("detailName").textContent = `${v.make} ${v.model}`;
+        $("detailReg").textContent =
+          `${v.registration || "No registration"} · Device ${v.deviceId}`;
+        $("detailStatus").innerHTML = `<i class="dot ${c}"></i> ${s}`;
+        $("detailMetrics").innerHTML = [
+          ["Speed", `${t?.speed ?? "—"} km/h`],
+          ["RPM", t?.rpm ?? "—"],
+          ["Coolant", `${t?.coolant ?? "—"} °C`],
+          ["Voltage", `${t?.voltage ?? "—"} V`],
+          ["Engine load", `${t?.load ?? "—"} %`],
+          ["Device", v.deviceId],
+        ]
+          .map(
+            (x) =>
+              `<div class="card metric"><small>${x[0]}</small><b>${esc(x[1])}</b></div>`,
+          )
+          .join("");
+        $("detailHealth").textContent = v.health;
+        $("detailHealthLabel").textContent =
+          v.health >= 90 ? "EXCELLENT"
+          : v.health >= 80 ? "GOOD"
+          : "NEEDS ATTENTION";
+        $("healthBars").innerHTML = [
+          ["Engine", Math.min(100, v.health + 2)],
+          ["Cooling", Math.max(0, v.health - 3)],
+          ["Electrical", Math.min(100, v.health + 4)],
+          ["Performance", v.health],
+        ]
+          .map(
+            (c) =>
+              `<div class="barrow"><span>${c[0]}</span><div class="track"><div class="fill" style="width:${c[1]}%"></div></div><b>${c[1]}</b></div>`,
+          )
+          .join("");
+        $("detailAlerts").innerHTML =
+          v.status === "warning" ?
+            `<div class="alert"><div>🟠</div><div><b>Vehicle health warning</b><span>Telemetry indicates this vehicle needs attention.</span></div></div>`
+          : `<div class="notice">No active alerts for this vehicle.</div>`;
+        renderChart(v.telemetry || []);
+        $("logCount").textContent = `${v.telemetry?.length || 0} samples`;
+        $("logBody").innerHTML = (v.telemetry || [])
+          .slice()
+          .reverse()
+          .map(
+            (x) =>
+              `<tr><td>${new Date(x.timestamp).toLocaleTimeString()}</td><td>${x.speed}</td><td>${x.rpm}</td><td>${x.coolant} °C</td><td>${x.voltage} V</td><td>${x.load}%</td></tr>`,
+          )
+          .join("");
+      }
+      function renderChart(d) {
+        const vals = d.map((x) => x.rpm),
+          min = Math.min(...vals) - 100,
+          max = Math.max(...vals) + 100,
+          w = 900,
+          h = 250,
+          pts = vals
+            .map(
+              (v, i) =>
+                `${35 + (i / (vals.length - 1 || 1)) * 830},${h - 25 - ((v - min) / (max - min)) * 180}`,
+            )
+            .join(" ");
+        $("detailChart").innerHTML =
+          `<div class="chartlabel">RPM · last 12 samples</div><svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><line class="gridline" x1="35" y1="55" x2="865" y2="55"/><line class="gridline" x1="35" y1="115" x2="865" y2="115"/><line class="gridline" x1="35" y1="175" x2="865" y2="175"/><polyline class="line" points="${pts}"/></svg>`;
+      }
+      function navigate(v) {
+        document
+          .querySelectorAll(".view")
+          .forEach((x) => x.classList.remove("active"));
+        $(v).classList.add("active");
+        document
+          .querySelectorAll(".navlinks button")
+          .forEach((x) => x.classList.toggle("active", x.dataset.view === v));
+        if (v === "dashboard") renderDashboard();
+        if (v === "vehicles") renderVehicles();
+        if (v === "account") renderAccount();
+        scrollTo({ top: 0, behavior: "smooth" });
+      }
+      function renderAccount() {
+        $("profileName").value = state.account.name || "";
+        $("profileEmail").value = state.account.email || "";
+        $("profilePhone").value = state.account.phone || "";
+        $("profileId").value = state.account.id;
+      }
+      function handleGoogleCredential(response) {
+        try {
+          const parts = response.credential.split(".");
+          if (parts.length < 2) throw new Error("Invalid Google credential");
+          const payload = JSON.parse(
+            atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
+          );
+          state.account = {
+            id: state.account?.id || "JF-CUS-" + String(Date.now()).slice(-6),
+            name: payload.name || payload.email?.split("@")[0] || "Customer",
+            email: payload.email || "",
+            phone: state.account?.phone || "",
+            googleSub: payload.sub || "",
+          };
+          save();
+          toast("Signed in with Google");
+          enter();
+        } catch (error) {
+          console.error("JaFaFa Google sign-in failed", error);
+          toast("Google sign-in could not be completed");
+        }
+      }
+      function initGoogleSignIn() {
+        if (!window.google?.accounts?.id)
+          return setTimeout(initGoogleSignIn, 250);
+        window.google.accounts.id.initialize({
+          client_id:
+            "618464687927-3qhsv0r9012cn0e50g963vk4n71pb54r.apps.googleusercontent.com",
+          callback: handleGoogleCredential,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+        window.google.accounts.id.renderButton($("googleSignIn"), {
+          theme: "outline",
+          size: "large",
+          type: "standard",
+          text: "continue_with",
+          shape: "rectangular",
+          logo_alignment: "left",
+          width: 390,
+        });
+      }
+      function enter() {
+        $("authView").classList.add("hidden");
+        $("app").classList.remove("hidden");
+        renderDashboard();
+        renderAccount();
+      }
+      function setAuth(m) {
+        mode = m;
+        const s = m === "signup";
+        $("nameField").classList.toggle("hidden", !s);
+        $("authEyebrow").textContent =
+          s ? "Create your account" : "Customer Portal";
+        $("authTitle").textContent =
+          s ? "Create your JaFaFa account." : "Welcome back.";
+        $("authText").textContent =
+          s ?
+            "Create an account to manage your vehicles and view their telemetry."
+          : "Sign in to see your vehicles, health status and alerts.";
+        $("authSubmit").textContent = s ? "Create account" : "Sign in";
+        $("switchText").textContent =
+          s ? "Already have an account?" : "Don't have an account?";
+        $("switchAuth").textContent = s ? "Sign in" : "Create one";
+        $("authPassword").autocomplete =
+          s ? "new-password" : "current-password";
+      }
+      $("authForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (mode === "signup") {
+          state.account = {
+            id: "JF-CUS-" + String(Date.now()).slice(-6),
+            name: $("authName").value.trim() || "Customer",
+            email: $("authEmail").value.trim(),
+            phone: "",
+          };
+          save();
+          toast("Account created");
+          enter();
+        } else {
+          if (!$("authEmail").value || !$("authPassword").value) return;
+          state.account.email = $("authEmail").value.trim();
+          save();
+          toast("Signed in");
+          enter();
+        }
+      });
+      $("switchAuth").onclick = () =>
+        setAuth(mode === "signup" ? "signin" : "signup");
+      $("logout").onclick = () => {
+        $("app").classList.add("hidden");
+        $("authView").classList.remove("hidden");
+        $("authForm").reset();
+        setAuth("signin");
+      };
+      document
+        .querySelectorAll("[data-view]")
+        .forEach((b) =>
+          b.addEventListener("click", () => navigate(b.dataset.view)),
+        );
+      $("addVehicleBtn").onclick = () =>
+        $("vehicleModal").classList.remove("hidden");
+      $("closeVehicle").onclick = () =>
+        $("vehicleModal").classList.add("hidden");
+      $("vehicleForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        state.vehicles.push({
+          id: "JF-V-" + String(Date.now()).slice(-6),
+          make: $("vMake").value.trim(),
+          model: $("vModel").value.trim(),
+          year: $("vYear").value,
+          registration: $("vReg").value.trim(),
+          deviceId: $("vDevice").value.trim(),
+          health: 100,
+          status: "online",
+          telemetry: telemetry(),
+        });
+        save();
+        $("vehicleForm").reset();
+        $("vehicleModal").classList.add("hidden");
+        renderVehicles();
+        renderDashboard();
+        toast("Vehicle added");
+      });
+      $("profileForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        state.account.name = $("profileName").value.trim();
+        state.account.email = $("profileEmail").value.trim();
+        state.account.phone = $("profilePhone").value.trim();
+        save();
+        renderAccount();
+        renderDashboard();
+        toast("Profile saved");
+      });
+      setAuth("signin");
+      initGoogleSignIn();
+    </script>
+  </body>
 </html>
