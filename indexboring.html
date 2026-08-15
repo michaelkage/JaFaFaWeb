@@ -1,0 +1,3013 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JaFaFa Admin Portal</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      #output {
+        margin-top: 20px;
+        white-space: pre-wrap;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      body {
+        background-color: #0f172a;
+        color: #f8fafc;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .auth-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      }
+      .card {
+        background: #1e293b;
+        border-radius: 12px;
+        padding: 2rem;
+        max-width: 420px;
+        width: 100%;
+        border: 1px solid #334155;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        text-align: center;
+      }
+      .card h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: #38bdf8;
+      }
+      .card p {
+        color: #94a3b8;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+      }
+      #buttonDiv {
+        display: flex;
+        justify-content: center;
+      }
+      .top-bar {
+        background: #1e293b;
+        border-bottom: 1px solid #334155;
+        padding: 0.75rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .app-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 700;
+        color: #38bdf8;
+        font-size: 1.1rem;
+      }
+      .user-pill {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        background: #0f172a;
+        border: 1px solid #334155;
+        padding: 0.35rem 0.75rem;
+        border-radius: 9999px;
+      }
+      .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+      .user-info {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+      }
+      .user-name {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #f8fafc;
+      }
+      .user-email {
+        font-size: 0.725rem;
+        color: #94a3b8;
+      }
+      .btn-logout {
+        background: transparent;
+        border: none;
+        color: #ef4444;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+      }
+      .btn-logout:hover {
+        background: rgba(239, 68, 68, 0.1);
+      }
+      .main-content {
+        max-width: 960px;
+        width: 100%;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+        flex: 1;
+      }
+      .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: #94a3b8;
+        margin-bottom: 1rem;
+      }
+      .btn-back {
+        background: #1e293b;
+        border: 1px solid #334155;
+        color: #38bdf8;
+        padding: 0.4rem 0.85rem;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: background 0.2s;
+      }
+      .btn-back:hover {
+        background: #334155;
+      }
+      .view-header {
+        margin-bottom: 1.75rem;
+      }
+      .view-header h2 {
+        font-size: 1.75rem;
+        color: #f8fafc;
+        margin-bottom: 0.35rem;
+      }
+      .view-header p {
+        color: #94a3b8;
+        font-size: 0.95rem;
+      }
+      .dropdown-wrapper {
+        position: relative;
+        width: 100%;
+        margin-bottom: 1.5rem;
+      }
+      .search-box {
+        position: relative;
+        width: 100%;
+      }
+      .search-input {
+        width: 100%;
+        background: #1e293b;
+        border: 2px solid #334155;
+        border-radius: 10px;
+        padding: 1rem 1rem 1rem 3.25rem;
+        font-size: 1rem;
+        color: #f8fafc;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .search-input:focus {
+        border-color: #38bdf8;
+      }
+      .search-icon {
+        position: absolute;
+        left: 1.2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 20px;
+        height: 20px;
+        color: #64748b;
+      }
+      .dropdown-results {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        background: #1e293b;
+        border: 1px solid #38bdf8;
+        border-radius: 10px;
+        max-height: 280px;
+        overflow-y: auto;
+        z-index: 50;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      }
+      .dropdown-item {
+        padding: 0.85rem 1.25rem;
+        border-bottom: 1px solid #334155;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background 0.15s;
+      }
+      .dropdown-item:last-child {
+        border-bottom: none;
+      }
+      .dropdown-item:hover {
+        background: #0284c7;
+        color: #fff;
+      }
+      .dropdown-item-main {
+        font-weight: 600;
+        color: #f8fafc;
+      }
+      .dropdown-item-sub {
+        font-size: 0.8rem;
+        color: #94a3b8;
+      }
+      .dropdown-item:hover .dropdown-item-sub {
+        color: #e0f2fe;
+      }
+      .selected-summary-card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+      }
+      .btn-action {
+        background: #0284c7;
+        color: #f8fafc;
+        border: none;
+        padding: 0.75rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .btn-action:hover {
+        background: #0369a1;
+      }
+      .vehicle-overview-card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .vehicle-spec h3 {
+        font-size: 1.5rem;
+        color: #38bdf8;
+      }
+      .car-plate {
+        background: #0f172a;
+        border: 1px solid #475569;
+        padding: 0.3rem 0.6rem;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #fef08a;
+        display: inline-block;
+      }
+      .status-badge {
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.725rem;
+      }
+      .status-active {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      .stat-card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 1.25rem;
+      }
+      .stat-label {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+      .stat-value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #f8fafc;
+      }
+      .stat-unit {
+        font-size: 0.9rem;
+        color: #38bdf8;
+        margin-left: 0.2rem;
+      }
+      .filter-panel {
+        background: #1e293b;
+        border: 1px solid #38bdf8;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      .filter-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.25rem;
+        align-items: end;
+      }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+      }
+      .form-group label {
+        font-size: 0.825rem;
+        font-weight: 600;
+        color: #94a3b8;
+      }
+      .form-control {
+        background: #0f172a;
+        border: 1px solid #334155;
+        color: #f8fafc;
+        padding: 0.6rem 0.85rem;
+        border-radius: 6px;
+        outline: none;
+      }
+      .table-container {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        overflow-x: auto;
+      }
+      .telemetry-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 0.875rem;
+      }
+      .telemetry-table th {
+        background: #0f172a;
+        color: #94a3b8;
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid #334155;
+      }
+      .telemetry-table td {
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid #1e293b;
+        color: #cbd5e1;
+      }
+      .high-speed {
+        color: #ef4444;
+        font-weight: 700;
+      }
+
+      /*
+        TELEMETRY TABLE STYLES
+        These rules control the table header, log counter, scrolling area,
+        clickable sorting headers, rows, and the small visual details inside
+        the telemetry section.
+      */
+      .telemetry-table-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+      }
+
+      /*
+        This title labels the data table.
+        It stays outside the scrolling container so it never moves.
+      */
+      .telemetry-table-title {
+        color: #f8fafc;
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+
+      /*
+        This badge shows the number of records currently visible.
+        The JavaScript changes the number after loading or filtering data.
+      */
+      .telemetry-log-count {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        width: fit-content;
+        padding: 0.45rem 0.7rem;
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        border-radius: 6px;
+        background: rgba(15, 23, 42, 0.65);
+        color: #94a3b8;
+        font-size: 0.78rem;
+        line-height: 1;
+      }
+
+      /*
+        The actual number is brighter so it can be found quickly.
+      */
+      .telemetry-log-count strong {
+        color: #38bdf8;
+        font-weight: 700;
+      }
+
+      /*
+        Only this area scrolls vertically.
+        The log counter above it remains visible.
+      */
+      .table-container {
+        max-height: 600px;
+        overflow-x: auto;
+        overflow-y: auto;
+        position: relative;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        background: rgba(15, 23, 42, 0.4);
+      }
+
+      /*
+        The table stretches across the available space.
+        The minimum width prevents sixteen telemetry columns from becoming cramped.
+      */
+      .telemetry-table {
+        width: 100%;
+        min-width: 1200px;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 0.875rem;
+      }
+
+      /*
+        Every column header is clickable.
+        The browser selection is disabled so repeated clicks feel like
+        a table control instead of text selection.
+      */
+      .sortable-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        background: #0b1120;
+        color: #94a3b8;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        -webkit-user-select: none;
+        user-select: none;
+        transition: color 0.2s ease, background 0.2s ease;
+      }
+
+      /*
+        Hovering over a column tells the user that it can be clicked.
+      */
+      .sortable-header:hover {
+        background: rgba(56, 189, 248, 0.08);
+        color: #38bdf8;
+      }
+
+      /*
+        The active column keeps the blue highlight after it has been sorted.
+      */
+      .sortable-header.active-sort {
+        color: #38bdf8;
+      }
+
+      /*
+        Units are deliberately smaller and quieter than the main heading.
+      */
+      .sortable-header .unit {
+        color: #64748b;
+        font-size: 0.65rem;
+        font-weight: 400;
+      }
+
+      /*
+        JavaScript puts an up or down arrow into this element.
+        An empty element means the column is not currently sorted.
+      */
+      .sort-indicator {
+        display: inline-block;
+        min-width: 8px;
+        margin-left: 4px;
+        color: #38bdf8;
+        font-size: 0.7rem;
+        font-weight: 700;
+      }
+
+      /*
+        Each telemetry row has a subtle divider and a smooth hover effect.
+      */
+      .telemetry-table tbody tr {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: background-color 0.15s ease;
+      }
+
+      .telemetry-table tbody tr:hover {
+        background: rgba(56, 189, 248, 0.08);
+        cursor: pointer;
+      }
+
+      /*
+        Every value is centered and kept on one line so the columns
+        remain aligned even when the browser window is narrow.
+      */
+      .telemetry-table td {
+        padding: 0.65rem 0.5rem;
+        color: #cbd5e1;
+        font-size: 0.85rem;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+      }
+
+      .high-speed {
+        color: #ef4444;
+        font-weight: 700;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div id="view-unauthenticated" class="auth-container">
+      <div class="card">
+        <h1>Customer Portal</h1>
+        <p>
+          Sign in with your Google Account to access customer data and telemetry
+          logs.
+        </p>
+        <div id="buttonDiv"></div>
+      </div>
+    </div>
+    <div id="view-authenticated" hidden>
+      <header class="top-bar">
+        <div class="app-brand">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+          </svg>
+          <span>Telemetry Hub</span>
+        </div>
+        <div class="user-pill">
+          <img id="user-picture" class="user-avatar" src="" alt="User Avatar" />
+          <div class="user-info">
+            <span id="user-name" class="user-name"></span>
+            <span id="user-email" class="user-email"></span>
+          </div>
+          <button class="btn-logout" onclick="handleSignOut()">Sign Out</button>
+        </div>
+      </header>
+      <main class="main-content">
+        <section id="screen-customers">
+          <div class="view-header">
+            <h2>Customer Lookup</h2>
+            <p>
+              Search for a customer to view their registered fleet vehicles.
+            </p>
+          </div>
+          <div class="dropdown-wrapper">
+            <div class="search-box">
+              <svg
+                class="search-icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                ></path>
+              </svg>
+              <input
+                type="text"
+                id="customerSearchInput"
+                class="search-input"
+                placeholder="Type customer name, email, or company..."
+                oninput="onCustomerSearchInput()"
+              />
+            </div>
+            <div
+              id="customerDropdownResults"
+              class="dropdown-results"
+              hidden
+            ></div>
+          </div>
+          <div
+            id="selectedCustomerSummary"
+            class="selected-summary-card"
+            hidden
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1rem;
+              "
+            >
+              <div>
+                <span
+                  style="
+                    font-size: 0.75rem;
+                    color: #38bdf8;
+                    text-transform: uppercase;
+                    font-weight: 700;
+                  "
+                  >Selected Customer</span
+                >
+                <h3
+                  id="summaryCustName"
+                  style="font-size: 1.4rem; color: #f8fafc"
+                ></h3>
+              </div>
+              <span
+                id="summaryCustTier"
+                class="status-badge status-active"
+              ></span>
+            </div>
+            <div
+              style="
+                font-size: 0.9rem;
+                color: #94a3b8;
+                display: flex;
+                flex-direction: column;
+                gap: 0.4rem;
+                margin-bottom: 1.5rem;
+              "
+            >
+              <div>
+                <strong>Company:</strong> <span id="summaryCustCompany"></span>
+              </div>
+              <div>
+                <strong>Email:</strong> <span id="summaryCustEmail"></span>
+              </div>
+              <div>
+                <strong>Registered Fleet:</strong>
+                <span id="summaryCustCarsCount"></span>
+              </div>
+            </div>
+            <button
+              class="btn-action"
+              style="width: 100%; text-align: center"
+              onclick="confirmCustomerSelection()"
+            >
+              View Vehicles for this Customer →
+            </button>
+          </div>
+        </section>
+        <section id="screen-vehicles" hidden>
+          <div class="breadcrumb">
+            <button class="btn-back" onclick="showScreen('screen-customers')">
+              ← Back to Customer Search
+            </button>
+            <span>/</span>
+            <span
+              id="breadcrumbCustomer"
+              style="color: #38bdf8; font-weight: 600"
+            ></span>
+          </div>
+          <div class="view-header">
+            <h2>Vehicle Registry</h2>
+            <p>Search for a vehicle within this customer's account.</p>
+          </div>
+          <div class="dropdown-wrapper">
+            <div class="search-box">
+              <svg
+                class="search-icon"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                ></path>
+              </svg>
+              <input
+                type="text"
+                id="vehicleSearchInput"
+                class="search-input"
+                placeholder="Type vehicle make, model, or plate number..."
+                oninput="onVehicleSearchInput()"
+              />
+            </div>
+            <div
+              id="vehicleDropdownResults"
+              class="dropdown-results"
+              hidden
+            ></div>
+          </div>
+          <div id="selectedVehicleSummary" class="selected-summary-card" hidden>
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1rem;
+              "
+            >
+              <div>
+                <span
+                  style="
+                    font-size: 0.75rem;
+                    color: #38bdf8;
+                    text-transform: uppercase;
+                    font-weight: 700;
+                  "
+                  >Selected Vehicle</span
+                >
+                <h3
+                  id="summaryCarTitle"
+                  style="font-size: 1.4rem; color: #f8fafc"
+                ></h3>
+              </div>
+              <span id="summaryCarPlate" class="car-plate"></span>
+            </div>
+            <div
+              style="
+                font-size: 0.9rem;
+                color: #94a3b8;
+                display: flex;
+                flex-direction: column;
+                gap: 0.4rem;
+                margin-bottom: 1.5rem;
+              "
+            >
+              <div>
+                <strong>Status:</strong> <span id="summaryCarStatus"></span>
+              </div>
+              <div>
+                <strong>Mileage:</strong> <span id="summaryCarMileage"></span>
+              </div>
+            </div>
+            <button
+              class="btn-action"
+              style="width: 100%; text-align: center"
+              onclick="metryScreen()"
+            >
+              Launch Telemetry Dashboard →
+            </button>
+          </div>
+        </section>
+       <section id="screen-telemetry" hidden>
+  <div class="breadcrumb">
+    <button class="btn-back" onclick="showScreen('screen-vehicles')">
+      ← Back to Vehicle Selection
+    </button>
+  </div>
+  <div class="vehicle-overview-card" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; margin-bottom: 1.5rem;">
+    <div class="vehicle-spec">
+      <h3 id="telemetryCarTitle" style="margin: 0 0 0.25rem 0; color: #fff; font-size: 1.25rem; font-weight: 600;">--</h3>
+      <p id="telemetryCarOwner" style="margin: 0; color: #94a3b8; font-size: 0.875rem;">--</p>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <span id="telemetryPlate" class="car-plate" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.875rem;">--</span>
+      <span id="telemetryMac" class="car-mac" style="background: rgba(148, 163, 184, 0.1); color: #94a3b8; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 500; font-size: 0.875rem; font-family: monospace;">VID: --</span>
+      <span id="telemetryStatus" class="status-badge status-active">Active</span>
+    </div>
+  </div>
+    <!--
+    TELEMETRY LOG AREA
+    The heading and log counter stay outside the scrollable table.
+    This means you can always see how many records are displayed.
+  -->
+  <div class="telemetry-table-header">
+    <!-- The left side identifies what this table contains. -->
+    <div class="telemetry-table-title">Telemetry Logs</div>
+
+    <!-- JavaScript updates this number whenever the visible logs change. -->
+    <div id="telemetryLogCount" class="telemetry-log-count">
+      Showing <strong>0</strong> logs
+    </div>
+  </div>
+
+  <!--
+    Only this container scrolls.
+    The table header stays visible while the log rows move underneath it.
+  -->
+  <div class="table-container">
+    <table id="telemetryTable" class="telemetry-table">
+      <thead>
+        <tr id="telemetryTableHeader">
+          <th data-sort-key="time" class="sortable-header">
+            Timestamp
+            <span class="sort-indicator"></span>
+          </th>
+          <th data-sort-key="speed" class="sortable-header">
+            Speed<br><span class="unit">(Km/h)</span>
+            <span class="sort-indicator"></span>
+          </th>
+          <th data-sort-key="rpm" class="sortable-header">
+            Engine<br><span class="unit">rpm</span>
+            <span class="sort-indicator"></span>
+          </th>
+          <th data-sort-key="maf" class="sortable-header">
+            Mass Air Flow<br><span class="unit">(g/s)</span>
+            <span class="sort-indicator"></span>
+          </th>
+          <th data-sort-key="ctemp" class="sortable-header">
+            Coolant Temp<br><span class="unit">(°C)</span>
+            <span class="sort-indicator"></span>
+          </th>
+          <th data-sort-key="fuel" class="sortable-header">
+            Fuel Level<br><span class="unit">(%)</span>
+            <span class="sort-indicator"></span>
+          </th>
+          <th data-sort-key="voltage" class="sortable-header">
+            Voltage<br><span class="unit">(Volt)</span>
+            <span class="sort-indicator"></span>
+          </th>
+          <th data-sort-key="evap" class="sortable-header">
+            EVAP Control<br><span class="unit">(%)</span>
+            <span class="sort-indicator"></span>
+          </th>
+          <th data-sort-key="timing" class="sortable-header">
+            Injector Timing<br><span class="unit">(°)</span>
+            <span class="sort-indicator"></span>
+          </th>
+          <th data-sort-key="etemp" class="sortable-header">
+            Engine Temp<br><span class="unit">(°C)</span>
+            <span class="sort-indicator"></span>
+          </th>
+          <th data-sort-key="mpg" class="sortable-header">
+            MPG<br><span class="unit">(mpg)</span>
+            <span class="sort-indicator"></span>
+          </th>
+          <th data-sort-key="iat" class="sortable-header">
+            Intake Air Temp<br><span class="unit">(°C)</span>
+            <span class="sort-indicator"></span>
+          </th>
+          <th data-sort-key="throttle" class="sortable-header">
+            Throttle Pos<br><span class="unit">(°)</span>
+            <span class="sort-indicator"></span>
+          </th>
+          <th data-sort-key="load" class="sortable-header">
+            Engine Load<br><span class="unit">(%)</span>
+            <span class="sort-indicator"></span>
+          </th>
+          <th data-sort-key="atemp" class="sortable-header">
+            Atmo Temp<br><span class="unit">(°C)</span>
+            <span class="sort-indicator"></span>
+          </th>
+          <th data-sort-key="bpressure" class="sortable-header">
+            Baro Pressure<br><span class="unit">(kPa)</span>
+            <span class="sort-indicator"></span>
+          </th>
+        </tr>
+      </thead>
+
+      <!-- JavaScript places the currently visible records here. -->
+      <tbody id="telemetryTableBody"></tbody>
+    </table>
+
+    <div id="output"></div>
+  </div>
+
+  <div class="filter-panel" style="margin-top: 1.5rem;">
+    <h4 style="margin-bottom: 1rem; color: #38bdf8">
+      Analyze Telemetry Data
+    </h4>
+    <div class="filter-form">
+      <div class="form-group">
+        <label for="minSpeed">Speed Filter</label>
+        <select id="minSpeed" class="form-control">
+          <option value="0">All Speeds (>= 0 Km/h)</option>
+          <option value="15">Idle / Crawling (>= 15 Km/h)</option>
+          <option value="40">City Driving (>= 40 Km/h)</option>
+          <option value="65">Highway Cruise (>= 65 Km/h)</option>
+          <option value="75">High Speed / Excessive (>= 75 Km/h)</option>
+          <option value="90">Extreme Speed (>= 90 Km/h)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="metricType">Focus / Metric Filter</label>
+        <select id="metricType" class="form-control">
+          <option value="all">Show All Logs</option>
+          <option value="speed">Speed Alerts (>75 Km/h)</option>
+          <option value="temp">Thermal Warnings (>105°C)</option>
+          <option value="overheat">Critical Overheat (>110°C)</option>
+          <option value="battery">
+            Low Battery Voltage (&lt;12.0V)
+          </option>
+          <option value="rpm">High RPM Warning (>5500 rpm)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="engineStatus">Driving State</label>
+        <select id="engineStatus" class="form-control">
+          <option value="all">All States</option>
+          <option value="running">Engine Running / Driving</option>
+          <option value="idling">Idling Only</option>
+          <option value="off">Ignition Off / Parked</option>
+          <option value="TrafficIdle_HeatSoak">Traffic Idle HeatSoak</option>
+          <option value="NormalCruising">Normal Cruising</option>
+          <option value="HighLoad_Overtaking">High Load Overtaking</option>
+          <option value="OverheatingWarning">Overheating Warning</option>
+          <option value="StopAndGo_Traffic">Stop and Go Traffic</option>
+          <option value="RainySeason_Cruising">Rainy Season Cruising</option>
+          <option value="Nighttime_CityDrive">Nighttime City Drive</option>
+          <option value="Highway_SteadyCruise">Highway Steady Cruise</option>
+          <option value="LowFuel_LimpMode">LowFuel LimpMode</option>
+          <option value="AC_Load_Stress">AC Load Stress</option>
+          <option value="ColdStart_Morning">Cold Start Morning</option>
+          <option value="HillClimb_HeavyLoad">Hill Climb Heavy Load</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="startDate">Filter by Date</label>
+        <input type="date" id="startDate" class="form-control" />
+      </div>
+      <div class="form-group">
+        <label for="startTime">Filter by Time of Day</label>
+        <input type="time" id="startTime" class="form-control" />
+      </div>
+      <div class="form-group">
+        <label for="timeRange">Time Preset</label>
+        <select id="timeRange" class="form-control">
+          <option value="all">All Available Logs</option>
+          <option value="1h">Past 1 Hour</option>
+          <option value="24h">Past 24 Hours</option>
+          <option value="7d">Past 7 Days</option>
+          <option value="30d">Past 30 Days</option>
+        </select>
+      </div>
+      <button class="btn-action" onclick="runTelemetryAnalysis()">
+        Analyze Data
+      </button>
+    </div>
+  </div>
+</section>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script
+      src="https://accounts.google.com/gsi/client"
+      async
+      defer
+      onload="initGoogleAuth()"
+    ></script>
+    <script>
+      const GOOGLE_CLIENT_ID = "618464687927-3qhsv0r9012cn0e50g963vk4n71pb54r.apps.googleusercontent.com";
+      const API_KEY = "AIzaSyDnP5gQ-CWLj1J4xEd0T6xvkboRZI_zoAM";
+      const MOCK_DATABASE = [
+        {
+          id: 1,
+          name: "Deji Ayeni",
+          email: "anywashng@gmail.com.ng",
+          company: "JaFaFa",
+          tier: "Enterprise",
+          cars: [
+            {
+              id: "00:10:CC:4F:36:03",
+              make: "BMW",
+              model: "X5",
+              year: 2024,
+              plate: "LAG-500-DJ",
+              status: "Active",
+              mileage: "4,200 mi",
+              telemetry: [
+  {
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:07",
+  speed: 0,
+  rpm: 675,
+  maf: 4.14,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.24,
+  evap: 58.43,
+  timing: -2,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 14.12,
+  load: 25.49,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:07",
+  speed: 0,
+  rpm: 675,
+  maf: 4.14,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.24,
+  evap: 58.43,
+  timing: -2,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 14.12,
+  load: 25.49,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:07",
+  speed: 0,
+  rpm: 675,
+  maf: 4.14,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 58.43,
+  timing: -2,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 14.12,
+  load: 25.49,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:08",
+  speed: 0,
+  rpm: 671,
+  maf: 4,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 56.08,
+  timing: 1,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 25.1,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:08",
+  speed: 0,
+  rpm: 671,
+  maf: 4,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 56.08,
+  timing: 1,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 25.1,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:09",
+  speed: 0,
+  rpm: 671,
+  maf: 4,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 56.08,
+  timing: 1,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 25.1,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:10",
+  speed: 0,
+  rpm: 671,
+  maf: 4,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 56.08,
+  timing: 1,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 25.1,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:11",
+  speed: 0,
+  rpm: 671,
+  maf: 4,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 56.08,
+  timing: 1,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 25.1,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:13",
+  speed: 0,
+  rpm: 671,
+  maf: 4,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 56.08,
+  timing: 1,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 25.1,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:14",
+  speed: 0,
+  rpm: 673,
+  maf: 3.97,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 55.69,
+  timing: 1,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 24.31,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:15",
+  speed: 0,
+  rpm: 673,
+  maf: 3.97,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 55.69,
+  timing: 1,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 24.31,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:16",
+  speed: 0,
+  rpm: 673,
+  maf: 3.97,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 55.69,
+  timing: 1,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 24.31,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:17",
+  speed: 0,
+  rpm: 673,
+  maf: 3.97,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 55.69,
+  timing: 1,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 24.31,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:18",
+  speed: 0,
+  rpm: 673,
+  maf: 3.97,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 55.69,
+  timing: 1,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 24.31,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:19",
+  speed: 0,
+  rpm: 673,
+  maf: 3.97,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 55.69,
+  timing: 1,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 24.31,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:20",
+  speed: 0,
+  rpm: 675,
+  maf: 3.97,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 56.08,
+  timing: 0,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 24.71,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:21",
+  speed: 0,
+  rpm: 675,
+  maf: 3.97,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 56.08,
+  timing: 0,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 24.71,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:22",
+  speed: 0,
+  rpm: 675,
+  maf: 3.97,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 56.08,
+  timing: 0,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 24.71,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:23",
+  speed: 0,
+  rpm: 675,
+  maf: 3.97,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 56.08,
+  timing: 0,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 24.71,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:24",
+  speed: 0,
+  rpm: 675,
+  maf: 3.97,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.32,
+  evap: 56.08,
+  timing: 0,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 24.71,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:25",
+  speed: 0,
+  rpm: 675,
+  maf: 3.97,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.03,
+  evap: 56.08,
+  timing: 0,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 24.71,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:26",
+  speed: 0,
+  rpm: 663,
+  maf: 5.66,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.03,
+  evap: 52.55,
+  timing: -2,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 13.73,
+  load: 33.33,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:27",
+  speed: 0,
+  rpm: 663,
+  maf: 5.66,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.03,
+  evap: 52.55,
+  timing: -2,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 14.51,
+  load: 33.33,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:28",
+  speed: 0,
+  rpm: 663,
+  maf: 5.66,
+  ctemp: 78,
+  fuel: 41.57,
+  voltage: 14.03,
+  evap: 52.55,
+  timing: -2,
+  etemp: 78,
+  mpg: 0,
+  iat: 30,
+  throttle: 14.51,
+  load: 33.33,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:29",
+  speed: 0,
+  rpm: 663,
+  maf: 5.66,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.03,
+  evap: 52.55,
+  timing: -2,
+  etemp: 79,
+  mpg: 0,
+  iat: 30,
+  throttle: 14.51,
+  load: 33.33,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:30",
+  speed: 0,
+  rpm: 663,
+  maf: 5.66,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.03,
+  evap: 52.55,
+  timing: -2,
+  etemp: 79,
+  mpg: 0,
+  iat: 30,
+  throttle: 14.51,
+  load: 33.33,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:31",
+  speed: 0,
+  rpm: 663,
+  maf: 5.66,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.19,
+  evap: 52.55,
+  timing: -2,
+  etemp: 79,
+  mpg: 0,
+  iat: 30,
+  throttle: 14.51,
+  load: 33.33,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:33",
+  speed: 1,
+  rpm: 679,
+  maf: 5.28,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.19,
+  evap: 69.02,
+  timing: -6,
+  etemp: 79,
+  mpg: 0.13,
+  iat: 30,
+  throttle: 14.51,
+  load: 37.25,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:34",
+  speed: 1,
+  rpm: 679,
+  maf: 5.28,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.19,
+  evap: 69.02,
+  timing: -6,
+  etemp: 79,
+  mpg: 0.13,
+  iat: 30,
+  throttle: 15.29,
+  load: 37.25,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:35",
+  speed: 1,
+  rpm: 679,
+  maf: 5.28,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.19,
+  evap: 69.02,
+  timing: -6,
+  etemp: 79,
+  mpg: 0.13,
+  iat: 30,
+  throttle: 15.29,
+  load: 37.25,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:36",
+  speed: 1,
+  rpm: 679,
+  maf: 5.28,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.19,
+  evap: 69.02,
+  timing: -6,
+  etemp: 79,
+  mpg: 0.13,
+  iat: 30,
+  throttle: 15.29,
+  load: 37.25,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:37",
+  speed: 1,
+  rpm: 679,
+  maf: 5.28,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.19,
+  evap: 69.02,
+  timing: -6,
+  etemp: 79,
+  mpg: 0.13,
+  iat: 30,
+  throttle: 15.29,
+  load: 37.25,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:38",
+  speed: 1,
+  rpm: 679,
+  maf: 5.28,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.16,
+  evap: 69.02,
+  timing: -6,
+  etemp: 79,
+  mpg: 0.13,
+  iat: 30,
+  throttle: 15.29,
+  load: 37.25,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:39",
+  speed: 0,
+  rpm: 670,
+  maf: 5.49,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.16,
+  evap: 67.84,
+  timing: -8,
+  etemp: 79,
+  mpg: 0.12,
+  iat: 30,
+  throttle: 15.29,
+  load: 31.76,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:40",
+  speed: 0,
+  rpm: 670,
+  maf: 5.49,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.16,
+  evap: 67.84,
+  timing: -8,
+  etemp: 79,
+  mpg: 0.12,
+  iat: 30,
+  throttle: 15.29,
+  load: 31.76,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:41",
+  speed: 0,
+  rpm: 670,
+  maf: 5.49,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.16,
+  evap: 67.84,
+  timing: -8,
+  etemp: 79,
+  mpg: 0.12,
+  iat: 30,
+  throttle: 15.29,
+  load: 31.76,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:42",
+  speed: 0,
+  rpm: 670,
+  maf: 5.49,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.16,
+  evap: 67.84,
+  timing: -8,
+  etemp: 79,
+  mpg: 0.12,
+  iat: 30,
+  throttle: 15.29,
+  load: 31.76,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:43",
+  speed: 0,
+  rpm: 670,
+  maf: 5.49,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.16,
+  evap: 67.84,
+  timing: -8,
+  etemp: 79,
+  mpg: 0.12,
+  iat: 30,
+  throttle: 15.29,
+  load: 31.76,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:44",
+  speed: 0,
+  rpm: 670,
+  maf: 5.49,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.25,
+  evap: 67.84,
+  timing: -8,
+  etemp: 79,
+  mpg: 0.12,
+  iat: 30,
+  throttle: 15.29,
+  load: 31.76,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:46",
+  speed: 2,
+  rpm: 643,
+  maf: 4.91,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.25,
+  evap: 63.92,
+  timing: -5,
+  etemp: 79,
+  mpg: 0.35,
+  iat: 30,
+  throttle: 15.29,
+  load: 33.33,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:47",
+  speed: 2,
+  rpm: 643,
+  maf: 4.91,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.25,
+  evap: 63.92,
+  timing: -5,
+  etemp: 79,
+  mpg: 0.35,
+  iat: 30,
+  throttle: 15.29,
+  load: 33.33,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:48",
+  speed: 2,
+  rpm: 643,
+  maf: 4.91,
+  ctemp: 79,
+  fuel: 41.57,
+  voltage: 14.25,
+  evap: 63.92,
+  timing: -5,
+  etemp: 79,
+  mpg: 0.35,
+  iat: 30,
+  throttle: 15.29,
+  load: 33.33,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:49",
+  speed: 2,
+  rpm: 643,
+  maf: 4.91,
+  ctemp: 81,
+  fuel: 41.57,
+  voltage: 14.25,
+  evap: 63.92,
+  timing: -5,
+  etemp: 81,
+  mpg: 0.35,
+  iat: 30,
+  throttle: 15.29,
+  load: 33.33,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:50",
+  speed: 2,
+  rpm: 643,
+  maf: 4.91,
+  ctemp: 81,
+  fuel: 41.57,
+  voltage: 14.25,
+  evap: 63.92,
+  timing: -5,
+  etemp: 81,
+  mpg: 0.35,
+  iat: 30,
+  throttle: 15.29,
+  load: 33.33,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:51",
+  speed: 2,
+  rpm: 643,
+  maf: 4.91,
+  ctemp: 81,
+  fuel: 41.57,
+  voltage: 14.19,
+  evap: 63.92,
+  timing: -5,
+  etemp: 81,
+  mpg: 0.35,
+  iat: 30,
+  throttle: 15.29,
+  load: 33.33,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:52",
+  speed: 2,
+  rpm: 720,
+  maf: 7.94,
+  ctemp: 81,
+  fuel: 41.57,
+  voltage: 14.19,
+  evap: 70.2,
+  timing: -11,
+  etemp: 81,
+  mpg: 0.47,
+  iat: 30,
+  throttle: 16.86,
+  load: 43.14,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:53",
+  speed: 2,
+  rpm: 720,
+  maf: 7.94,
+  ctemp: 81,
+  fuel: 41.57,
+  voltage: 14.19,
+  evap: 70.2,
+  timing: -11,
+  etemp: 81,
+  mpg: 0.47,
+  iat: 30,
+  throttle: 16.86,
+  load: 43.14,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:54",
+  speed: 2,
+  rpm: 720,
+  maf: 7.94,
+  ctemp: 81,
+  fuel: 41.57,
+  voltage: 14.19,
+  evap: 70.2,
+  timing: -11,
+  etemp: 81,
+  mpg: 0.47,
+  iat: 30,
+  throttle: 16.86,
+  load: 43.14,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:55",
+  speed: 2,
+  rpm: 720,
+  maf: 7.94,
+  ctemp: 82,
+  fuel: 41.57,
+  voltage: 14.19,
+  evap: 70.2,
+  timing: -11,
+  etemp: 82,
+  mpg: 0.47,
+  iat: 30,
+  throttle: 16.86,
+  load: 43.14,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:56",
+  speed: 2,
+  rpm: 720,
+  maf: 7.94,
+  ctemp: 82,
+  fuel: 41.57,
+  voltage: 14.19,
+  evap: 70.2,
+  timing: -11,
+  etemp: 82,
+  mpg: 0.47,
+  iat: 30,
+  throttle: 16.86,
+  load: 43.14,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:57",
+  speed: 0,
+  rpm: 662,
+  maf: 7.94,
+  ctemp: 82,
+  fuel: 41.57,
+  voltage: 13.07,
+  evap: 70.2,
+  timing: -11,
+  etemp: 82,
+  mpg: 0.47,
+  iat: 30,
+  throttle: 16.86,
+  load: 43.14,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2705:59:58",
+  speed: 0,
+  rpm: 662,
+  maf: 5.06,
+  ctemp: 82,
+  fuel: 41.57,
+  voltage: 13.07,
+  evap: 49.8,
+  timing: -4,
+  etemp: 82,
+  mpg: 0.44,
+  iat: 30,
+  throttle: 15.69,
+  load: 38.82,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2706:00:00",
+  speed: 0,
+  rpm: 662,
+  maf: 5.06,
+  ctemp: 82,
+  fuel: 41.57,
+  voltage: 13.07,
+  evap: 49.8,
+  timing: -4,
+  etemp: 82,
+  mpg: 0.44,
+  iat: 30,
+  throttle: 15.69,
+  load: 38.82,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2706:00:01",
+  speed: 0,
+  rpm: 662,
+  maf: 5.06,
+  ctemp: 82,
+  fuel: 40.39,
+  voltage: 13.07,
+  evap: 49.8,
+  timing: -4,
+  etemp: 82,
+  mpg: 0.44,
+  iat: 30,
+  throttle: 15.69,
+  load: 38.82,
+  atemp: 25,
+  bpressure: 100
+},
+{
+  vehicleId: "00:10:CC:4F:36:03",
+  time: "2026-07-2706:00:02",
+  speed: 0,
+  rpm: 662,
+  maf: 5.06,
+  ctemp: 82,
+  fuel: 40.39,
+  voltage: 13.07,
+  evap: 49.8,
+  timing: -4,
+  etemp: 82,
+  mpg: 0.44,
+  iat: 30,
+  throttle: 15.69,
+  load: 38.82,
+  atemp: 25,
+  bpressure: 100
+}
+],
+            },
+          ],
+        },
+        {
+          id: 2,
+          name: "Morenike Ayeni",
+          email: "morenike.ayeni@gmail.com",
+          company: "Layer3 Limited",
+          tier: "Enterprise",
+          cars: [
+            {
+              id: "00:10:CC:4F:36:03",
+              make: "Lexus",
+              model: "LX 600",
+              year: 2024,
+              plate: "VI-600-MO",
+              status: "Active",
+              mileage: "3,500 mi",
+              telemetry: [],
+            },
+          ],
+        },
+        {
+          id: 3,
+          name: "Michael Ayeni",
+          email: "michaelkage9@gmail.com",
+          company: "HyperSpace Technologies",
+          tier: "Enterprise",
+          cars: [
+            {
+              id: "00:10:CC:4F:36:03",
+              make: "Land Rover",
+              model: "Defender 110 V8",
+              year: 2023,
+              plate: "LAG-110-MA",
+              status: "Active",
+              mileage: "11,300 mi",
+              telemetry: [],
+            },
+          ],
+        },
+        {
+          id: 4,
+          name: "Gabriel Blitzer",
+          email: "gabriel.blitzer@blitztech.net",
+          company: "Blitz Aero",
+          tier: "Pro",
+          cars: [
+            {
+              id: "00:10:CC:4F:36:03",
+              make: "BMW",
+              model: "M4 Competition",
+              year: 2023,
+              plate: "GBL-004-M",
+              status: "Active",
+              mileage: "7,800 mi",
+              telemetry: [],
+            },
+          ],
+        },
+        {
+          id: 5,
+          name: "Elizabeth Ayeni",
+          email: "elizabeth.ayeni@alphahealth.org",
+          company: "Alpha Medical Centers",
+          tier: "Pro",
+          cars: [
+            {
+              id: "00:10:CC:4F:36:03",
+              make: "Mercedes-Benz",
+              model: "GLE 450",
+              year: 2024,
+              plate: "KRD-450-EL",
+              status: "Active",
+              mileage: "1,900 mi",
+              telemetry: [],
+            },
+          ],
+        },
+      ];
+      let activeCustomer = null;
+      let activeCar = null;
+
+/*
+  These values remember the current table state.
+  Sorting uses them so it can reorder the visible records without
+  downloading the telemetry again or changing the active filters.
+*/
+let currentTelemetryDisplayedLogs = [];
+let telemetrySortKey = null;
+let telemetrySortDirection = "asc";
+      /* Screen navigation: hides all dashboard screens and shows the requested one. */
+function showScreen(screenIdToShow) {
+        const screens = [
+          "screen-customers",
+          "screen-vehicles",
+          "screen-telemetry",
+        ];
+        screens.forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.hidden = true;
+        });
+        const target = document.getElementById(screenIdToShow);
+        if (target) target.hidden = false;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".dropdown-wrapper")) {
+          document.getElementById("customerDropdownResults").hidden = true;
+          document.getElementById("vehicleDropdownResults").hidden = true;
+        }
+      });
+      /* Google login helper: reads user information from the login token. */
+function parseJwtToken(token) {
+        try {
+          const base64Url = token.split(".")[1];
+          const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+          return JSON.parse(atob(base64));
+        } catch (e) {
+          return null;
+        }
+      }
+      /* Google login success: fills the user information and opens the dashboard. */
+function handleCredentialResponse(response) {
+        const user = parseJwtToken(response.credential);
+        if (!user) return;
+        document.getElementById("user-name").textContent =
+          user.given_name || user.name;
+        document.getElementById("user-email").textContent = user.email;
+        document.getElementById("user-picture").src = user.picture;
+        document.getElementById("view-unauthenticated").hidden = true;
+        document.getElementById("view-authenticated").hidden = false;
+        document.getElementById("customerSearchInput").value = "";
+        document.getElementById("selectedCustomerSummary").hidden = true;
+        showScreen("screen-customers");
+      }
+      /* Google logout: hides the dashboard and returns to the login screen. */
+function handleSignOut() {
+        if (window.google?.accounts?.id) google.accounts.id.disableAutoSelect();
+        document.getElementById("view-authenticated").hidden = true;
+        document.getElementById("view-unauthenticated").hidden = false;
+      }
+      /* Customer search: finds customers matching what the user has typed. */
+function onCustomerSearchInput() {
+        const query = document
+          .getElementById("customerSearchInput")
+          .value.toLowerCase()
+          .trim();
+        const resultsContainer = document.getElementById(
+          "customerDropdownResults",
+        );
+        const matches = MOCK_DATABASE.filter(
+          (c) =>
+            c.name.toLowerCase().includes(query) ||
+            c.company.toLowerCase().includes(query) ||
+            c.email.toLowerCase().includes(query),
+        ).slice(0, 8);
+        if (matches.length === 0) {
+          resultsContainer.innerHTML = `<div class="dropdown-item"><span class="dropdown-item-sub">No matching customers found</span></div>`;
+        } else {
+          resultsContainer.innerHTML = matches
+            .map(
+              (cust) => `
+              <div class="dropdown-item" onclick=selectCustomerFromDropdown(${cust.id})>
+                <div>
+                  <div class="dropdown-item-main">${escapeHtml(cust.name)}</div>
+                  <div class="dropdown-item-sub">${escapeHtml(cust.company)} • ${escapeHtml(cust.email)}</div>
+                </div>
+                <span class="dropdown-item-sub">${cust.cars.length} vehicles</span>
+              </div>
+            `,
+            )
+            .join("");
+        }
+        resultsContainer.hidden = false;
+      }
+      /* Customer selection: stores the chosen customer and fills the summary card. */
+function selectCustomerFromDropdown(customerId) {
+        activeCustomer = MOCK_DATABASE.find((c) => c.id === customerId);
+        document.getElementById("customerDropdownResults").hidden = true;
+        document.getElementById("customerSearchInput").value =
+          `${activeCustomer.name} (${activeCustomer.company})`;
+        document.getElementById("summaryCustName").textContent =
+          activeCustomer.name;
+        document.getElementById("summaryCustCompany").textContent =
+          activeCustomer.company;
+        document.getElementById("summaryCustEmail").textContent =
+          activeCustomer.email;
+        document.getElementById("summaryCustTier").textContent =
+          activeCustomer.tier;
+        document.getElementById("summaryCustCarsCount").textContent =
+          `${activeCustomer.cars.length} Vehicle(s)`;
+        document.getElementById("selectedCustomerSummary").hidden = false;
+      }
+      /* Moves from customer selection to the vehicle list for that customer. */
+function confirmCustomerSelection() {
+        if (!activeCustomer) return;
+        document.getElementById("breadcrumbCustomer").textContent =
+          activeCustomer.name;
+        document.getElementById("vehicleSearchInput").value = "";
+        document.getElementById("selectedVehicleSummary").hidden = true;
+        showScreen("screen-vehicles");
+      }
+      /* Vehicle search: finds vehicles belonging to the selected customer. */
+function onVehicleSearchInput() {
+        if (!activeCustomer) return;
+        const query = document
+          .getElementById("vehicleSearchInput")
+          .value.toLowerCase()
+          .trim();
+        const resultsContainer = document.getElementById(
+          "vehicleDropdownResults",
+        );
+        const matches = activeCustomer.cars
+          .filter(
+            (car) =>
+              car.make.toLowerCase().includes(query) ||
+              car.model.toLowerCase().includes(query) ||
+              car.plate.toLowerCase().includes(query) ||
+              car.year.toString().includes(query),
+          )
+          .slice(0, 8);
+        if (matches.length === 0) {
+          resultsContainer.innerHTML = `<div class="dropdown-item"><span class="dropdown-item-sub">No matching vehicles found</span></div>`;
+        } else {
+          resultsContainer.innerHTML = matches
+            .map(
+              (car) => `
+                <div class="dropdown-item" onclick=selectVehicleFromDropdown('${car.id}')>
+                <div>
+                  <div class="dropdown-item-main">${car.year} ${escapeHtml(car.make)} ${escapeHtml(car.model)}</div>
+                  <div class="dropdown-item-sub">Plate: ${escapeHtml(car.plate)}</div>
+                </div>
+                <span class="dropdown-item-sub">${escapeHtml(car.status)}</span>
+              </div>
+            `,
+            )
+            .join("");
+        }
+        resultsContainer.hidden = false;
+      }
+      /* Vehicle selection: stores the chosen vehicle and fills its summary card. */
+function selectVehicleFromDropdown(carId) {
+        activeCar = activeCustomer?.cars?.find((c) => c.id === carId);
+        if (!activeCar) return;
+        document.getElementById("vehicleDropdownResults").hidden = true;
+        document.getElementById("vehicleSearchInput").value =
+          `${activeCar.make || ""} ${activeCar.model || ""} (${activeCar.plate || ""})`.trim();
+        const carPlateEl = document.getElementById("summaryCarPlate");
+        if (carPlateEl) carPlateEl.textContent = activeCar.plate || "N/A";
+        const carStatus = document.getElementById("summaryCarStatus");
+        if (carStatus) carStatus.textContent = activeCar.status || "N/A";
+        const carMileage = document.getElementById("summaryCarMileage");
+        if (carMileage) carMileage.textContent = activeCar.mileage || "N/A";
+        const carTitleEl = document.getElementById("summaryCarTitle");
+        if (carTitleEl) {
+          carTitleEl.textContent =
+            `${activeCar.year || ""} ${activeCar.make || ""} ${activeCar.model || ""}`.trim();
+        }
+        document.getElementById("selectedVehicleSummary").hidden = false;
+      }
+      /* Telemetry loading: fetches server records and converts them into the table format. */
+async function populateTableBodyTelemetryData(carId) {
+  activeCar = activeCustomer?.cars?.find((c) => c.id === carId);
+  if (!activeCar) return;
+  const carTitleEl = document.getElementById("telemetryCarTitle");
+  const carOwnerEl = document.getElementById("telemetryCarOwner");
+  const plateEl = document.getElementById("telemetryPlate");
+  const macEl = document.getElementById("telemetryMac");
+  if (carTitleEl) carTitleEl.innerText = `${activeCar.make || ''} ${activeCar.model || ''}`.trim() || activeCar.name || "Vehicle Overview";
+  if (carOwnerEl) carOwnerEl.innerText = activeCustomer?.name ? `Owner: ${activeCustomer.name}` : "--";
+  if (plateEl) plateEl.innerText = activeCar.plate || "--";
+  if (macEl) macEl.innerText = activeCar.mac ? `VID: ${activeCar.mac}` : `VID: ${activeCar.id || '--'}`;
+  const tableBody = document.getElementById("telemetryTableBody");
+  /*
+    Show a temporary loading message so the user knows the dashboard
+    is waiting for the server instead of appearing empty.
+  */
+  if (tableBody) {
+    tableBody.innerHTML = `<tr><td colspan="16" style="text-align:center; padding: 1rem;">Fetching database records for Vehicle with ID ${activeCar.id}...</td></tr>`;
+  }
+        /*
+    The server expects the selected vehicle ID in the VehicleId parameter.
+    The response is mapped into short field names used throughout the dashboard.
+  */
+        const parampass =
+          "https://anywashng.com/api/download_sensors_VID.php?VehicleId=" +
+          carId;
+        try {
+          const response = await fetch(parampass, {
+            headers: {
+              "X-API-KEY": API_KEY,
+              "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+              "Content-Type": "application/json",
+            },
+          });
+          const result = await response.json();         
+    if (result.status === "success" && Array.isArray(result.data)) {
+      activeCar.telemetry = result.data.map((row) => ({
+        id: row.VehicleId,
+        time: row.Timestamp,
+        speed: parseFloat(row.Speed || 0),
+        etemp: parseFloat(row.Engine_Temperature || 0),
+        maf: parseFloat(row.Mass_Air_Flow || 0),
+        mpg: parseFloat(row.Miles_Per_Gallon || 0),
+        rpm: parseFloat(row.Revolutions_Per_Minute || 0),
+        ctemp: parseFloat(row.Coolant_Temperature || 0),
+        atemp: parseFloat(row.Atmospheric_Temperature || 0),
+        bpressure: parseFloat(row.Barometric_Pressure || 0),
+        evap: parseFloat(row.Evaporative_Emission_Control || 0),
+        load: parseFloat(row.Engine_Load || 0),
+        throttle: parseFloat(row.Throttle_Position || 0),
+        timing: parseFloat(row.Engine_Timing || 0),
+        iat: parseFloat(row.Intake_Air_Temperature || 0),
+        fuel: parseFloat(row.Fuel_Level || row.fuel || 0),
+        voltage: parseFloat(row.Voltage || 0)
+      }));
+    } else {
+      activeCar.telemetry = [];
+    }
+  } catch (err) {
+    console.error("Failed to fetch sensor data:", err);
+    activeCar.telemetry = activeCar.telemetry || [];
+  }
+  if (typeof renderTelemetryTable === "function") {
+    renderTelemetryTable(activeCar.telemetry);
+  } else if (typeof applyTableFilters === "function") {
+    applyTableFilters();
+  }
+  if (typeof showScreen === "function") showScreen("screen-telemetry");
+}
+
+/*
+ * ================================================================
+ * FILTER EVENT LISTENERS
+ * ================================================================
+ *
+ * addEventListener() tells the browser:
+ *
+ *   "When this control changes, run this function."
+ *
+ * Every filter control calls runTelemetryAnalysis(), so the table
+ * refreshes immediately after the user changes a filter.
+ *
+ * This avoids requiring a separate "refresh" button just to apply
+ * a changed filter.
+ *
+ * ================================================================
+ */
+
+document.getElementById("minSpeed")?.addEventListener("input", runTelemetryAnalysis);
+document.getElementById("metricType")?.addEventListener("change", runTelemetryAnalysis);
+document.getElementById("engineStatus")?.addEventListener("change", runTelemetryAnalysis);
+document.getElementById("startDate")?.addEventListener("change", runTelemetryAnalysis);
+document.getElementById("startTime")?.addEventListener("change", runTelemetryAnalysis);
+document.getElementById("timeRange")?.addEventListener("change", runTelemetryAnalysis);
+
+/*
+  The table headers are now ready to respond to clicks.
+  This only connects the controls; it does not load any telemetry.
+*/
+initializeTelemetrySorting();
+/*
+  TELEMETRY TABLE RENDERING
+  This function turns the filtered records into visible table rows.
+  It also updates the log counter and remembers what is currently shown.
+*/
+function renderTelemetryTable(logs) {
+  const tableBody = document.getElementById("telemetryTableBody");
+  if (!tableBody) return;
+
+  currentTelemetryDisplayedLogs = Array.isArray(logs) ? [...logs] : [];
+  updateTelemetryLogCount(currentTelemetryDisplayedLogs.length);
+
+  if (currentTelemetryDisplayedLogs.length === 0) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="16" style="text-align:center; padding:1rem;">
+          No telemetry records found for this car ID.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  const safeEscape = (value) =>
+    typeof escapeHtml === "function" ? escapeHtml(value) : (value ?? "");
+
+  tableBody.innerHTML = currentTelemetryDisplayedLogs
+    .map((log) => {
+      const isHighSpeed = (log.speed || 0) >= 80;
+
+      /*
+        The timestamp is kept as a date internally for sorting.
+        This formatted version is only what the user sees in the table.
+      */
+      let formattedTime = "--";
+
+      if (log.time) {
+        const dateObj = new Date(log.time);
+
+        if (!Number.isNaN(dateObj.getTime())) {
+          formattedTime = dateObj.toLocaleString("en-US", {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+        } else {
+          formattedTime = safeEscape(log.time);
+        }
+      }
+
+      return `
+        <tr>
+          <td>${formattedTime}</td>
+          <td style="color:${isHighSpeed ? "#ef4444" : "#f8fafc"};font-weight:${isHighSpeed ? "600" : "400"};">
+            ${(parseFloat(log.speed) || 0).toFixed(1)}
+          </td>
+          <td>${Math.round(log.rpm || 0)}</td>
+          <td>${(parseFloat(log.maf) || 0).toFixed(1)}</td>
+          <td>${(parseFloat(log.ctemp) || 0).toFixed(1)}</td>
+          <td>${(parseFloat(log.fuel) || 0).toFixed(1)}</td>
+          <td>${(parseFloat(log.voltage) || 0).toFixed(1)}</td>
+          <td>${(parseFloat(log.evap) || 0).toFixed(1)}</td>
+          <td>${(parseFloat(log.timing) || 0).toFixed(1)}</td>
+          <td>${(parseFloat(log.etemp) || 0).toFixed(1)}</td>
+          <td>${(parseFloat(log.mpg) || 0).toFixed(1)}</td>
+          <td>${(parseFloat(log.iat) || 0).toFixed(1)}</td>
+          <td>${(parseFloat(log.throttle) || 0).toFixed(1)}</td>
+          <td>${(parseFloat(log.load) || 0).toFixed(1)}</td>
+          <td>${(parseFloat(log.atemp) || 0).toFixed(1)}</td>
+          <td>${(parseFloat(log.bpressure) || 0).toFixed(1)}</td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+/*
+  LOG COUNT
+  This counter stays outside the scrollable table.
+  It always reports how many records are currently visible.
+*/
+function updateTelemetryLogCount(count) {
+  const counter = document.getElementById("telemetryLogCount");
+  if (!counter) return;
+
+  const numberElement = counter.querySelector("strong");
+  if (numberElement) {
+    numberElement.textContent = Number(count || 0).toLocaleString();
+  }
+}
+
+/*
+  TABLE SORTING
+  The first click sorts the selected column from low to high.
+  The next click on that same column reverses it from high to low.
+  Timestamps are treated as dates and telemetry values are treated as numbers.
+*/
+function sortTelemetryLogs(logs, key) {
+  if (!Array.isArray(logs)) return [];
+
+  if (telemetrySortKey === key) {
+    telemetrySortDirection =
+      telemetrySortDirection === "asc" ? "desc" : "asc";
+  } else {
+    telemetrySortKey = key;
+    telemetrySortDirection = "asc";
+  }
+
+  const sortedLogs = [...logs];
+
+  sortedLogs.sort((a, b) => {
+    const valueA = a?.[key];
+    const valueB = b?.[key];
+
+    if (key === "time") {
+      const timeA = new Date(valueA).getTime();
+      const timeB = new Date(valueB).getTime();
+
+      const safeA = Number.isNaN(timeA) ? 0 : timeA;
+      const safeB = Number.isNaN(timeB) ? 0 : timeB;
+
+      return telemetrySortDirection === "asc"
+        ? safeA - safeB
+        : safeB - safeA;
+    }
+
+    const numberA = parseFloat(valueA);
+    const numberB = parseFloat(valueB);
+
+    if (Number.isFinite(numberA) && Number.isFinite(numberB)) {
+      return telemetrySortDirection === "asc"
+        ? numberA - numberB
+        : numberB - numberA;
+    }
+
+    const textA = String(valueA ?? "").toLowerCase();
+    const textB = String(valueB ?? "").toLowerCase();
+
+    return telemetrySortDirection === "asc"
+      ? textA.localeCompare(textB)
+      : textB.localeCompare(textA);
+  });
+
+  return sortedLogs;
+}
+
+/*
+  SORT INDICATORS
+  This clears all arrows first and then marks only the active column.
+  An upward arrow means ascending order; a downward arrow means descending.
+*/
+function updateTelemetrySortIndicators() {
+  document
+    .querySelectorAll("#telemetryTableHeader .sortable-header")
+    .forEach((header) => {
+      const indicator = header.querySelector(".sort-indicator");
+      const isActive = header.dataset.sortKey === telemetrySortKey;
+
+      header.classList.toggle("active-sort", isActive);
+
+      if (indicator) {
+        indicator.textContent = isActive
+          ? telemetrySortDirection === "asc"
+            ? "↑"
+            : "↓"
+          : "";
+      }
+    });
+}
+
+/*
+  SORTING EVENTS
+  This connects every clickable column header to the sorting function.
+*/
+function initializeTelemetrySorting() {
+  document
+    .querySelectorAll("#telemetryTableHeader .sortable-header")
+    .forEach((header) => {
+      header.addEventListener("click", () => {
+        const key = header.dataset.sortKey;
+        if (!key) return;
+
+        const sortedLogs = sortTelemetryLogs(
+          currentTelemetryDisplayedLogs,
+          key
+        );
+
+        currentTelemetryDisplayedLogs = sortedLogs;
+        renderTelemetryTable(sortedLogs);
+        updateTelemetrySortIndicators();
+      });
+    });
+}
+
+/*
+  TELEMETRY FILTERING
+  This function reads the filter controls, checks every loaded record,
+  and sends the matching records to the table.
+*/
+
+/*
+ * ================================================================
+ * BEGINNER GUIDE: TELEMETRY FILTERING
+ * ================================================================
+ *
+ * This section contains the logic that decides which telemetry
+ * records should be shown in the dashboard.
+ *
+ * Think of a telemetry record as one snapshot of the vehicle:
+ *
+ *   {
+ *     speed: 72,
+ *     rpm: 2100,
+ *     ctemp: 96,
+ *     fuel: 48,
+ *     voltage: 14.1,
+ *     ...
+ *   }
+ *
+ * The function below:
+ *
+ *   1. Reads the values selected in the filter controls.
+ *   2. Reads every telemetry record belonging to the active vehicle.
+ *   3. Converts sensor values into numbers so comparisons are reliable.
+ *   4. Applies the selected filters.
+ *   5. Keeps only records that pass ALL selected conditions.
+ *   6. Sends the surviving records to the telemetry table.
+ *
+ * IMPORTANT:
+ * The filter values are not changing the vehicle data itself.
+ * They only decide which records are temporarily displayed.
+ *
+ * ================================================================
+ */
+
+function runTelemetryAnalysis() {
+  /*
+   * VERSION 2 — EXISTING SCENARIO FILTER SYSTEM
+   *
+   * The original filter names are intentionally preserved exactly.
+   * Only the numerical conditions are calibrated around the telemetry
+   * fields actually supplied by the 2008 BMW X5 E70 N52 dataset.
+   *
+   * Important:
+   * - These are telemetry classification bands, not BMW DME fault thresholds.
+   * - Rain/night/hill/A/C/limp-mode are inferred from available signals because
+   *   the dataset does not contain direct rain, light, grade, compressor-load,
+   *   or fault-code fields.
+   */
+  if (!activeCar || !Array.isArray(activeCar.telemetry)) return;
+
+
+  /*
+   * ---------------------------------------------------------------
+   * TELEMETRY FILTER INPUTS
+   * ---------------------------------------------------------------
+   *
+   * These variables represent the controls the user can change in
+   * the dashboard.
+   *
+   * minSpeed:
+   *   Minimum road speed allowed by the user.
+   *
+   * metricFilter:
+   *   The selected metric/alert category.
+   *
+   * engineFilter:
+   *   The selected driving/scenario condition in Version 2.
+   *
+   * startDate / startTime:
+   *   Optional exact date/time filters.
+   *
+   * timePreset:
+   *   A relative time window such as the last hour, 24 hours,
+   *   7 days, or 30 days.
+   *
+   * The ?. operator means "only try to access this element if it
+   * exists". The || fallback gives the variable a safe default.
+   *
+   * parseFloat() converts text from an input element into a number.
+   */
+
+  const minSpeed = parseFloat(document.getElementById("minSpeed")?.value || "0");
+  const metricFilter = document.getElementById("metricType")?.value || "all";
+  const engineFilter = document.getElementById("engineStatus")?.value || "all";
+  const startDate = document.getElementById("startDate")?.value || "";
+  const startTime = document.getElementById("startTime")?.value || "";
+  const timePreset = document.getElementById("timeRange")?.value || "all";
+
+  const hoursMap = {
+    "1h": 1,
+    "24h": 24,
+    "7d": 24 * 7,
+    "30d": 24 * 30
+  };
+
+  let presetCutoff = null;
+  if (hoursMap[timePreset]) {
+    presetCutoff = new Date(Date.now() - hoursMap[timePreset] * 60 * 60 * 1000);
+  }
+
+  const filteredLogs = activeCar.telemetry.filter((log) => {
+    const speed = Number(log.speed ?? 0);
+    const rpm = Number(log.rpm ?? 0);
+    const maf = Number(log.maf ?? 0);
+    const coolantTemp = Number(log.ctemp ?? log.temp ?? 0);
+    const fuel = Number(log.fuel ?? 0);
+    const voltage = Number(log.voltage ?? 0);
+    const evap = Number(log.evap ?? 0);
+    const timing = Number(log.timing ?? 0);
+    const mpg = Number(log.mpg ?? 0);
+    const iat = Number(log.iat ?? 0);
+    const throttle = Number(log.throttle ?? 0);
+    const load = Number(log.load ?? 0);
+    const ambientTemp = Number(log.atemp ?? 0);
+    const barometricPressure = Number(log.bpressure ?? 0);
+
+    /* Basic speed filter — retained exactly as a control. */
+    if (speed < minSpeed) return false;
+
+    /* Existing metric names retained; only thresholds are calibrated. */
+    switch (metricFilter) {
+      case "speed":
+        if (speed < 75) return false;
+        break;
+
+      case "temp":
+        if (coolantTemp < 105) return false;
+        break;
+
+      case "overheat":
+        if (coolantTemp <= 115) return false;
+        break;
+
+      case "battery":
+        /* Charging voltage is meaningful only with the engine running. */
+        if (!(rpm > 500 && voltage > 0 && voltage < 13.2)) return false;
+        break;
+
+      case "rpm":
+        if (rpm < 5000) return false;
+        break;
+    }
+
+    /*
+     * Existing scenario names are deliberately untouched.
+     * The ranges below are broader than the old artificial profiles so a
+     * normal N52 event is not rejected because one unrelated sensor moved.
+     */
+    switch (engineFilter) {
+      case "running":
+        if (rpm <= 0) return false;
+        break;
+
+      case "moving":
+        if (speed <= 0) return false;
+        break;
+
+      case "idle":
+      case "idling":
+        if (!(speed <= 3 && rpm > 0 && rpm <= 1200)) return false;
+        break;
+
+      case "off":
+        if (rpm > 0) return false;
+        break;
+
+      /* Stop and Go Traffic: low speed with a running engine. */
+      case "StopAndGo_Traffic":
+        if (!(speed <= 35 && rpm >= 550 && rpm <= 2800)) return false;
+        break;
+
+      /*
+       * Rainy Season Cruising: rain is not measured. Use a conservative
+       * warm/humid-season proxy plus moderate cruising, without claiming
+       * that the record proves rain occurred.
+       */
+      case "RainySeason_Cruising":
+        if (!(speed >= 30 && speed <= 90 && rpm >= 1000 && rpm <= 3200 &&
+              ambientTemp >= 18 && ambientTemp <= 34 &&
+              barometricPressure >= 98 && barometricPressure <= 103)) return false;
+        break;
+
+      /* Nighttime City Drive: time is handled by the explicit time filter;
+         this scenario remains a city-driving profile when selected. */
+      case "Nighttime_CityDrive":
+        if (!(speed >= 10 && speed <= 70 && rpm >= 800 && rpm <= 3000 &&
+              load >= 8 && load <= 65)) return false;
+        break;
+
+      /* Highway Steady Cruise: speed + settled RPM + moderate load. */
+      case "Highway_SteadyCruise":
+        if (!(speed >= 80 && rpm >= 1300 && rpm <= 3200 &&
+              load >= 8 && load <= 50 && throttle <= 45)) return false;
+        break;
+
+      /* LowFuel_LimpMode: low fuel is measurable; true limp mode is not. */
+      case "LowFuel_LimpMode":
+        if (!(fuel <= 20 && rpm <= 3500 && load <= 70 && speed <= 80)) return false;
+        break;
+
+      /* A/C load is inferred from warm ambient + elevated IAT + engine load. */
+      case "AC_Load_Stress":
+        if (!(ambientTemp >= 27 && iat >= 35 && load >= 28 &&
+              speed >= 5 && speed <= 80 && rpm >= 700)) return false;
+        break;
+
+      /* Cold-start profile: coolant is the strongest available indicator. */
+      case "ColdStart_Morning":
+        if (!(coolantTemp < 65 && rpm >= 650 && rpm <= 1800 && speed <= 25)) return false;
+        break;
+
+      /* Hill climb cannot be proven without grade/GPS; use sustained load. */
+      case "HillClimb_HeavyLoad":
+        if (!(speed >= 10 && speed <= 85 && load >= 55 &&
+              throttle >= 30 && rpm >= 1700 && rpm <= 5000)) return false;
+        break;
+
+      /* Normal cruising: broad everyday E70 road-driving band. */
+      case "NormalCruising":
+        if (!(speed >= 40 && speed <= 100 && rpm >= 1000 && rpm <= 3200 &&
+              load >= 8 && load <= 55 && throttle <= 45)) return false;
+        break;
+
+      /* Traffic idle heat soak: stationary/near-stationary + warm intake/coolant. */
+      case "TrafficIdle_HeatSoak":
+        if (!(speed <= 5 && rpm >= 550 && rpm <= 1100 &&
+              iat >= 42 && coolantTemp >= 95)) return false;
+        break;
+
+      /* Overtaking: high demand while already moving. */
+      case "HighLoad_Overtaking":
+        if (!(speed >= 45 && throttle >= 50 && load >= 60 && rpm >= 2300)) return false;
+        break;
+
+      /* Strong thermal condition rather than treating normal N52 heat as a fault. */
+      case "OverheatingWarning":
+        if (!(coolantTemp > 115 || (coolantTemp > 110 && load >= 55))) return false;
+        break;
+    }
+
+    /* Date/time filtering remains unchanged. */
+    const rawTime = String(log.time ?? "");
+    const normalizedTime = rawTime.replace(/(\d{4}-\d{2}-\d{2})(\d{2}:\d{2}:\d{2})/, "$1T$2");
+    const logDate = new Date(normalizedTime);
+    const hasValidDate = !Number.isNaN(logDate.getTime());
+
+    if (startDate && hasValidDate) {
+      const year = logDate.getFullYear();
+      const month = String(logDate.getMonth() + 1).padStart(2, "0");
+      const day = String(logDate.getDate()).padStart(2, "0");
+      if (`${year}-${month}-${day}` !== startDate) return false;
+    }
+
+    if (startTime) {
+      if (hasValidDate) {
+        const localTime = logDate.toTimeString().slice(0, 5);
+        if (localTime !== startTime) return false;
+      } else if (!rawTime.includes(startTime)) {
+        return false;
+      }
+    }
+
+    if (presetCutoff && hasValidDate && logDate < presetCutoff) return false;
+
+    return true;
+  });
+
+  window.currentTelemetryDisplayedLogs = filteredLogs;
+  renderTelemetryTable(filteredLogs);
+}
+    /* Opens the telemetry dashboard for the selected vehicle. */
+async 
+/*
+ * ================================================================
+ * OPEN TELEMETRY SCREEN
+ * ================================================================
+ *
+ * This function prepares the telemetry page for the vehicle that
+ * the user selected.
+ *
+ * Main variables used here:
+ *
+ *   activeCar
+ *     The vehicle currently selected in the application.
+ *
+ *   activeCustomer
+ *     The customer who owns the selected vehicle.
+ *
+ *   telemetryCarTitle
+ *     HTML element used to display the vehicle's year/make/model.
+ *
+ *   telemetryCarOwner
+ *     HTML element used to display the owner information.
+ *
+ *   telemetryPlate
+ *     HTML element used to display the vehicle registration/plate.
+ *
+ *   telemetryStatus
+ *     HTML element used to display the vehicle's current status.
+ *
+ * The function first makes sure a vehicle exists. It then updates
+ * the page with that vehicle's information, loads its telemetry,
+ * runs the filters, and finally displays the telemetry screen.
+ *
+ * ================================================================
+ */
+
+async function showTelemetryScreen() {
+  if (!activeCar) return;
+  document.getElementById("telemetryCarTitle").textContent =
+    `${activeCar.year} ${activeCar.make} ${activeCar.model}`;
+  document.getElementById("telemetryCarOwner").textContent =
+    `Owner: ${activeCustomer.name} (${activeCustomer.company})`;
+  document.getElementById("telemetryPlate").textContent = activeCar.plate;
+  document.getElementById("telemetryStatus").textContent = activeCar.status;
+  await populateTableBodyTelemetryData(activeCar.id);
+  runTelemetryAnalysis();
+  showScreen("screen-telemetry");
+}
+      /* HTML safety helper: keeps telemetry values from being interpreted as HTML. */
+
+/*
+ * ================================================================
+ * HTML SAFETY HELPER
+ * ================================================================
+ *
+ * This function protects text before it is inserted into HTML.
+ *
+ * Example:
+ *   A telemetry value might contain "<" or "&".
+ *
+ * If that text were inserted directly into innerHTML, the browser
+ * could interpret it as HTML instead of displaying it as text.
+ *
+ * The function replaces special characters with their safe HTML
+ * equivalents:
+ *
+ *   &  -> &amp;
+ *   <  -> &lt;
+ *   >  -> &gt;
+ *   "  -> &quot;
+ *   '  -> &#39;
+ *
+ * Parameter:
+ *   str
+ *     The value that needs to be made safe.
+ *
+ * Return value:
+ *   A string that can safely be inserted into HTML.
+ *
+ * ================================================================
+ */
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str).replace(/[&<>"']/g, function (m) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    }[m];
+  });
+}
+      /* Google authentication setup: creates the Google sign-in control. */
+
+/*
+ * ================================================================
+ * GOOGLE AUTHENTICATION INITIALIZATION
+ * ================================================================
+ *
+ * This function connects the page to Google's Identity Services
+ * when that library is available.
+ *
+ * Important values:
+ *
+ *   GOOGLE_CLIENT_ID
+ *     Identifies this web application to Google's authentication
+ *     service.
+ *
+ *   handleCredentialResponse
+ *     Callback function that receives the login result.
+ *
+ *   buttonDiv
+ *     HTML element where the Google sign-in button is rendered.
+ *
+ * The optional chaining checks (?.) prevent an error if Google's
+ * authentication library has not loaded yet.
+ *
+ * ================================================================
+ */
+
+function initGoogleAuth() {
+        if (window.google?.accounts?.id) {
+          google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleCredentialResponse,
+          });
+          google.accounts.id.renderButton(
+            document.getElementById("buttonDiv"),
+            { theme: "outline", size: "large", type: "standard" },
+          );
+        }
+      }
+    </script>
+  </body>
+</html>
