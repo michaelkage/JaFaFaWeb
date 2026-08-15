@@ -1,0 +1,199 @@
+name: JaFaFa maintenance v7
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  maintain:
+    if: ${{ !contains(github.event.head_commit.message, '[skip jafafa-maintenance]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply deterministic maintenance pass
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          def dedupe_css(path):
+              text = path.read_text(encoding='utf-8')
+              lines = text.splitlines(True)
+              out = []
+              brace_depth = 0
+              seen = {}
+              for line in lines:
+                  stripped = line.strip()
+                  m = re.match(r'(-webkit-backdrop-filter|backdrop-filter)\s*:\s*([^;]+);', stripped)
+                  if m:
+                      key = (brace_depth, m.group(1), m.group(2).strip())
+                      if key in seen:
+                          continue
+                      seen[key] = True
+                  out.append(line)
+                  brace_depth += line.count('{') - line.count('}')
+              path.write_text(''.join(out), encoding='utf-8')
+
+          def replace_once(text, old, new, label, required=True):
+              if old in text:
+                  return text.replace(old, new, 1), True
+              if required:
+                  raise SystemExit(f'maintenance target missing: {label}')
+              return text, False
+
+          # ------------------------------------------------------------
+          # ADMIN PORTAL
+          # ------------------------------------------------------------
+          admin = Path('index.html')
+          text = admin.read_text(encoding='utf-8')
+          dedupe_css(admin)
+          text = admin.read_text(encoding='utf-8')
+
+          # Canonical connectivity is live/recent/stale/offline everywhere.
+          text = text.replace('a.connection === "online" || a.connection === "recent"', 'a.connection === "live" || a.connection === "recent"')
+          text = text.replace('a.connection==="online"||a.connection==="recent"', 'a.connection==="live"||a.connection==="recent"')
+          text = text.replace("return s==='online'?'Online':s==='recent'?'Recently seen':'Offline'", "return ({live:'Live',recent:'Recently seen',stale:'Stale',offline:'Offline'})[s] || 'Unknown'")
+          text = text.replace("return s==='online'?'jf-ok':s==='recent'?'jf-warn':'jf-bad'", "return ({live:'jf-ok',recent:'jf-info',stale:'jf-warn',offline:'jf-bad'})[s] || 'jf-bad'")
+          text = text.replace('${online}<span>Live</span>', '${live}<span>Live</span>')
+          text = text.replace('${online}</b><span>Live</span>', '${live}</b><span>Live</span>')
+          text = text.replace('a.connection==="online"?"Live telemetry"', 'a.connection==="live"?"Live telemetry"')
+          text = text.replace('const live = age < 120000;', 'const live = age < 10000;')
+
+          # The fleet command center previously referenced an undefined `online` variable.
+          text = text.replace('${online}</b><span>Live</span>', '${live}</b><span>Live</span>')
+
+          # Remove the obsolete customer-style connectivity fallback from the admin-facing fleet suite.
+          old = "function connLabel(s){return s==='online'?'Online':s==='recent'?'Recently seen':'Offline'}\n   function connClass(s){return s==='online'?'jf-ok':s==='recent'?'jf-warn':'jf-bad'}"
+          new = "function connLabel(s){return ({live:'Live',recent:'Recently seen',stale:'Stale',offline:'Offline'})[s] || 'Unknown'}\n   function connClass(s){return ({live:'jf-ok',recent:'jf-info',stale:'jf-warn',offline:'jf-bad'})[s] || 'jf-bad'}"
+          text = text.replace(old, new)
+
+          # Surface ownership conflicts in the admin fleet suite.
+          marker = "function load(){"
+          conflict_ui = r'''function renderOwnershipConflicts(){
+     const conflicts=window.JaFaFaOwnershipConflicts||[];
+     let host=document.getElementById('jfOwnershipConflicts');
+     if(!host){
+       host=document.createElement('section');host.id='jfOwnershipConflicts';host.className='dashboard-section jf-ownership-conflicts';
+       const anchor=document.querySelector('#jfFleetCommand')||document.querySelector('#dashboardActivity')?.closest('.dashboard-section');
+       if(anchor) anchor.parentNode.insertBefore(host,anchor);
+     }
+     if(!host)return;
+     if(!conflicts.length){host.hidden=true;return;}
+     host.hidden=false;
+     host.innerHTML='<div class="jf-suite-card"><div class="jf-suite-head"><h3>⚠ Ownership conflicts</h3><span class="jf-chip jf-warn">'+conflicts.length+' unresolved</span></div>'+conflicts.map(x=>'<div class="jf-alert-row"><span class="jf-chip jf-bad">CONFLICT</span><div><strong>Vehicle '+esc(x.vehicleId)+'</strong><div class="jf-suite-small">Assigned to '+x.customerIds.map(id=>{const c=db.find(c=>String(c.id)===String(id));return esc(c?.name||('Customer '+id))}).join(' · ')+'</div><button class="btn-secondary jf-suite-small" type="button" data-resolve-owner="'+esc(x.vehicleId)+'">Resolve conflict</button></div></div>').join('')+'</div>';
+     host.querySelectorAll('[data-resolve-owner]').forEach(b=>b.onclick=()=>resolveOwnershipConflict(b.dataset.resolveOwner));
+   }
+   function resolveOwnershipConflict(vehicleId){
+     const hit=vehicle(vehicleId); if(!hit)return;
+     const candidates=db.filter(c=>(c.cars||[]).some(v=>String(v.id)===String(vehicleId)));
+     if(candidates.length<2)return;
+     const chosen=prompt('Enter the customer ID that should own vehicle '+vehicleId+':\\n\\n'+candidates.map(c=>c.id+' — '+c.name).join('\\n'));
+     if(chosen===null)return;
+     const owner=candidates.find(c=>String(c.id)===String(chosen).trim()); if(!owner){alert('Invalid customer ID. No changes made.');return;}
+     for(const c of candidates){c.cars=(c.cars||[]).filter(v=>String(v.id)!==String(vehicleId));c.vehicleIds=(c.vehicleIds||[]).filter(id=>String(id)!==String(vehicleId));}
+     const original=candidates.find(c=>c===owner)||owner; const source=hit.v; source.customerId=String(owner.id); source.ownershipConflict=false; delete source.ownershipConflictOwners; owner.cars=owner.cars||[]; owner.vehicleIds=owner.vehicleIds||[]; owner.cars.push(source); owner.vehicleIds.push(String(vehicleId));
+     save();detectOwnershipConflicts(db);renderOwnershipConflicts();refreshAdminDashboard();
+   }
+   '''
+          if 'function renderOwnershipConflicts()' not in text:
+              if marker not in text:
+                  raise SystemExit('maintenance target missing: admin fleet load marker')
+              text = text.replace(marker, conflict_ui + marker, 1)
+
+          # Run conflict detection whenever the suite loads/saves.
+          text = text.replace("syncGlobal();\n   }\n   function syncGlobal()", "syncGlobal();\n     detectOwnershipConflicts(db);\n   }\n   function syncGlobal()", 1)
+          text = text.replace("function save(){ localStorage", "function save(){ detectOwnershipConflicts(db); localStorage", 1)
+          text = text.replace("syncGlobal();\n   }\n   function log(", "syncGlobal(); detectOwnershipConflicts(db); renderOwnershipConflicts();\n   }\n   function log(", 1)
+
+          # Initialize the conflict panel after the fleet suite has rendered.
+          text = text.replace("renderFleetCommandCenter(vs);", "renderFleetCommandCenter(vs); renderOwnershipConflicts();", 1)
+
+          # ------------------------------------------------------------
+          # CUSTOMER PORTAL
+          # ------------------------------------------------------------
+          customer = Path('customer.html')
+          ctext = customer.read_text(encoding='utf-8')
+          dedupe_css(customer)
+          ctext = customer.read_text(encoding='utf-8')
+
+          # Do not let normalization silently rewrite an existing owner.
+          ctext = ctext.replace('v.customerId = String(c.id); v.createdAt = v.createdAt || now();', 'v.customerId = v.customerId ? String(v.customerId) : String(c.id); v.createdAt = v.createdAt || now();', 1)
+
+          # Remove the dead legacy connectivity branch from analyze().
+          old_analyze = '''function analyze(v) {
+         const t=latest(v), time=t ? new Date(t.time||t.timestamp) : null, age=time && !Number.isNaN(time.getTime()) ? Math.max(0,Date.now()-time.getTime()) : Infinity;
+         const connection=!t?"offline":age<=120000?"online":age<=900000?"recent":"offline";
+         if (window.analyzeVehicleTelemetry) return window.analyzeVehicleTelemetry(v.telemetry||[]);
+         const coolant=num(t?.ctemp ?? t?.coolant), voltage=num(t?.voltage), rpm=num(t?.rpm), speed=num(t?.speed);
+         const overall=(coolant!==null&&coolant>110)||(voltage!==null&&voltage<11.5)?"critical":connection==="offline"||(coolant!==null&&coolant>=105)||(voltage!==null&&voltage<12)||(rpm!==null&&rpm>5000)?"warning":"healthy";
+         return {latest:t,connection,cooling:coolant===null?"unknown":coolant>110?"overheating":coolant>=105?"warm":"normal",electrical:voltage===null?"unknown":voltage<12?"low-voltage":"normal",overall,age};
+       }'''
+          new_analyze = '''function analyze(v) {
+         if (window.analyzeVehicleTelemetry) return window.analyzeVehicleTelemetry(v?.telemetry || []);
+         return {latest:latest(v),connection:"offline",engine:"unknown",driving:"unknown",cooling:"unknown",electrical:"unknown",overall:"warning",age:Infinity,score:null,categories:[]};
+       }'''
+          ctext, ok = replace_once(ctext, old_analyze, new_analyze, 'customer analyze fallback', required=False)
+          if not ok:
+              ctext = re.sub(r'function analyze\(v\) \{.*?\n       \}\n       function health\(v\)', new_analyze + '\n       function health(v)', ctext, count=1, flags=re.S)
+
+          # Missing data must be unknown, not a perfect 100. Air/intake stays unassessed until thresholds exist.
+          old_categories = re.search(r'       function vehicleHealthCategories\(logs\)\{.*?\n', ctext)
+          replacement_categories = '''       function vehicleHealthCategories(logs){const latest=latestTelemetry(logs);if(!latest)return[];const n=normalizeTelemetryValue,coolant=n(latest.ctemp),voltage=n(latest.voltage),rpm=n(latest.rpm),speed=n(latest.speed),maf=n(latest.maf),iat=n(latest.iat),throttle=n(latest.throttle),load=n(latest.load),d=latest.time||latest.timestamp?new Date(latest.time||latest.timestamp):null,age=d&&!Number.isNaN(d.getTime())?Math.max(0,Date.now()-d.getTime()):Infinity,connection=telemetryConnectionState(age),score=(value,deduction=0)=>value===null?null:Math.max(0,Math.min(100,Math.round(value-deduction))),engine=rpm===null?null:score(100,rpm>=TELEMETRY_CONFIG.rpm.warning?10:0),cooling=coolant===null?null:score(100,coolant>=TELEMETRY_CONFIG.ctemp.critical?30:coolant>=TELEMETRY_CONFIG.ctemp.warning?10:0),electrical=voltage===null||voltage<=0?null:score(100,voltage<TELEMETRY_CONFIG.voltage.warningBelow?20:0),air=(maf===null&&iat===null&&throttle===null&&load===null)?null:score(100,0),performance=speed===null?null:score(100,speed>=TELEMETRY_CONFIG.speed.warning?5:0),connectivity=connection==="live"?100:connection==="recent"?90:connection==="stale"?75:50;return [["Engine",engine],["Cooling",cooling],["Electrical",electrical],["Air / Intake",air],["Performance",performance],["Connectivity",connectivity]]}\n'''
+          if old_categories:
+              ctext = ctext[:old_categories.start()] + replacement_categories + ctext[old_categories.end():]
+
+          # Customer dashboard statistics distinguish connectivity states from health warnings.
+          ctext = ctext.replace('const online=vs.filter(v=>analyze(v).connection==="live").length, warnings=vs.filter(v=>analyze(v).connection==="recent").length, offline=vs.filter(v=>analyze(v).connection==="offline").length;', 'const online=vs.filter(v=>analyze(v).connection==="live").length, recent=vs.filter(v=>analyze(v).connection==="recent").length, offline=vs.filter(v=>analyze(v).connection==="offline").length, warnings=vs.filter(v=>analyze(v).overall==="warning").length, critical=vs.filter(v=>analyze(v).overall==="critical").length;')
+          ctext = ctext.replace('$("statVehicles").textContent=vs.length; $("statOnline").textContent=online; $("statWarnings").textContent=warnings; $("statOffline").textContent=offline;', '$("statVehicles").textContent=vs.length; $("statOnline").textContent=online; $("statWarnings").textContent=warnings+critical; $("statOffline").textContent=offline; const recentEl=$("statWarnings")?.parentElement?.querySelector("small"); if(recentEl) recentEl.textContent=`${recent} recent · ${warnings} warning · ${critical} critical`;')
+
+          # Health bars explicitly render UNKNOWN for missing assessments.
+          ctext = ctext.replace('$("healthBars").innerHTML=healthCategories(v).map(x=>`<div class="barrow"><span>${esc(x[0])}</span><div class="track"><div class="fill" style="width:${x[1]}%"></div></div><b>${x[1]}</b></div>`).join("");', '$("healthBars").innerHTML=healthCategories(v).map(x=>{const known=Number.isFinite(x[1]);return `<div class="barrow"><span>${esc(x[0])}</span><div class="track"><div class="fill" style="width:${known?x[1]:0}%"></div></div><b>${known?x[1]:"UNKNOWN"}</b></div>`}).join("");')
+
+          # Ownership conflict metadata is surfaced to the customer UI rather than repaired silently.
+          if 'function detectCustomerOwnershipConflicts' not in ctext:
+              marker='function migrateLegacy() {'
+              helper='''function detectCustomerOwnershipConflicts(source){const seen=new Map(),conflicts=[];(Array.isArray(source)?source:[]).forEach(c=>(c.cars||[]).forEach(v=>{const id=String(v?.id||"");if(!id)return;const owner=String(c.id),prior=seen.get(id);if(prior&&prior!==owner){conflicts.push({vehicleId:id,customerIds:[prior,owner]});v.ownershipConflict=true;v.ownershipConflictOwners=[prior,owner];}else if(!prior)seen.set(id,owner)}));return conflicts}\n       '''
+              ctext=ctext.replace(marker, helper+marker, 1)
+
+          # Keep customer email uniqueness check explicit after normalization.
+          email_check='if(db.some(x=>String(x.id)!==String(c.id)&&String(x.email||"").trim().toLowerCase()===nextEmail))return toast("That email is already used by another customer.");'
+          if email_check not in ctext:
+              raise SystemExit('maintenance target missing: customer email uniqueness check')
+
+          # Add keyboard-safe customer log sorting indicators without changing the existing table structure.
+          if 'data-customer-log-sort' not in ctext:
+              ctext = ctext.replace('</body>', '''<script id="jafafa-v7-customer-sort">\n(() => {\n  const labels={time:'Time',speed:'Speed',rpm:'RPM',ctemp:'Coolant',voltage:'Voltage',load:'Load'};\n  function wire(){const table=document.querySelector('#logBody')?.closest('table');if(!table||table.dataset.jfV7Sort)return;table.dataset.jfV7Sort='1';table.querySelectorAll('thead th').forEach((th,i)=>{const key=Object.keys(labels)[i];if(!key)return;th.dataset.customerLogSort=key;th.style.cursor='pointer';th.title='Click to sort';th.addEventListener('click',()=>{customerLogSort.key=key;customerLogSort.dir=customerLogSort.dir==='asc'?'desc':'asc';renderLog(selected?.telemetry||[]);table.querySelectorAll('thead th').forEach(x=>x.classList.remove('jf-sort-active'));th.classList.add('jf-sort-active');th.textContent=labels[key]+' '+(customerLogSort.dir==='asc'?'↑':'↓');});});}\n  const oldRenderLog=window.renderLog; if(typeof oldRenderLog==='function'){window.renderLog=oldRenderLog;}\n  document.addEventListener('DOMContentLoaded',()=>setTimeout(wire,50));\n})();\n</script>\n</body>''',1)
+
+          admin.write_text(text, encoding='utf-8')
+          customer.write_text(ctext, encoding='utf-8')
+          print('JaFaFa maintenance pass applied.')
+          PY
+
+      - name: Validate HTML/JS structure
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          for name in ('index.html','customer.html'):
+              text=Path(name).read_text(encoding='utf-8')
+              assert text.count('<html') == 1, f'{name}: html root count'
+              assert text.count('</html>') == 1, f'{name}: html close count'
+              assert text.count('<style') == text.count('</style>'), f'{name}: style balance'
+              assert text.count('<script') == text.count('</script>'), f'{name}: script balance'
+              print(name, 'OK', len(text), 'bytes')
+          PY
+
+      - name: Commit maintenance changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html customer.html
+          if git diff --cached --quiet; then
+            echo 'No maintenance changes required.'
+          else
+            git commit -m 'fix: consolidate telemetry and ownership semantics [skip jafafa-maintenance]'
+            git push
+          fi
