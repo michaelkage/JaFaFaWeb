@@ -3420,7 +3420,7 @@
     getCustomers() { return normalize(); },
     getCustomer(id) { return normalize().find(c => String(c.id) === String(id)) || null; },
     getVehicles() { return normalize().flatMap(c => c.cars.map(v => ({ ...v, customerId: String(c.id) }))); },
-    getVehicle(id) { const c = normalize().find(c => c.cars.some(v => String(v.id) === String(id))); return c ? c.cars.find(v => String(v.id) === String(id)) : null; },
+    getVehicle(id) { const c = normalize().find(c => c.cars.some(v => String(v.id) === String(id))); if (!c) return null; const v = c.cars.find(v => String(v.id) === String(id)); return v ? { ...v, customerId: String(c.id), ownerName: c.name || '', ownerEmail: c.email || '' } : null; },
     getCustomerVehicles(id) { const c = this.getCustomer(id); return c ? c.cars.filter(v => String(v.customerId) === String(c.id) && v.status !== 'Deleted') : []; },
     createCustomer(data) {
       const db = normalize();
@@ -3444,8 +3444,11 @@
       localStorage.setItem(DB_KEY, JSON.stringify(db)); return v;
     },
     updateVehicle(id, data) {
-      const v = this.getVehicle(id); if (!v) throw new Error('Vehicle not found.');
-      Object.assign(v, data); v.vehicleId = v.vehicleId || v.id; v.customerId = String(v.customerId); localStorage.setItem(DB_KEY, JSON.stringify(normalize())); return v;
+      const db = normalize();
+      let owner = null, v = null;
+      for (const c of db) { const found = c.cars.find(v => String(v.id) === String(id)); if (found) { owner = c; v = found; break; } }
+      if (!v || !owner) throw new Error('Vehicle not found.');
+      Object.assign(v, data); v.vehicleId = v.vehicleId || v.id; v.customerId = String(owner.id); localStorage.setItem(DB_KEY, JSON.stringify(db)); return { ...v, customerId: String(owner.id), ownerName: owner.name || '', ownerEmail: owner.email || '' };
     },
     assignVehicle(vehicleId, customerId) {
       const db = normalize();
@@ -3493,9 +3496,10 @@
     const rows = claims.map(claim => {
       const c = db.find(x => String(x.id) === String(claim.customerId));
       const v = api.getVehicle(claim.vehicleId);
-      return { claim, c, v };
-    }).filter(x => x.c && x.v);
-    host.innerHTML = `<div class="jf-suite-card"><div class="jf-suite-head"><div><h3>Vehicle claim requests</h3><span class="jf-fm-muted">Customer ownership requests require admin approval.</span></div></div><div class="jf-claim-list">${rows.length ? rows.map(({claim,c,v}) => `<div class="jf-claim-row"><div><strong>${esc(c.name)}</strong><span>${esc(c.email || 'No email')}</span><small>${esc(v.year || '')} ${esc(v.make)} ${esc(v.model)} · ${esc(v.plate || v.registration || 'No plate')} · ${esc(v.id)}</small></div><div class="jf-claim-status ${claim.status.toLowerCase()}">${claim.status}</div><div class="jf-claim-actions">${claim.status === 'PENDING' ? `<button class="btn-action jf-suite-small" onclick="window.jfDecideClaim('${esc(claim.id)}','APPROVED')">Approve</button><button class="btn-secondary jf-suite-small" onclick="window.jfDecideClaim('${esc(claim.id)}','REJECTED')">Reject</button>` : `<span class="jf-fm-muted">${claim.decidedAt ? new Date(claim.decidedAt).toLocaleString() : 'Processed'}</span>`}</div></div>`).join('') : '<div class="jf-empty">No claim requests yet.</div>'}</div></div>`;
+      const issue = !c ? 'Missing customer' : !v ? 'Missing vehicle' : '';
+      return { claim, c, v, issue };
+    });
+    host.innerHTML = `<div class="jf-suite-card"><div class="jf-suite-head"><div><h3>Vehicle claim requests</h3><span class="jf-fm-muted">Customer ownership requests require admin approval. Missing records stay visible for cleanup.</span></div></div><div class="jf-claim-list">${rows.length ? rows.map(({claim,c,v,issue}) => `<div class="jf-claim-row ${issue ? 'jf-claim-row-issue' : ''}"><div><strong>${esc(c?.name || 'Unknown customer')}</strong><span>${esc(c?.email || issue || 'No email')}</span><small>${v ? `${esc(v.year || '')} ${esc(v.make)} ${esc(v.model)} · ${esc(v.plate || v.registration || 'No plate')} · ${esc(v.id)}` : `Requested vehicle ${esc(claim.vehicleId || 'unknown')} needs review`}</small></div><div class="jf-claim-status ${issue ? 'warning' : claim.status.toLowerCase()}">${esc(issue || claim.status)}</div><div class="jf-claim-actions">${claim.status === 'PENDING' && !issue ? `<button class="btn-action jf-suite-small" onclick="window.jfDecideClaim('${esc(claim.id)}','APPROVED')">Approve</button><button class="btn-secondary jf-suite-small" onclick="window.jfDecideClaim('${esc(claim.id)}','REJECTED')">Reject</button>` : claim.status === 'PENDING' ? `<button class="btn-secondary jf-suite-small" onclick="window.jfDecideClaim('${esc(claim.id)}','REJECTED')">Reject request</button>` : `<span class="jf-fm-muted">${claim.decidedAt ? new Date(claim.decidedAt).toLocaleString() : 'Processed'}</span>`}</div></div>`).join('') : '<div class="jf-empty">No claim requests yet.</div>'}</div></div>`;
     document.querySelectorAll('[data-suite]').forEach(b => b.classList.toggle('active', b.dataset.suite === 'claims'));
   }
 
@@ -3505,10 +3509,17 @@
     badge.style.display = n ? 'inline-flex' : 'none';
   }
 
+  function auditClaimDecision(claim, status) {
+    const key = 'jafafa_audit_v1';
+    let audit = [];
+    try { audit = JSON.parse(localStorage.getItem(key) || '[]'); } catch {}
+    audit.push({ id: uid('evt'), time: now(), actor: document.getElementById('user-name')?.textContent || 'Admin', role: localStorage.getItem('jafafa_admin_role_v1') || 'Super Admin', action: `Claim ${status.toLowerCase()}`, target: claim?.vehicleId || 'unknown', detail: `Customer ${claim?.customerId || 'unknown'}` });
+    localStorage.setItem(key, JSON.stringify(audit.slice(-500)));
+  }
   window.jfDecideClaim = (id, status) => {
     try {
       if (typeof window.confirm === 'function' && !window.confirm(`${status === 'APPROVED' ? 'Approve' : 'Reject'} this vehicle claim?`)) return;
-      api.decideClaim(id, status); normalize(); refreshBadge(); renderClaims();
+      const claim = api.decideClaim(id, status); auditClaimDecision(claim, status); normalize(); refreshBadge(); renderClaims();
       if (typeof window.showToast === 'function') window.showToast(`Claim ${status.toLowerCase()}`);
     } catch (e) { alert(e.message); }
   };
@@ -3534,7 +3545,7 @@
 :root{--jf-glow:rgba(34,211,238,.18)}
 .jf-enh-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 14px}.jf-enh-toolbar .jf-enh-actions{display:flex;gap:8px;flex-wrap:wrap}.jf-enh-btn{border:1px solid var(--line,#26344a);background:rgba(15,23,42,.72);color:inherit;border-radius:10px;padding:9px 12px;cursor:pointer;font:inherit}.jf-enh-btn:hover{border-color:rgba(34,211,238,.45);transform:translateY(-1px)}.jf-enh-btn.active{box-shadow:0 0 0 1px rgba(34,211,238,.35),0 8px 30px var(--jf-glow)}
 .jf-enh-health{display:inline-flex;align-items:center;gap:6px;font-weight:800}.jf-enh-health i{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor}.jf-enh-health.good{color:#67e8a5}.jf-enh-health.warn{color:#fbbf24}.jf-enh-health.bad{color:#fb7185}.jf-enh-health.unknown{color:#94a3b8}
-.jf-enh-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.jf-enh-stat{border:1px solid var(--line,#26344a);border-radius:16px;padding:14px;background:rgba(8,15,30,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}.jf-enh-stat b{display:block;font-size:1.45rem}.jf-enh-stat span{font-size:.68rem;color:var(--muted,#94a3b8);text-transform:uppercase;letter-spacing:.08em}.jf-enh-toolbar input,.jf-enh-toolbar select{min-height:40px}
+.jf-enh-banner{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid rgba(251,191,36,.28);background:rgba(251,191,36,.08);color:#fde68a;border-radius:14px;padding:11px 13px;margin:0 0 14px}.jf-enh-banner span{color:#facc15;font-size:.78rem}.jf-enh-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.jf-enh-stat{border:1px solid var(--line,#26344a);border-radius:16px;padding:14px;background:rgba(8,15,30,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}.jf-enh-stat b{display:block;font-size:1.45rem}.jf-enh-stat span{font-size:.68rem;color:var(--muted,#94a3b8);text-transform:uppercase;letter-spacing:.08em}.jf-enh-toolbar input,.jf-enh-toolbar select{min-height:40px}
 .jf-enh-alert{border-left:3px solid #fbbf24!important}.jf-enh-alert.critical{border-left-color:#fb7185!important}.jf-enh-alert.info{border-left-color:#38bdf8!important}
 .jf-enh-skeleton{position:relative;overflow:hidden;background:rgba(148,163,184,.08)!important;color:transparent!important}.jf-enh-skeleton:after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:jfShimmer 1.25s infinite}@keyframes jfShimmer{to{transform:translateX(100%)}}
 .jf-enh-empty{padding:30px;text-align:center;border:1px dashed var(--line,#26344a);border-radius:16px;color:var(--muted,#94a3b8)}
@@ -3557,15 +3568,16 @@ function health(v){try{if(typeof window.analyzeVehicleTelemetry==='function'){co
 function conn(v){const t=(v.telemetry||[]).slice().sort((a,b)=>new Date(b.time)-new Date(a.time))[0];if(!t)return'offline';const age=Date.now()-new Date(t.time).getTime();return age<=120000?'online':age<=900000?'recent':'offline'}
 function toast(msg){let t=q('#jfEnhToast');if(!t){t=document.createElement('div');t.id='jfEnhToast';t.style.cssText='position:fixed;right:18px;bottom:18px;z-index:10001;padding:12px 15px;border:1px solid rgba(34,211,238,.28);border-radius:12px;background:rgba(7,15,29,.94);backdrop-filter:blur(10px);box-shadow:0 12px 35px rgba(0,0,0,.3);opacity:0;transform:translateY(10px);transition:.2s';document.body.appendChild(t)}t.textContent=msg;t.style.opacity='1';t.style.transform='translateY(0)';clearTimeout(t._x);t._x=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(10px)'},2600)}
 function modal(title,body,actions){let m=document.createElement('div');m.className='jf-enh-modal';m.innerHTML='<div><h3>'+esc(title)+'</h3><p>'+body+'</p><div class="row">'+actions.map((a,i)=>'<button class="jf-enh-btn '+(i===actions.length-1?'active':'')+'" data-a="'+i+'">'+esc(a.label)+'</button>').join('')+'</div></div>';document.body.appendChild(m);actions.forEach((a,i)=>m.querySelector('[data-a="'+i+'"]').onclick=()=>{if(a.run)a.run();m.remove()});return m}
-function addOverview(){const host=q('#jfFleetHost');if(!host||window.jfEnhOverview) return;window.jfEnhOverview=1}
+function addOverview(){const host=q('#jfFleetHost');if(!host||q('#jfEnhModeBanner')) return;const b=document.createElement('div');b.id='jfEnhModeBanner';b.className='jf-enh-banner';b.innerHTML='<strong>Demo/local mode</strong><span>Fleet, claims and telemetry are stored in this browser until a backend is connected.</span>';host.parentNode.insertBefore(b,host)}
 function enhanceFleet(){
+ addOverview();
  const host=q('#jfFleetHost');if(!host)return;
  let old=host.dataset.enhanced==='1';host.dataset.enhanced='1';
  const vs=vehicles(), online=vs.filter(x=>conn(x.v)==='online').length,recent=vs.filter(x=>conn(x.v)==='recent').length,off=vs.length-online-recent;
  const scores=vs.map(x=>health(x.v)).filter(Number.isFinite),avg=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):null;
  const claims=(()=>{try{return JSON.parse(localStorage.getItem(CLAIM)||'[]')}catch{return[]}})();const pending=claims.filter(x=>x.status==='PENDING').length;
  let grid=host.querySelector('.jf-enh-grid');if(!grid){grid=document.createElement('div');grid.className='jf-enh-grid';host.prepend(grid)}grid.innerHTML=[['Fleet health',avg===null?'—':avg+'/100'],['Online',online],['Warning / recent',recent],['Offline / claims',off+' / '+pending]].map(x=>'<div class="jf-enh-stat"><b>'+esc(x[1])+'</b><span>'+esc(x[0])+'</span></div>').join('');
- const table=host.querySelector('.jf-suite-table');if(table){table.querySelectorAll('tbody tr').forEach(tr=>{if(tr.querySelector('.jf-enh-health'))return;const cells=tr.children;if(cells.length<2)return;const text=tr.textContent.toLowerCase();let cls='unknown',label='NO DATA';if(text.includes('online')){cls='good';label='ONLINE'}else if(text.includes('warning')||text.includes('recent')){cls='warn';label='ATTENTION'}else if(text.includes('offline')){cls='bad';label='OFFLINE'}const td=document.createElement('td');td.innerHTML='<span class="jf-enh-health '+cls+'"><i></i>'+label+'</span>';tr.appendChild(td)})}
+ const table=host.querySelector('.jf-suite-table');if(table&&!table.dataset.enhHealth){table.dataset.enhHealth='1';const head=table.querySelector('thead tr');if(head){const th=document.createElement('th');th.textContent='Health';head.appendChild(th)}table.querySelectorAll('tbody tr').forEach(tr=>{const cells=tr.children;if(cells.length<2)return;const text=tr.textContent.toLowerCase();let cls='unknown',label='NO DATA';if(text.includes('online')){cls='good';label='ONLINE'}else if(text.includes('warning')||text.includes('recent')){cls='warn';label='ATTENTION'}else if(text.includes('offline')){cls='bad';label='OFFLINE'}const td=document.createElement('td');td.innerHTML='<span class="jf-enh-health '+cls+'"><i></i>'+label+'</span>';tr.appendChild(td)})}
  if(!old) toast('Fleet view refreshed');
 }
 function patchDelete(){window.jfBulkDelete=()=>{const ids=[...document.querySelectorAll('.jf-select-customer:checked')].map(x=>String(x.value));if(!ids.length)return;const data=db(), affected=vehicles().filter(x=>ids.includes(String(x.c.id))).length;modal('Delete customers',affected?`These customers have <strong>${affected}</strong> assigned vehicle(s). Their vehicles will be moved to an Unassigned Vehicles holding record so no telemetry is orphaned.`:'The selected customers have no assigned vehicles.',[{label:'Cancel'},{label:'Delete safely',run:()=>{let next=data.filter(c=>!ids.includes(String(c.id)));if(affected){let holding=next.find(c=>c.systemRecord==='UNASSIGNED');if(!holding){holding={id:'JF-SYSTEM-UNASSIGNED',name:'Unassigned Vehicles',email:'',phone:'',status:'System',systemRecord:'UNASSIGNED',vehicleIds:[],cars:[]};next.push(holding)}data.filter(c=>ids.includes(String(c.id))).forEach(c=>(c.cars||[]).forEach(v=>{v.customerId=String(holding.id);v.status='Unassigned';holding.cars.push(v);holding.vehicleIds.push(String(v.id))}))}write(next);toast('Customer records removed safely');if(window.jfOpenFleet)window.jfOpenFleet('customers')}}])}}
@@ -3574,7 +3586,7 @@ function patchEditors(){
  window.openEditor=function(type,id,ownerId){try{if(type==='customer'&&!id){const e=q('#jfFleetHost');}return oldOpen.apply(this,arguments)}catch(err){console.error(err);toast('Could not open editor')}};
 }
 function addSearchControls(){const bar=q('.jf-suite-bar');if(!bar||q('#jfEnhFilter'))return;const wrap=document.createElement('div');wrap.id='jfEnhFilter';wrap.style.cssText='display:flex;gap:8px;align-items:center;flex-wrap:wrap;width:100%;margin-top:8px';wrap.innerHTML='<select id="jfEnhStatus" class="form-control" style="width:auto"><option value="all">All status</option><option value="Active">Active</option><option value="Suspended">Suspended</option><option value="Pending">Pending</option></select><select id="jfEnhHealth" class="form-control" style="width:auto"><option value="all">All health</option><option value="good">90–100</option><option value="warn">70–89</option><option value="bad">0–69</option></select><button id="jfEnhClear" class="jf-enh-btn">Clear filters</button>';bar.parentNode.insertBefore(wrap,bar.nextSibling);const apply=()=>{const st=q('#jfEnhStatus').value,hf=q('#jfEnhHealth').value;document.querySelectorAll('#jfFleetHost tbody tr').forEach(tr=>{const tx=tr.textContent.toLowerCase();let ok=st==='all'||tx.includes(st.toLowerCase());if(hf!=='all'){const n=(tx.match(/(\d{1,3})(?:\/100|%)/)||[])[1];ok=ok&&(n?(hf==='good'?+n>=90:hf==='warn'?+n>=70&&+n<90:+n<70):true)}tr.hidden=!ok})};q('#jfEnhStatus').onchange=apply;q('#jfEnhHealth').onchange=apply;q('#jfEnhClear').onclick=()=>{q('#jfEnhStatus').value='all';q('#jfEnhHealth').value='all';apply()}}
-function refresh(){try{if(typeof render==='function'&&q('#screen-fleet')&&!q('#screen-fleet').hidden){render();setTimeout(()=>{addSearchControls();enhanceFleet()},0)}}catch(e){console.error('JaFaFa UI refresh',e)}}
+function refresh(){try{if(q('#screen-fleet')&&!q('#screen-fleet').hidden){addSearchControls();enhanceFleet()}}catch(e){console.error('JaFaFa UI refresh',e)}}
 window.addEventListener('storage',e=>{if(e.key===DB||e.key===CLAIM){refresh();toast('Fleet data updated from another JaFaFa session')}});
 window.addEventListener('error',e=>{if(String(e?.message||'').toLowerCase().includes('jafafa'))console.error(e)});
 const observer=new MutationObserver(()=>{if(q('#screen-fleet')&&!q('#screen-fleet').hidden){addSearchControls();enhanceFleet()}});observer.observe(document.body,{childList:true,subtree:true});
