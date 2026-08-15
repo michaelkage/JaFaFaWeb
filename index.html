@@ -136,7 +136,7 @@
         border-radius: 24px;
         background: rgba(7, 13, 26, 0.78);
         -webkit-backdrop-filter: blur(24px) saturate(130%);
-        -webkit-backdrop-filter:blur(24px) saturate(130%);backdrop-filter:blur(24px) saturate(130%);
+        backdrop-filter: blur(24px) saturate(130%);
         box-shadow: var(--shadow);
         text-align: center;
       }
@@ -183,7 +183,7 @@
         border-bottom: 1px solid var(--line);
         background: rgba(5, 9, 20, 0.66);
         -webkit-backdrop-filter: blur(20px) saturate(140%);
-        -webkit-backdrop-filter:blur(20px) saturate(140%);backdrop-filter:blur(20px) saturate(140%);
+        backdrop-filter: blur(20px) saturate(140%);
       }
       .app-brand {
         display: flex;
@@ -299,7 +299,7 @@
           rgba(7, 13, 26, 0.52)
         );
         -webkit-backdrop-filter: blur(12px);
-        -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+        backdrop-filter: blur(12px);
         box-shadow: var(--shadow);
         isolation: isolate;
       }
@@ -399,7 +399,7 @@
         border: 1px solid var(--line);
         background: var(--panel);
         -webkit-backdrop-filter: blur(18px) saturate(125%);
-        -webkit-backdrop-filter:blur(18px) saturate(125%);backdrop-filter:blur(18px) saturate(125%);
+        backdrop-filter: blur(18px) saturate(125%);
         box-shadow: 0 12px 45px rgba(0, 0, 0, 0.18);
       }
       .stat-card {
@@ -546,7 +546,7 @@
         color: var(--text);
         background: rgba(7, 14, 28, 0.72);
         -webkit-backdrop-filter: blur(14px);
-        -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+        backdrop-filter: blur(14px);
         transition: 0.2s;
       }
       .search-input:focus {
@@ -573,7 +573,7 @@
         border-radius: 14px;
         background: rgba(7, 14, 28, 0.96);
         -webkit-backdrop-filter: blur(24px);
-        -webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);
+        backdrop-filter: blur(24px);
         box-shadow: var(--shadow);
       }
       .dropdown-item {
@@ -733,7 +733,7 @@
         border: 1px solid var(--line);
         background: rgba(5, 11, 22, 0.42);
         -webkit-backdrop-filter: blur(4px);
-        -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+        backdrop-filter: blur(4px);
       }
       .jf-hud {
         position: absolute;
@@ -757,7 +757,7 @@
         border-radius: 12px;
         background: rgba(5, 12, 25, 0.58);
         -webkit-backdrop-filter: blur(12px);
-        -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+        backdrop-filter: blur(12px);
         box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
       }
       .jf-hud-label {
@@ -982,7 +982,7 @@
         padding: 20px;
         background: rgba(2, 6, 16, 0.72);
         -webkit-backdrop-filter: blur(10px);
-        -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+        backdrop-filter: blur(10px);
       }
       .jf-detail-card {
         width: min(720px, 100%);
@@ -1077,7 +1077,7 @@ body.jf-warning{--jf-accent:var(--jf-warn)} body.jf-critical{--jf-accent:var(--j
 .jf-notification.critical{border-color:rgba(251,113,133,.25)} .jf-notification.warning{border-color:rgba(251,191,36,.22)}
 .jf-notification b{display:block;font-size:.76rem}.jf-notification span{display:block;color:var(--muted);font-size:.66rem;margin-top:3px}
 .jf-command-hint{font-size:.62rem;color:var(--muted);border:1px solid var(--line);padding:3px 6px;border-radius:6px}
-.jf-fleet-command{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:18px 0 8px}
+.jf-fleet-command{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin:18px 0 8px}
 .jf-fleet-stat{padding:16px;border:1px solid var(--line);border-radius:14px;background:rgba(7,14,26,.68);min-width:0}
 .jf-fleet-stat strong{display:block;font-size:1.65rem;letter-spacing:-.05em}.jf-fleet-stat span{display:block;color:var(--muted);font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
 .jf-healthbar{height:8px;border-radius:99px;background:rgba(148,163,184,.12);overflow:hidden}.jf-healthbar>i{display:block;height:100%;width:var(--jf-health,0%);background:linear-gradient(90deg,var(--cyan,#38bdf8),var(--cyan2,#22d3ee));border-radius:inherit;transition:width .7s ease}
@@ -1094,7 +1094,7 @@ body.jf-warning{--jf-accent:var(--jf-warn)} body.jf-critical{--jf-accent:var(--j
 .jf-toast{position:fixed;right:18px;bottom:18px;z-index:1200;max-width:360px;padding:12px 15px;border:1px solid var(--line);border-radius:12px;background:rgba(7,14,26,.95);box-shadow:0 20px 50px rgba(0,0,0,.4);font-size:.72rem}.jf-toast.ok{border-color:rgba(74,222,128,.3)}.jf-toast.warn{border-color:rgba(251,191,36,.3)}.jf-toast.error{border-color:rgba(251,113,133,.3)}
 .jf-mobile-menu{display:none}.jf-mobile-toggle{display:none}
 body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visual-layer{filter:saturate(.9)} body.jf-offline #jf-visual-layer{filter:grayscale(.55) saturate(.45);opacity:.62}
-@media(max-width:900px){.jf-fleet-command{grid-template-columns:repeat(3,1fr)}.jf-commandbar{display:none}.jf-mobile-toggle{display:inline-flex}.admin-nav{display:none}.jf-status-strip{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.jf-fleet-command{grid-template-columns:repeat(4,1fr)}.jf-commandbar{display:none}.jf-mobile-toggle{display:inline-flex}.admin-nav{display:none}.jf-status-strip{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:640px){.jf-fleet-command{grid-template-columns:repeat(2,1fr)}.jf-fleet-stat strong{font-size:1.35rem}.jf-status-strip{grid-template-columns:1fr 1fr}.jf-mobile-menu{position:fixed;top:62px;left:10px;right:10px;z-index:900;padding:10px;border:1px solid var(--line);border-radius:14px;background:rgba(7,14,26,.97);box-shadow:0 25px 70px rgba(0,0,0,.5)}.jf-mobile-menu.open{display:grid;gap:4px}.jf-mobile-menu button{padding:12px;border:0;border-radius:9px;background:transparent;color:var(--muted);text-align:left}.jf-mobile-menu button:hover{background:rgba(56,189,248,.08);color:var(--text)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
 
@@ -1198,7 +1198,7 @@ body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visu
         background: rgba(7, 14, 28, 0.97);
         box-shadow: var(--shadow);
         -webkit-backdrop-filter: blur(24px);
-        -webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);
+        backdrop-filter: blur(24px);
       }
       .jf-mobile-nav button {
         padding: 13px;
@@ -2161,6 +2161,9 @@ body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visu
     ></script>
     <script>
       "use strict";
+      // ============================================================
+      // AUTHENTICATION
+      // ============================================================
       const GOOGLE_CLIENT_ID =
         "618464687927-3qhsv0r9012cn0e50g963vk4n71pb54r.apps.googleusercontent.com";
       // DEBUG ONLY — temporary AnyWash proxy.
@@ -2463,7 +2466,7 @@ body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visu
       function renderFleetCommandCenter(vs){
         let host=document.getElementById("jfFleetCommand");
         if(!host){const anchor=document.querySelector("#dashboardActivity")?.closest(".dashboard-section");if(!anchor)return;const sec=document.createElement("div");sec.id="jfFleetCommand";sec.className="dashboard-section jf-fleet-command scroll-reveal";anchor.parentNode.insertBefore(sec,anchor);host=sec}
-        const states=vs.map(v=>analyzeVehicleTelemetry(v.telemetry)),online=states.filter(a=>a.connection==="online"||a.connection==="recent").length,critical=states.filter(a=>a.overall==="critical").length,warning=states.filter(a=>a.overall==="warning"&&a.connection!=="offline").length,offline=states.filter(a=>a.connection==="offline").length,healthy=Math.max(0,Math.min(100,vs.length?Math.round(states.reduce((sum,a)=>sum+(a.overall==="healthy"?100:a.overall==="warning"?70:25),0)/vs.length):0));host.innerHTML=`<h3>Fleet command center</h3><div class="jf-fleet-command-grid"><div class="jf-fleet-command-card"><b>${vs.length}</b><span>Fleet</span></div><div class="jf-fleet-command-card"><b>${online}</b><span>Online</span></div><div class="jf-fleet-command-card"><b>${warning}</b><span>Warning</span></div><div class="jf-fleet-command-card"><b>${offline}</b><span>Offline</span></div></div><div class="jf-fleet-health"><div class="stat-label">Fleet health</div><div style="display:flex;justify-content:space-between;align-items:end"><strong style="font-size:1.8rem">${healthy}</strong><span style="color:var(--muted);font-size:.7rem">/ 100 · ${critical} critical</span></div><div class="jf-health-track"><div class="jf-health-fill" style="width:${healthy}%"></div></div></div>`
+        const states=vs.map(v=>analyzeVehicleTelemetry(v.telemetry)),live=states.filter(a=>a.connection==="live").length,recent=states.filter(a=>a.connection==="recent").length,stale=states.filter(a=>a.connection==="stale").length,critical=states.filter(a=>a.overall==="critical").length,warning=states.filter(a=>a.overall==="warning"&&a.connection!=="offline").length,offline=states.filter(a=>a.connection==="offline").length,scores=states.map(a=>a.score).filter(Number.isFinite),healthy=scores.length?Math.round(scores.reduce((sum,a)=>sum+a,0)/scores.length):0);host.innerHTML=`<h3>Fleet command center</h3><div class="jf-fleet-command-grid"><div class="jf-fleet-command-card"><b>${vs.length}</b><span>Fleet</span></div><div class="jf-fleet-command-card"><b>${online}</b><span>Live</span></div><div class="jf-fleet-command-card"><b>${warning}</b><span>Warning</span></div><div class="jf-fleet-command-card"><b>${offline}</b><span>Offline</span></div></div><div class="jf-fleet-health"><div class="stat-label">Fleet health</div><div style="display:flex;justify-content:space-between;align-items:end"><strong style="font-size:1.8rem">${healthy}</strong><span style="color:var(--muted);font-size:.7rem">/ 100 · ${critical} critical</span></div><div class="jf-health-track"><div class="jf-health-fill" style="width:${healthy}%"></div></div></div>`
       }
       function renderActivity() {
         const a = [];
@@ -2599,6 +2602,9 @@ body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visu
           activeCar.status || "Unknown";
         document.getElementById("selectedVehicleSummary").hidden = false;
       }
+      // ============================================================
+      // TELEMETRY CORE + HEALTH ENGINE
+      // ============================================================
       const TELEMETRY_CONFIG=Object.freeze({speed:{label:"Speed",unit:"km/h",category:"driving",warning:100},rpm:{label:"RPM",unit:"rpm",category:"engine",warning:5000},ctemp:{label:"Coolant",unit:"°C",category:"cooling",warning:105,critical:110},voltage:{label:"Voltage",unit:"V",category:"electrical",warningBelow:12},maf:{label:"MAF",unit:"g/s",category:"air"},fuel:{label:"Fuel",unit:"%",category:"fuel"},evap:{label:"EVAP",unit:"%",category:"emissions"},timing:{label:"Timing",unit:"°",category:"engine"},etemp:{label:"Engine temp",unit:"°C",category:"engine"},mpg:{label:"MPG",unit:"mpg",category:"fuel"},iat:{label:"Intake",unit:"°C",category:"air"},throttle:{label:"Throttle",unit:"%",category:"air"},load:{label:"Load",unit:"%",category:"engine"},atemp:{label:"Atmo",unit:"kPa",category:"environment"},bpressure:{label:"Baro",unit:"kPa",category:"environment"}});
       window.TELEMETRY_CONFIG=TELEMETRY_CONFIG;
       function latestTelemetry(logs){const list=Array.isArray(logs)?logs:[];let latest=null,latestMs=-Infinity;for(const row of list){const d=parseTime(row?.time??row?.timestamp),ms=d?d.getTime():-Infinity;if(ms>latestMs){latest=row;latestMs=ms}}return latest}
@@ -2609,7 +2615,10 @@ body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visu
       window.normalizeTelemetryRecord=normalizeTelemetryRecord;window.mapTelemetryData=mapTelemetryData;
       function telemetrySeverity(key,value){const cfg=TELEMETRY_CONFIG[key],n=normalizeTelemetryValue(value);if(!cfg||n===null)return"normal";if(cfg.critical!==undefined&&n>=cfg.critical)return"critical";if(cfg.warning!==undefined&&n>=cfg.warning)return"warning";if(cfg.warningBelow!==undefined&&n>0&&n<cfg.warningBelow)return"warning";return"normal"}
       window.telemetrySeverity=telemetrySeverity;
-      function analyzeVehicleTelemetry(logs){const latest=latestTelemetry(logs),l=latest||{},speed=normalizeTelemetryValue(l.speed)??0,rpm=normalizeTelemetryValue(l.rpm)??0,coolant=normalizeTelemetryValue(l.ctemp),voltage=normalizeTelemetryValue(l.voltage),d=parseTime(l.time),age=d?Math.max(0,Date.now()-d.getTime()):Infinity,connection=!latest?"offline":age<=120000?"online":age<=900000?"recent":"offline",engine=rpm<=0?"off":rpm<900?"idle":"running",driving=speed<=0?"stationary":speed>=100?"high-speed":"moving",cooling=coolant===null?"unknown":coolant>TELEMETRY_CONFIG.ctemp.critical?"overheating":coolant>=TELEMETRY_CONFIG.ctemp.warning?"warm":"normal",electrical=voltage===null||voltage<=0?"unknown":voltage<TELEMETRY_CONFIG.voltage.warningBelow?"low-voltage":"normal",sevs=[telemetrySeverity("speed",speed),telemetrySeverity("rpm",rpm),telemetrySeverity("ctemp",coolant),telemetrySeverity("voltage",voltage)],overall=sevs.includes("critical")?"critical":sevs.includes("warning")||connection==="offline"?"warning":"healthy";return{latest,connection,engine,driving,cooling,electrical,overall,age}}
+      function telemetryConnectionState(age){if(!Number.isFinite(age)||age<0)return "offline";if(age<10000)return "live";if(age<30000)return "recent";if(age<120000)return "stale";return "offline"}
+      function vehicleHealthScore(logs){const latest=latestTelemetry(logs);if(!latest)return null;const coolant=normalizeTelemetryValue(latest.ctemp),voltage=normalizeTelemetryValue(latest.voltage),rpm=normalizeTelemetryValue(latest.rpm),speed=normalizeTelemetryValue(latest.speed),d=parseTime(latest.time),age=d?Math.max(0,Date.now()-d.getTime()):Infinity,connection=telemetryConnectionState(age);let score=100;if(coolant!==null){if(coolant>=TELEMETRY_CONFIG.ctemp.critical)score-=30;else if(coolant>=TELEMETRY_CONFIG.ctemp.warning)score-=10}if(voltage!==null&&voltage>0&&voltage<TELEMETRY_CONFIG.voltage.warningBelow)score-=20;if(rpm!==null&&rpm>=TELEMETRY_CONFIG.rpm.warning)score-=10;if(speed!==null&&speed>=TELEMETRY_CONFIG.speed.warning)score-=5;if(connection==="stale")score-=5;if(connection==="offline")score-=10;return Math.max(0,Math.min(100,Math.round(score)))}
+      function vehicleHealthCategories(logs){const latest=latestTelemetry(logs);if(!latest)return[];const coolant=normalizeTelemetryValue(latest.ctemp),voltage=normalizeTelemetryValue(latest.voltage),rpm=normalizeTelemetryValue(latest.rpm),speed=normalizeTelemetryValue(latest.speed),d=parseTime(latest.time),age=d?Math.max(0,Date.now()-d.getTime()):Infinity,connection=telemetryConnectionState(age),clamp=n=>Math.max(0,Math.min(100,Math.round(n)));return [["Engine",clamp(100-(rpm!==null&&rpm>=TELEMETRY_CONFIG.rpm.warning?10:0))],["Cooling",clamp(100-(coolant===null?0:coolant>=TELEMETRY_CONFIG.ctemp.critical?30:coolant>=TELEMETRY_CONFIG.ctemp.warning?10:0))],["Electrical",clamp(100-(voltage!==null&&voltage>0&&voltage<TELEMETRY_CONFIG.voltage.warningBelow?20:0))],["Air / Intake",100],["Performance",clamp(100-(speed!==null&&speed>=TELEMETRY_CONFIG.speed.warning?5:0))],["Connectivity",connection==="live"?100:connection==="recent"?90:connection==="stale"?75:50]]}
+      function analyzeVehicleTelemetry(logs){const latest=latestTelemetry(logs),l=latest||{},speed=normalizeTelemetryValue(l.speed)??0,rpm=normalizeTelemetryValue(l.rpm)??0,coolant=normalizeTelemetryValue(l.ctemp),voltage=normalizeTelemetryValue(l.voltage),d=parseTime(l.time),age=d?Math.max(0,Date.now()-d.getTime()):Infinity,connection=telemetryConnectionState(age),engine=rpm<=0?"off":rpm<900?"idle":"running",driving=speed<=0?"stationary":speed>=100?"high-speed":"moving",cooling=coolant===null?"unknown":coolant>=TELEMETRY_CONFIG.ctemp.critical?"overheating":coolant>=TELEMETRY_CONFIG.ctemp.warning?"warm":"normal",electrical=voltage===null||voltage<=0?"unknown":voltage<TELEMETRY_CONFIG.voltage.warningBelow?"low-voltage":"normal",sevs=[telemetrySeverity("speed",speed),telemetrySeverity("rpm",rpm),telemetrySeverity("ctemp",coolant),telemetrySeverity("voltage",voltage)],overall=sevs.includes("critical")?"critical":sevs.includes("warning")||connection==="offline"?"warning":"healthy",score=vehicleHealthScore(logs),categories=vehicleHealthCategories(logs);return{latest,connection,engine,driving,cooling,electrical,overall,age,score,categories}}
       window.analyzeVehicleTelemetry=analyzeVehicleTelemetry;
       const TELEMETRY_COLUMNS=["time","speed","rpm","maf","ctemp","fuel","voltage","evap","timing","etemp","mpg","iat","throttle","load","atemp","bpressure"],TELEMETRY_LABELS={time:"Timestamp",speed:"Speed",rpm:"RPM",maf:"MAF",ctemp:"Coolant",fuel:"Fuel",voltage:"Voltage",evap:"EVAP",timing:"Timing",etemp:"Engine temp",mpg:"MPG",iat:"Intake",throttle:"Throttle",load:"Load",atemp:"Atmo",bpressure:"Baro"},TELEMETRY_UNITS=Object.fromEntries(Object.entries(TELEMETRY_CONFIG).map(([k,v])=>[k,v.unit]));
       let telemetrySortKey="time",telemetrySortDir=-1;
@@ -2641,7 +2650,7 @@ body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visu
         }
         const stage=document.querySelector("#screen-telemetry .jf-telemetry-stage");if(stage&&!document.getElementById("jfStageState")){const st=document.createElement("div");st.id="jfStageState";st.className="jf-stage-state";st.innerHTML=`<div class="jf-stage-state-label">Live telemetry</div><div id="jfStageStateTitle" class="jf-stage-state-title">WAITING</div><div id="jfStageStateSub" class="jf-stage-state-sub">Select a vehicle</div>`;stage.appendChild(st)}
       }
-      function refreshTelemetryHealth(){const a=analyzeVehicleTelemetry(currentTelemetry),score=a.overall==="critical"?25:a.overall==="warning"?72:92;const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};set("jfHealthScore",`${score} / 100`);set("jfHealthState",a.overall.toUpperCase());const fill=document.getElementById("jfHealthFill");if(fill)fill.style.width=`${score}%`;const reasons=[];if(a.cooling==="warm")reasons.push(["warn","Elevated coolant temperature"]);if(a.cooling==="overheating")reasons.push(["critical","Coolant temperature critical"]);if(a.electrical==="low-voltage")reasons.push(["warn","Low battery voltage"]);if(a.connection==="offline")reasons.push(["critical","No recent telemetry"]);const r=document.getElementById("jfHealthReasons");if(r)r.innerHTML=reasons.length?reasons.map(x=>`<span class="jf-health-reason ${x[0]}">${esc(x[1])}</span>`).join(""):"<span class=\"jf-health-reason\">No active health deductions</span>";const stage=document.getElementById("jfTelemetryStage"),title=document.getElementById("jfStageStateTitle"),sub=document.getElementById("jfStageStateSub");if(stage){stage.classList.remove("jf-stage-warning","jf-stage-critical","jf-stage-offline");if(a.overall==="critical")stage.classList.add("jf-stage-critical");else if(a.overall==="warning")stage.classList.add("jf-stage-warning");if(a.connection==="offline")stage.classList.add("jf-stage-offline")}if(title)title.textContent=a.connection==="offline"?"OFFLINE":a.overall==="critical"?"CRITICAL":a.overall==="warning"?"ATTENTION":a.engine.toUpperCase();if(sub)sub.textContent=`${activeCar?.make||"Vehicle"} ${activeCar?.model||""} · ${a.connection.toUpperCase()} · ${Math.round(Number(a.latest?.speed)||0)} km/h`;const dot=document.getElementById("jfLiveDot"),st=document.getElementById("jfTelemetryStatusTitle");if(dot)dot.className=`jf-live-dot ${a.connection==="offline"?"offline":a.connection==="recent"?"warn":""}`;if(st)st.textContent=a.connection==="online"?"Live telemetry":a.connection==="recent"?"Recent telemetry":"Telemetry log"}
+      function refreshTelemetryHealth(){const a=analyzeVehicleTelemetry(currentTelemetry),score=Number.isFinite(a.score)?a.score:null;const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};set("jfHealthScore",score===null?"— / 100":`${score} / 100`);set("jfHealthState",a.overall.toUpperCase());const fill=document.getElementById("jfHealthFill");if(fill)fill.style.width=`${score===null?0:score}%`;const reasons=[];if(a.cooling==="warm")reasons.push(["warn","Elevated coolant temperature"]);if(a.cooling==="overheating")reasons.push(["critical","Coolant temperature critical"]);if(a.electrical==="low-voltage")reasons.push(["warn","Low battery voltage"]);if(a.connection==="offline")reasons.push(["critical","No recent telemetry"]);const r=document.getElementById("jfHealthReasons");if(r)r.innerHTML=reasons.length?reasons.map(x=>`<span class="jf-health-reason ${x[0]}">${esc(x[1])}</span>`).join(""):"<span class=\"jf-health-reason\">No active health deductions</span>";const stage=document.getElementById("jfTelemetryStage"),title=document.getElementById("jfStageStateTitle"),sub=document.getElementById("jfStageStateSub");if(stage){stage.classList.remove("jf-stage-warning","jf-stage-critical","jf-stage-offline");if(a.overall==="critical")stage.classList.add("jf-stage-critical");else if(a.overall==="warning")stage.classList.add("jf-stage-warning");if(a.connection==="offline")stage.classList.add("jf-stage-offline")}if(title)title.textContent=a.connection==="offline"?"OFFLINE":a.overall==="critical"?"CRITICAL":a.overall==="warning"?"ATTENTION":a.engine.toUpperCase();if(sub)sub.textContent=`${activeCar?.make||"Vehicle"} ${activeCar?.model||""} · ${a.connection.toUpperCase()} · ${Math.round(Number(a.latest?.speed)||0)} km/h`;const dot=document.getElementById("jfLiveDot"),st=document.getElementById("jfTelemetryStatusTitle");if(dot)dot.className=`jf-live-dot ${a.connection==="offline"?"offline":a.connection==="recent"?"warn":""}`;if(st)st.textContent=a.connection==="online"?"Live telemetry":a.connection==="recent"?"Recent telemetry":"Telemetry log"}
       function setupTelemetryCore(){injectTelemetryUX();wireTelemetryFilterControls();setupTelemetrySorting();bindTelemetryRows();refreshTelemetryHealth()}
 
       window.telemetryCoreReady=setupTelemetryCore;
@@ -3293,7 +3302,10 @@ body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visu
           refreshMetrics();
           drawChart("speed");
         }
-        const originalShowTelemetry = window.showTelemetryScreen;
+        // ============================================================
+         // UI RENDERING + TELEMETRY PRESENTATION
+         // ============================================================
+         const originalShowTelemetry = window.showTelemetryScreen;
         if (
           typeof originalShowTelemetry === "function" &&
           !originalShowTelemetry.__uiWrapped
@@ -3343,7 +3355,10 @@ body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visu
       })();
     </script>
   <script>
-/* JaFaFa Admin Fleet Suite — consolidated customer/vehicle operations layer. */
+/* ============================================================
+   CUSTOMER MANAGEMENT + VEHICLE MANAGEMENT + ALERTS
+   ============================================================ */
+   /* JaFaFa Admin Fleet Suite — consolidated customer/vehicle operations layer. */
 (() => {
   'use strict';
   const KEY = 'jafafa_fleet_suite_v3';
@@ -3371,7 +3386,7 @@ body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visu
   function vehicle(id){ for(const c of db){ const v=(c.cars||[]).find(x=>String(x.id)===String(id)); if(v)return {c,v}; } return null; }
   function lastTelemetry(v){ return window.latestTelemetry ? window.latestTelemetry(v?.telemetry) : null; }
   function lastSeen(v){ const l=lastTelemetry(v); return l?.time ? new Date(l.time) : null; }
-  function connectivity(v){ const d=lastSeen(v); if(!d || Number.isNaN(d.getTime())) return 'offline'; const mins=(Date.now()-d.getTime())/60000; if(mins<=10)return 'online'; if(mins<=60)return 'recent'; return 'offline'; }
+  function connectivity(v){ const a=window.analyzeVehicleTelemetry?.(v?.telemetry||[]); return a?.connection || 'offline'; }
   function connLabel(s){return s==='online'?'Online':s==='recent'?'Recently seen':'Offline'}
   function connClass(s){return s==='online'?'jf-ok':s==='recent'?'jf-warn':'jf-bad'}
   function can(action){ if(role==='Viewer') return ['view'].includes(action); if(role==='Operator') return !['delete','roles','settings'].includes(action); if(role==='Manager') return action!=='roles'; return true; }
@@ -3643,7 +3658,10 @@ window.JaFaFaPlatform=window.JaFaFaPlatform||{};Object.assign(window.JaFaFaPlatf
 </script>
 
 <script>
-/* JaFaFaWeb 2.0 — Plans 1–6 integration layer. */
+/* ============================================================
+   ACCESS REQUESTS + PLATFORM DATA LAYER
+   ============================================================ */
+   /* JaFaFaWeb 2.0 — Plans 1–6 integration layer. */
 (()=>{'use strict';if(window.__JF_V2_MASTER)return;window.__JF_V2_MASTER=true;
 const DB='jafafa_fleet_suite_v3',CLAIMS='jafafa_vehicle_claims_v1',ID='jafafa_identity_v1',uid=p=>`${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`,read=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}},write=(k,v)=>localStorage.setItem(k,JSON.stringify(v)),esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 function load(){let d=read(DB,[]);if(!Array.isArray(d))d=[];d.forEach(c=>{c.cars=Array.isArray(c.cars)?c.cars:[];c.auth=c.auth||{};c.auth.email=String(c.auth.email||c.email||'').toLowerCase();c.cars.forEach(v=>{v.customerId=String(c.id);v.recordId=v.recordId||uid('veh');v.telemetry=Array.isArray(v.telemetry)?v.telemetry:[]})});write(DB,d);window.MOCK_DATABASE=d;return d}
@@ -3693,7 +3711,7 @@ body.jf-warning{--jf-accent:var(--jf-warn)} body.jf-critical{--jf-accent:var(--j
 .jf-notification.critical{border-color:rgba(251,113,133,.25)} .jf-notification.warning{border-color:rgba(251,191,36,.22)}
 .jf-notification b{display:block;font-size:.76rem}.jf-notification span{display:block;color:var(--muted);font-size:.66rem;margin-top:3px}
 .jf-command-hint{font-size:.62rem;color:var(--muted);border:1px solid var(--line);padding:3px 6px;border-radius:6px}
-.jf-fleet-command{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:18px 0 8px}
+.jf-fleet-command{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin:18px 0 8px}
 .jf-fleet-stat{padding:16px;border:1px solid var(--line);border-radius:14px;background:rgba(7,14,26,.68);min-width:0}
 .jf-fleet-stat strong{display:block;font-size:1.65rem;letter-spacing:-.05em}.jf-fleet-stat span{display:block;color:var(--muted);font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
 .jf-healthbar{height:8px;border-radius:99px;background:rgba(148,163,184,.12);overflow:hidden}.jf-healthbar>i{display:block;height:100%;width:var(--jf-health,0%);background:linear-gradient(90deg,var(--cyan,#38bdf8),var(--cyan2,#22d3ee));border-radius:inherit;transition:width .7s ease}
@@ -3710,7 +3728,7 @@ body.jf-warning{--jf-accent:var(--jf-warn)} body.jf-critical{--jf-accent:var(--j
 .jf-toast{position:fixed;right:18px;bottom:18px;z-index:1200;max-width:360px;padding:12px 15px;border:1px solid var(--line);border-radius:12px;background:rgba(7,14,26,.95);box-shadow:0 20px 50px rgba(0,0,0,.4);font-size:.72rem}.jf-toast.ok{border-color:rgba(74,222,128,.3)}.jf-toast.warn{border-color:rgba(251,191,36,.3)}.jf-toast.error{border-color:rgba(251,113,133,.3)}
 .jf-mobile-menu{display:none}.jf-mobile-toggle{display:none}
 body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visual-layer{filter:saturate(.9)} body.jf-offline #jf-visual-layer{filter:grayscale(.55) saturate(.45);opacity:.62}
-@media(max-width:900px){.jf-fleet-command{grid-template-columns:repeat(3,1fr)}.jf-commandbar{display:none}.jf-mobile-toggle{display:inline-flex}.admin-nav{display:none}.jf-status-strip{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.jf-fleet-command{grid-template-columns:repeat(4,1fr)}.jf-commandbar{display:none}.jf-mobile-toggle{display:inline-flex}.admin-nav{display:none}.jf-status-strip{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:640px){.jf-fleet-command{grid-template-columns:repeat(2,1fr)}.jf-fleet-stat strong{font-size:1.35rem}.jf-status-strip{grid-template-columns:1fr 1fr}.jf-mobile-menu{position:fixed;top:62px;left:10px;right:10px;z-index:900;padding:10px;border:1px solid var(--line);border-radius:14px;background:rgba(7,14,26,.97);box-shadow:0 25px 70px rgba(0,0,0,.5)}.jf-mobile-menu.open{display:grid;gap:4px}.jf-mobile-menu button{padding:12px;border:0;border-radius:9px;background:transparent;color:var(--muted);text-align:left}.jf-mobile-menu button:hover{background:rgba(56,189,248,.08);color:var(--text)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
 `;document.head.appendChild(st);

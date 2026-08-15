@@ -69,7 +69,7 @@
       border-bottom: 1px solid var(--line);
       background: rgba(3, 7, 18, 0.78);
       -webkit-backdrop-filter: blur(18px);
-      -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+      backdrop-filter: blur(18px);
     }
 
     .nav {
@@ -570,7 +570,7 @@
       border-radius: 22px;
       background: rgba(7, 14, 26, 0.82);
       -webkit-backdrop-filter: blur(22px);
-      -webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
+      backdrop-filter: blur(22px);
       box-shadow: 0 35px 120px rgba(0, 0, 0, 0.55);
     }
 
@@ -658,7 +658,7 @@
       border-radius: 12px;
       background: rgba(7, 14, 26, 0.94);
       -webkit-backdrop-filter: blur(14px);
-      -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+      backdrop-filter: blur(14px);
       font-size: 0.72rem;
       opacity: 0;
       transform: translateY(12px);
@@ -845,13 +845,13 @@ body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visu
             <b id="statVehicles">0</b><span>Your vehicles</span>
           </div>
           <div class="stat">
-            <b id="statOnline">0</b><span>Online now</span>
+            <b id="statOnline">0</b><span>Live now</span>
           </div>
           <div class="stat">
-            <b id="statWarnings">0</b><span>Warnings</span>
+            <b id="statWarnings">0</b><span>Recent</span>
           </div>
           <div class="stat">
-            <b id="statHealth">—</b><span>Fleet health</span>
+            <b id="statOffline">0</b><span>Offline</span>
           </div>
         </div>
         <div class="section">
@@ -905,7 +905,7 @@ body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visu
               <span id="detailHealthLabel">GOOD</span>
             </div>
             <div class="healthscore" id="detailHealth">—</div>
-            <div class="bars" id="healthBars"></div>
+            <div class="bars" id="healthBars"></div><div id="healthReasons" class="health-reasons"></div>
           </div>
           <div class="card panel">
             <div class="sectionhead">
@@ -1139,6 +1139,15 @@ body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visu
 
       function saveDb() { db = normalizeDb(db); writeDb(db); }
       function latest(v) { return (v?.telemetry||[]).slice().sort((a,b)=>new Date(b.time||b.timestamp)-new Date(a.time||a.timestamp))[0] || null; }
+      const TELEMETRY_CONFIG=Object.freeze({speed:{label:"Speed",unit:"km/h",category:"driving",warning:100},rpm:{label:"RPM",unit:"rpm",category:"engine",warning:5000},ctemp:{label:"Coolant",unit:"°C",category:"cooling",warning:105,critical:110},voltage:{label:"Voltage",unit:"V",category:"electrical",warningBelow:12},maf:{label:"MAF",unit:"g/s",category:"air"},fuel:{label:"Fuel",unit:"%",category:"fuel"},evap:{label:"EVAP",unit:"%",category:"emissions"},timing:{label:"Timing",unit:"°",category:"engine"},etemp:{label:"Engine temp",unit:"°C",category:"engine"},mpg:{label:"MPG",unit:"mpg",category:"fuel"},iat:{label:"Intake",unit:"°C",category:"air"},throttle:{label:"Throttle",unit:"%",category:"air"},load:{label:"Load",unit:"%",category:"engine"},atemp:{label:"Atmo",unit:"kPa",category:"environment"},bpressure:{label:"Baro",unit:"kPa",category:"environment"}});
+      window.TELEMETRY_CONFIG=TELEMETRY_CONFIG;
+      function normalizeTelemetryValue(v){if(v===null||v===undefined||v==="")return null;const n=Number(v);return Number.isFinite(n)?n:null}
+      function telemetryConnectionState(age){if(!Number.isFinite(age)||age<0)return "offline";if(age<10000)return "live";if(age<30000)return "recent";if(age<120000)return "stale";return "offline"}
+      function telemetrySeverity(key,value){const cfg=TELEMETRY_CONFIG[key],n=normalizeTelemetryValue(value);if(!cfg||n===null)return "normal";if(cfg.critical!==undefined&&n>=cfg.critical)return "critical";if(cfg.warning!==undefined&&n>=cfg.warning)return "warning";if(cfg.warningBelow!==undefined&&n>0&&n<cfg.warningBelow)return "warning";return "normal"}
+      function vehicleHealthScore(logs){const latest=latestTelemetry(logs);if(!latest)return null;const coolant=normalizeTelemetryValue(latest.ctemp),voltage=normalizeTelemetryValue(latest.voltage),rpm=normalizeTelemetryValue(latest.rpm),speed=normalizeTelemetryValue(latest.speed),d=latest.time||latest.timestamp?new Date(latest.time||latest.timestamp):null,age=d&&!Number.isNaN(d.getTime())?Math.max(0,Date.now()-d.getTime()):Infinity,connection=telemetryConnectionState(age);let score=100;if(coolant!==null){if(coolant>=TELEMETRY_CONFIG.ctemp.critical)score-=30;else if(coolant>=TELEMETRY_CONFIG.ctemp.warning)score-=10}if(voltage!==null&&voltage>0&&voltage<TELEMETRY_CONFIG.voltage.warningBelow)score-=20;if(rpm!==null&&rpm>=TELEMETRY_CONFIG.rpm.warning)score-=10;if(speed!==null&&speed>=TELEMETRY_CONFIG.speed.warning)score-=5;if(connection==="stale")score-=5;if(connection==="offline")score-=10;return Math.max(0,Math.min(100,Math.round(score)))}
+      function vehicleHealthCategories(logs){const latest=latestTelemetry(logs);if(!latest)return[];const coolant=normalizeTelemetryValue(latest.ctemp),voltage=normalizeTelemetryValue(latest.voltage),rpm=normalizeTelemetryValue(latest.rpm),speed=normalizeTelemetryValue(latest.speed),d=latest.time||latest.timestamp?new Date(latest.time||latest.timestamp):null,age=d&&!Number.isNaN(d.getTime())?Math.max(0,Date.now()-d.getTime()):Infinity,connection=telemetryConnectionState(age),clamp=n=>Math.max(0,Math.min(100,Math.round(n)));return [["Engine",clamp(100-(rpm!==null&&rpm>=TELEMETRY_CONFIG.rpm.warning?10:0))],["Cooling",clamp(100-(coolant===null?0:coolant>=TELEMETRY_CONFIG.ctemp.critical?30:coolant>=TELEMETRY_CONFIG.ctemp.warning?10:0))],["Electrical",clamp(100-(voltage!==null&&voltage>0&&voltage<TELEMETRY_CONFIG.voltage.warningBelow?20:0))],["Air / Intake",100],["Performance",clamp(100-(speed!==null&&speed>=TELEMETRY_CONFIG.speed.warning?5:0))],["Connectivity",connection==="live"?100:connection==="recent"?90:connection==="stale"?75:50]]}
+      function analyzeVehicleTelemetry(logs){const latest=latestTelemetry(logs),l=latest||{},speed=normalizeTelemetryValue(l.speed)??0,rpm=normalizeTelemetryValue(l.rpm)??0,coolant=normalizeTelemetryValue(l.ctemp),voltage=normalizeTelemetryValue(l.voltage),d=latest&&(latest.time||latest.timestamp)?new Date(latest.time||latest.timestamp):null,age=d&&!Number.isNaN(d.getTime())?Math.max(0,Date.now()-d.getTime()):Infinity,connection=telemetryConnectionState(age),engine=rpm<=0?"off":rpm<900?"idle":"running",driving=speed<=0?"stationary":speed>=100?"high-speed":"moving",cooling=coolant===null?"unknown":coolant>=TELEMETRY_CONFIG.ctemp.critical?"overheating":coolant>=TELEMETRY_CONFIG.ctemp.warning?"warm":"normal",electrical=voltage===null||voltage<=0?"unknown":voltage<TELEMETRY_CONFIG.voltage.warningBelow?"low-voltage":"normal",sevs=[telemetrySeverity("speed",speed),telemetrySeverity("rpm",rpm),telemetrySeverity("ctemp",coolant),telemetrySeverity("voltage",voltage)],overall=sevs.includes("critical")?"critical":sevs.includes("warning")||connection==="offline"?"warning":"healthy";return{latest,connection,engine,driving,cooling,electrical,overall,age,score:vehicleHealthScore(logs),categories:vehicleHealthCategories(logs)}}
+      window.vehicleHealthScore=vehicleHealthScore;window.vehicleHealthCategories=vehicleHealthCategories;window.analyzeVehicleTelemetry=analyzeVehicleTelemetry;
       function analyze(v) {
         const t=latest(v), time=t ? new Date(t.time||t.timestamp) : null, age=time && !Number.isNaN(time.getTime()) ? Math.max(0,Date.now()-time.getTime()) : Infinity;
         const connection=!t?"offline":age<=120000?"online":age<=900000?"recent":"offline";
@@ -1147,30 +1156,9 @@ body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visu
         const overall=(coolant!==null&&coolant>110)||(voltage!==null&&voltage<11.5)?"critical":connection==="offline"||(coolant!==null&&coolant>=105)||(voltage!==null&&voltage<12)||(rpm!==null&&rpm>5000)?"warning":"healthy";
         return {latest:t,connection,cooling:coolant===null?"unknown":coolant>110?"overheating":coolant>=105?"warm":"normal",electrical:voltage===null?"unknown":voltage<12?"low-voltage":"normal",overall,age};
       }
-      function health(v) {
-        if (!v) return null;
-        if (typeof v.health === "number" && !v.telemetry?.length) return Math.round(v.health);
-        const t=latest(v); if (!t) return typeof v.health === "number" ? Math.round(v.health) : null;
-        let score=100; const coolant=num(t.ctemp ?? t.coolant), voltage=num(t.voltage), rpm=num(t.rpm), speed=num(t.speed);
-        if (coolant!==null) { if(coolant>110) score-=30; else if(coolant>=105) score-=10; }
-        if (voltage!==null && voltage<12) score-=20;
-        if (rpm!==null && rpm>5000) score-=10;
-        if (speed!==null && speed>=100) score-=5;
-        if (analyze(v).connection==="offline") score-=10;
-        return Math.max(0,Math.min(100,Math.round(score)));
-      }
-      function healthCategories(v) {
-        const t=latest(v)||{}; const h=health(v) ?? 0; const c=num(t.ctemp ?? t.coolant), vol=num(t.voltage), load=num(t.load), maf=num(t.maf), iat=num(t.iat);
-        return [
-          ["Engine",Math.max(0,Math.min(100,h + (num(t.rpm)>5000?-8:2)))],
-          ["Cooling",Math.max(0,Math.min(100,h + (c!==null&&c<105?3:-8)))],
-          ["Electrical",Math.max(0,Math.min(100,h + (vol!==null&&vol>=12?4:-12)))],
-          ["Air / Intake",Math.max(0,Math.min(100,h + (iat!==null&&iat<50?3:-5) + (maf!==null?2:0)))],
-          ["Performance",Math.max(0,Math.min(100,h + (load!==null&&load<85?2:-8)))],
-          ["Connectivity",analyze(v).connection==="online"?100:analyze(v).connection==="recent"?85:40]
-        ];
-      }
-      function meta(v) { const a=analyze(v); return a.connection==="offline"?["OFFLINE","off"]:(a.overall==="warning"?["WARNING","warn"]:[a.connection==="recent"?"RECENT":"ONLINE",""]); }
+      function health(v){return v?vehicleHealthScore(v.telemetry||[]):null;}
+      function healthCategories(v){return vehicleHealthCategories(v?.telemetry||[]);}
+      function meta(v){const a=analyze(v);if(a.connection==="offline")return ["OFFLINE","off"];if(a.overall==="critical")return ["CRITICAL","critical"];if(a.overall==="warning")return ["WARNING","warn"];if(a.connection==="stale")return ["STALE","warn"];if(a.connection==="recent")return ["RECENT",""];return ["LIVE",""];}
       function toast(t){$("toast").textContent=t;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2400);}
 
       function card(v){
@@ -1178,9 +1166,9 @@ body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visu
         return `<article class="card vehicle"><div class="vehiclehead"><div><h3>${esc(v.make)} ${esc(v.model)}</h3><div class="reg">${esc(v.registration||v.plate||"No registration")} · ${esc(v.year||"Year N/A")}</div></div><div class="status"><i class="dot ${c}"></i>${s}</div></div><div class="health"><div class="healthline"><span>Vehicle health</span><b>${h===null?"—":h+"/100"}</b></div><div class="track"><div class="fill" style="width:${h??0}%"></div></div></div><div class="metrics"><div class="metric"><small>Speed</small><b>${t?.speed??"—"} km/h</b></div><div class="metric"><small>RPM</small><b>${t?.rpm??"—"}</b></div><div class="metric"><small>Voltage</small><b>${t?.voltage??"—"} V</b></div></div><div class="vehiclefoot"><button class="btn" onclick="openVehicle('${esc(v.id)}')">View vehicle →</button></div></article>`;
       }
       function renderDashboard(){
-        const n=account?.name||"Customer", vs=ownedVehicles(); const online=vs.filter(v=>analyze(v).connection==="online").length, warnings=vs.filter(v=>analyze(v).overall!=="healthy").length, offline=vs.filter(v=>analyze(v).connection==="offline").length;
+        const n=account?.name||"Customer", vs=ownedVehicles(); const online=vs.filter(v=>analyze(v).connection==="live").length, warnings=vs.filter(v=>analyze(v).connection==="recent").length, offline=vs.filter(v=>analyze(v).connection==="offline").length;
         $("heroName").textContent=", "+esc(n.split(" ")[0]); $("navName").textContent=n; $("avatar").textContent=(n.charAt(0)||"C").toUpperCase();
-        $("statVehicles").textContent=vs.length; $("statOnline").textContent=online; $("statWarnings").textContent=warnings; $("statHealth").textContent=vs.length?Math.round(vs.map(health).filter(x=>x!==null).reduce((a,x)=>a+x,0)/(vs.map(health).filter(x=>x!==null).length||1)):"—";
+        $("statVehicles").textContent=vs.length; $("statOnline").textContent=online; $("statWarnings").textContent=warnings; $("statOffline").textContent=offline;
         $("dashboardVehicles").innerHTML=vs.map(card).join("")||empty("No vehicles are currently assigned to your account.");
         const active=vs.flatMap(v=>customerAlerts(v));
         $("dashboardAlerts").innerHTML=active.length?active.slice(0,5).map(alertHtml).join(""):"<div class=\"notice\">No active alerts. Your fleet is looking good.</div>";
@@ -1287,7 +1275,7 @@ body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visu
       $("addVehicleBtn").onclick=()=>$("vehicleModal").classList.remove("hidden");
       $("closeVehicle").onclick=()=>$("vehicleModal").classList.add("hidden");
       $("vehicleForm").addEventListener("submit",(e)=>{e.preventDefault();if(!account)return;db=normalizeDb(readDb()||db);const id=$("vDevice").value.trim();if(!id)return toast("Enter the JaFaFa device ID.");if(vehicleById(id))return toast("That vehicle ID already exists. Use claim instead.");const c=customerById(account.id);const v={id,vehicleId:id,obdId:id,customerId:String(account.id),make:$("vMake").value.trim(),model:$("vModel").value.trim(),year:Number($("vYear").value)||"",registration:$("vReg").value.trim(),plate:$("vReg").value.trim(),status:"Pending",createdAt:now(),telemetry:[]};c.cars.push(v);saveDb();const list=claims();list.unshift({id:uid("CLAIM"),vehicleId:id,customerId:String(account.id),requestedAt:now(),status:"PENDING"});writeClaims(list);$("vehicleForm").reset();$("vehicleModal").classList.add("hidden");renderVehicles();toast("Vehicle claim submitted for approval");});
-      $("profileForm").addEventListener("submit",(e)=>{e.preventDefault();if(!account)return;db=normalizeDb(readDb()||db);const c=customerById(account.id);c.name=$("profileName").value.trim();c.email=$("profileEmail").value.trim().toLowerCase();c.phone=$("profilePhone").value.trim();account=c;syncCustomerState();saveDb();persistSession();renderAccount();renderDashboard();toast("Profile saved");});
+      $("profileForm").addEventListener("submit",(e)=>{e.preventDefault();if(!account)return;db=normalizeDb(readDb()||db);const c=customerById(account.id);const nextEmail=$("profileEmail").value.trim().toLowerCase();if(db.some(x=>String(x.id)!==String(c.id)&&String(x.email||"").trim().toLowerCase()===nextEmail))return toast("That email is already used by another customer.");c.name=$("profileName").value.trim();c.email=nextEmail;c.phone=$("profilePhone").value.trim();account=c;syncCustomerState();saveDb();persistSession();renderAccount();renderDashboard();toast("Profile saved");});
 
       function restoreSession(){
         try{const s=JSON.parse(localStorage.getItem(SESSION_KEY)||"null");if(!s?.customerId)return;db=normalizeDb(readDb()||db);const c=customerById(s.customerId);if(c&&String(c.status).toLowerCase()!=="suspended")enter(c);}catch{}
@@ -1298,7 +1286,7 @@ body.jf-critical #jf-visual-layer{filter:saturate(.92)} body.jf-warning #jf-visu
 
 <style id="jf-customer-enhancements">
 .jf-cx-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 18px}.jf-cx-summary .card{min-height:90px}.jf-cx-summary b{font-size:1.55rem}.jf-cx-summary small{display:block;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}.jf-cx-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.jf-cx-bell{position:relative;border:1px solid var(--line);background:rgba(255,255,255,.035);border-radius:10px;width:40px;height:40px;color:inherit;cursor:pointer}.jf-cx-badge{position:absolute;right:-4px;top:-4px;min-width:18px;height:18px;border-radius:99px;background:#fb7185;color:white;font-size:10px;font-weight:900;display:grid;place-items:center}.jf-cx-notify{position:fixed;right:18px;top:74px;width:min(380px,calc(100vw - 28px));z-index:9998;border:1px solid var(--line);background:rgba(7,14,27,.96);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.35);padding:14px}.jf-cx-notify h3{margin:0 0 10px}.jf-cx-notify-item{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.jf-cx-notify-item:first-of-type{border-top:0}.jf-cx-notify-item small{display:block;color:var(--muted);margin-top:3px}.jf-cx-health{display:inline-flex;gap:6px;align-items:center;font-weight:800}.jf-cx-health:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 10px currentColor}.jf-cx-health.good{color:#67e8a5}.jf-cx-health.warn{color:#fbbf24}.jf-cx-health.bad{color:#fb7185}.jf-cx-skeleton{min-height:160px;background:rgba(148,163,184,.08)!important;position:relative;overflow:hidden}.jf-cx-skeleton:after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:jfCxShimmer 1.2s infinite}@keyframes jfCxShimmer{to{transform:translateX(100%)}}
-.jf-cx-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.jf-cx-metric{border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,.025)}.jf-cx-metric small{display:block;color:var(--muted);font-size:.68rem}.jf-cx-metric b{display:block;margin-top:4px;font-size:1.15rem}.jf-cx-claim-approved{border-color:rgba(103,232,165,.3)!important}.jf-cx-error{border:1px solid rgba(251,113,133,.25);background:rgba(251,113,133,.06);border-radius:14px;padding:14px;color:#fecdd3}
+.jf-cx-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.jf-cx-metric{border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,.025)}.jf-cx-metric small{display:block;color:var(--muted);font-size:.68rem}.jf-cx-metric b{display:block;margin-top:4px;font-size:1.15rem}.jf-cx-claim-approved{border-color:rgba(103,232,165,.3)!important}.health-reasons{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}.health-reason{color:var(--muted);font-size:.72rem;margin-top:6px}.dot.critical{background:var(--red);box-shadow:0 0 10px var(--red)}.jf-cx-error{border:1px solid rgba(251,113,133,.25);background:rgba(251,113,133,.06);border-radius:14px;padding:14px;color:#fecdd3}
 @media(max-width:850px){.jf-cx-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.jf-cx-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.jf-cx-summary,.jf-cx-metrics{grid-template-columns:1fr 1fr}.jf-cx-notify{right:10px}}
 </style>
 <script>
@@ -1313,7 +1301,7 @@ function activeSelected(){return window.JaFaFaCustomerState?.selected||window.se
 function customer(){const acct=activeAccount();if(!acct)return null;return read().find(c=>String(c.id)===String(acct.id))||null}
 function owned(){const c=customer();if(!c)return[];const ids=new Set((c.vehicleIds||[]).map(String));return (c.cars||[]).filter(v=>ids.has(String(v.id))&&String(v.customerId)===String(c.id)&&!['pending','deleted','unassigned'].includes(String(v.status).toLowerCase()))}
 function latest(v){return(v?.telemetry||[]).slice().sort((a,b)=>new Date(b.time||b.timestamp)-new Date(a.time||a.timestamp))[0]||null}
-function health(v){if(typeof window.health==='function')return window.health(v);const t=latest(v);if(!t)return typeof v.health==='number'?v.health:null;let s=100,ct=Number(t.ctemp??t.coolant),vol=Number(t.voltage),rpm=Number(t.rpm);if(Number.isFinite(ct)){if(ct>110)s-=30;else if(ct>=105)s-=10}if(Number.isFinite(vol)&&vol<12)s-=20;if(Number.isFinite(rpm)&&rpm>5000)s-=10;return Math.max(0,Math.min(100,s))}
+function health(v){try{return window.vehicleHealthScore?.(v?.telemetry||[])??null}catch{return null}}
 function claims(){try{return JSON.parse(localStorage.getItem(CLAIM)||'[]')}catch{return[]}}
 function alerts(){let a=[];try{a=JSON.parse(localStorage.getItem('jafafa_alerts_v1')||'[]')}catch{}return a.filter(x=>!x.resolved&&owned().some(v=>String(v.id)===String(x.vehicleId)))}
 function addBell(){const nav=q('.userchip');if(!nav||q('#jfCxBell'))return;const b=document.createElement('button');b.id='jfCxBell';b.className='jf-cx-bell';b.type='button';b.innerHTML='🔔<span class="jf-cx-badge" hidden></span>';nav.insertBefore(b,nav.firstChild);b.onclick=toggleNotify;updateBell()}
