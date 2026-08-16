@@ -186,7 +186,6 @@
       border-bottom: 1px solid var(--line);
       background: rgba(5, 9, 20, 0.66);
       -webkit-backdrop-filter: blur(20px) saturate(140%);
-      -webkit-backdrop-filter: blur(20px) saturate(140%);
       backdrop-filter: blur(20px) saturate(140%);
     }
 
@@ -318,7 +317,6 @@
       background: linear-gradient(135deg,
           rgba(8, 18, 35, 0.82),
           rgba(7, 13, 26, 0.52));
-      -webkit-backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       backdrop-filter: blur(12px);
       box-shadow: var(--shadow);
@@ -587,7 +585,6 @@
       color: var(--text);
       background: rgba(7, 14, 28, 0.72);
       -webkit-backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
       backdrop-filter: blur(14px);
       transition: 0.2s;
     }
@@ -617,7 +614,6 @@
       border: 1px solid var(--line-bright);
       border-radius: 14px;
       background: rgba(7, 14, 28, 0.96);
-      -webkit-backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
       backdrop-filter: blur(24px);
       box-shadow: var(--shadow);
@@ -798,7 +794,6 @@
       border: 1px solid var(--line);
       background: rgba(5, 11, 22, 0.42);
       -webkit-backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
       backdrop-filter: blur(4px);
     }
 
@@ -826,7 +821,6 @@
       border: 1px solid rgba(148, 163, 184, 0.15);
       border-radius: 12px;
       background: rgba(5, 12, 25, 0.58);
-      -webkit-backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       backdrop-filter: blur(12px);
       box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
@@ -1086,7 +1080,6 @@
       padding: 20px;
       background: rgba(2, 6, 16, 0.72);
       -webkit-backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
       backdrop-filter: blur(10px);
     }
 
@@ -1274,7 +1267,6 @@
       border-radius: 16px;
       background: rgba(7, 14, 28, 0.97);
       box-shadow: var(--shadow);
-      -webkit-backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
       backdrop-filter: blur(24px);
     }
@@ -3018,7 +3010,7 @@
       document.getElementById("dashboardVehicleCount").textContent =
         vs.length.toLocaleString();
       document.getElementById("dashboardOnlineCount").textContent = vs
-        .filter((v) => { const a = analyzeVehicleTelemetry(v.telemetry); return a.connection === "online" || a.connection === "recent"; })
+        .filter((v) => { const a = analyzeVehicleTelemetry(v.telemetry); return a.connection === "live" || a.connection === "recent"; })
         .length.toLocaleString();
       document.getElementById("dashboardTelemetryCount").textContent =
         records.toLocaleString();
@@ -3059,7 +3051,7 @@
     function renderFleetCommandCenter(vs) {
       let host = document.getElementById("jfFleetCommand");
       if (!host) { const anchor = document.querySelector("#dashboardActivity")?.closest(".dashboard-section"); if (!anchor) return; const sec = document.createElement("div"); sec.id = "jfFleetCommand"; sec.className = "dashboard-section jf-fleet-command scroll-reveal"; anchor.parentNode.insertBefore(sec, anchor); host = sec }
-      const states = vs.map(v => analyzeVehicleTelemetry(v.telemetry)), online = states.filter(a => a.connection === "online" || a.connection === "recent").length, critical = states.filter(a => a.overall === "critical").length, warning = states.filter(a => a.overall === "warning" && a.connection !== "offline").length, offline = states.filter(a => a.connection === "offline").length, healthy = Math.max(0, Math.min(100, vs.length ? Math.round(states.reduce((sum, a) => sum + (a.overall === "healthy" ? 100 : a.overall === "warning" ? 70 : 25), 0) / vs.length) : 0)); host.innerHTML = `<h3>Fleet command center</h3><div class="jf-fleet-command-grid"><div class="jf-fleet-command-card"><b>${vs.length}</b><span>Fleet</span></div><div class="jf-fleet-command-card"><b>${online}</b><span>Online</span></div><div class="jf-fleet-command-card"><b>${warning}</b><span>Warning</span></div><div class="jf-fleet-command-card"><b>${offline}</b><span>Offline</span></div></div><div class="jf-fleet-health"><div class="stat-label">Fleet health</div><div style="display:flex;justify-content:space-between;align-items:end"><strong style="font-size:1.8rem">${healthy}</strong><span style="color:var(--muted);font-size:.7rem">/ 100 · ${critical} critical</span></div><div class="jf-health-track"><div class="jf-health-fill" style="width:${healthy}%"></div></div></div>`
+      const states = vs.map(v => analyzeVehicleTelemetry(v.telemetry)), online = states.filter(a => a.connection === "live" || a.connection === "recent").length, critical = states.filter(a => a.overall === "critical").length, warning = states.filter(a => a.overall === "warning" && a.connection !== "offline").length, offline = states.filter(a => a.connection === "offline").length, healthy = Math.max(0, Math.min(100, vs.length ? Math.round(states.reduce((sum, a) => sum + (a.overall === "healthy" ? 100 : a.overall === "warning" ? 70 : 25), 0) / vs.length) : 0)); host.innerHTML = `<h3>Fleet command center</h3><div class="jf-fleet-command-grid"><div class="jf-fleet-command-card"><b>${vs.length}</b><span>Fleet</span></div><div class="jf-fleet-command-card"><b>${online}</b><span>Online</span></div><div class="jf-fleet-command-card"><b>${warning}</b><span>Warning</span></div><div class="jf-fleet-command-card"><b>${offline}</b><span>Offline</span></div></div><div class="jf-fleet-health"><div class="stat-label">Fleet health</div><div style="display:flex;justify-content:space-between;align-items:end"><strong style="font-size:1.8rem">${healthy}</strong><span style="color:var(--muted);font-size:.7rem">/ 100 · ${critical} critical</span></div><div class="jf-health-track"><div class="jf-health-fill" style="width:${healthy}%"></div></div></div>`
     }
     function renderActivity() {
       const a = [];
@@ -3820,7 +3812,7 @@
         if (l) {
           const d = parseTime(l.time),
             age = d ? Math.max(0, Date.now() - d.getTime()) : Infinity;
-          const live = age < 120000;
+          const live = age < 10000;
           f.textContent = `Latest sample · ${prettyTime(l.time)}`;
           li.textContent = live ? "Live stream" : "Stale data";
           li.classList.toggle("offline", !live);
@@ -4430,6 +4422,15 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script id="jafafa-v7-ownership-ui">
+(()=>{
+function escV(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]||m))}
+function conflicts(){try{const d=JSON.parse(localStorage.getItem("jafafa_fleet_suite_v3")||"[]"),seen=new Map(),out=[];for(const c of d)for(const v of (c.cars||[])){const id=String(v.id||"");if(!id)continue;if(seen.has(id)&&seen.get(id).id!==c.id){const prior=seen.get(id);if(!out.some(x=>x.vehicleId===id))out.push({vehicleId:id,owners:[prior,c]})}else seen.set(id,c)}return out}catch{return[]}}
+function render(){let p=document.getElementById("jfV7OwnershipPanel");if(!p){p=document.createElement("section");p.id="jfV7OwnershipPanel";p.className="dashboard-section";const a=document.getElementById("jfFleetCommand")||document.getElementById("dashboardActivity")?.closest(".dashboard-section");if(a)a.parentNode.insertBefore(p,a)}if(!p)return;const xs=conflicts();p.hidden=!xs.length;if(!xs.length)return;p.innerHTML='<div class="jf-suite-card"><div class="jf-suite-head"><h3>⚠ Ownership conflicts</h3><span class="jf-chip jf-warn">'+xs.length+' unresolved</span></div>'+xs.map(x=>'<div class="jf-alert-row"><span class="jf-chip jf-bad">CONFLICT</span><div><strong>Vehicle '+escV(x.vehicleId)+'</strong><div class="jf-suite-small">'+x.owners.map(o=>escV(o.name||o.email||o.id)).join(' · ')+'</div><button class="btn-secondary jf-suite-small" type="button" data-jf-resolve="'+escV(x.vehicleId)+'">Resolve conflict</button></div></div>').join('')+'</div>';p.querySelectorAll('[data-jf-resolve]').forEach(b=>b.onclick=()=>resolve(b.dataset.jfResolve))}
+function resolve(id){try{const d=JSON.parse(localStorage.getItem("jafafa_fleet_suite_v3")||"[]"),owners=d.filter(c=>(c.cars||[]).some(v=>String(v.id)===String(id)));if(owners.length<2)return;const answer=prompt("Choose the owner by customer ID:\n\n"+owners.map(c=>c.id+" — "+c.name).join("\n"));if(answer===null)return;const owner=owners.find(c=>String(c.id)===String(answer).trim());if(!owner){alert("Invalid customer ID.");return}let source=null;for(const c of owners){const hit=(c.cars||[]).find(v=>String(v.id)===String(id));if(hit&&!source)source={...hit};c.cars=(c.cars||[]).filter(v=>String(v.id)!==String(id));c.vehicleIds=(c.vehicleIds||[]).filter(v=>String(v)!==String(id))}if(!source)return;source.customerId=String(owner.id);source.ownershipConflict=false;delete source.ownershipConflictOwners;owner.cars=owner.cars||[];owner.vehicleIds=owner.vehicleIds||[];owner.cars.push(source);owner.vehicleIds.push(String(id));localStorage.setItem("jafafa_fleet_suite_v3",JSON.stringify(d));localStorage.setItem("jafafa_admin_role_v1",localStorage.getItem("jafafa_admin_role_v1")||"Super Admin");window.MOCK_DATABASE=d;render();if(typeof refreshAdminDashboard==='function')refreshAdminDashboard()}catch(e){console.error(e);alert("Could not resolve ownership conflict.")}}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>setTimeout(render,120));else setTimeout(render,120);window.addEventListener("jafafa:ownership-updated",render);
+})();
+</script>
 </body>
 
 </html>
