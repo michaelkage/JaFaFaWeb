@@ -338,6 +338,178 @@
                 grid-template-columns: 1fr
             }
         }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: .4rem
+        }
+
+        .form-group.full {
+            grid-column: 1/-1
+        }
+
+        .form-group label {
+            color: #cbd5e1;
+            font-size: .78rem;
+            font-weight: 700
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: .72rem .8rem;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: #f8fafc;
+            outline: none
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, .1)
+        }
+
+        .form-group input[readonly] {
+            color: #94a3b8;
+            cursor: not-allowed;
+            background: #111827
+        }
+
+        .field-help {
+            color: #64748b;
+            font-size: .7rem;
+            line-height: 1.4
+        }
+
+        .section-note {
+            padding: .8rem 1rem;
+            background: rgba(56, 189, 248, .06);
+            border: 1px solid rgba(56, 189, 248, .18);
+            border-radius: 9px;
+            color: #94a3b8;
+            font-size: .78rem;
+            line-height: 1.5;
+            margin-bottom: 1rem
+        }
+
+        .verify-row {
+            display: flex;
+            gap: .5rem;
+            align-items: stretch
+        }
+
+        .verify-row input {
+            flex: 1
+        }
+
+        .verify-row button {
+            white-space: nowrap
+        }
+
+        .verification {
+            display: none;
+            margin-top: .55rem;
+            padding: .6rem .7rem;
+            border-radius: 8px;
+            font-size: .75rem;
+            font-weight: 700
+        }
+
+        .verification.ok {
+            display: block;
+            color: #4ade80;
+            background: rgba(34, 197, 94, .1);
+            border: 1px solid rgba(34, 197, 94, .2)
+        }
+
+        .verification.bad {
+            display: block;
+            color: #f87171;
+            background: rgba(248, 113, 113, .1);
+            border: 1px solid rgba(248, 113, 113, .2)
+        }
+
+        .profile-editor {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1.25rem
+        }
+
+        .profile-preview {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #334155
+        }
+
+        .locked {
+            color: #64748b;
+            font-size: .72rem;
+            margin-top: .3rem
+        }
+
+        .empty-state {
+            padding: 2rem;
+            text-align: center;
+            color: #94a3b8;
+            border: 1px dashed #475569;
+            border-radius: 12px
+        }
+
+        .device-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            color: #4ade80;
+            font-size: .72rem;
+            font-weight: 800;
+            margin-top: .65rem
+        }
+
+        .device-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #4ade80
+        }
+
+        .danger {
+            color: #fca5a5;
+            border-color: #7f1d1d;
+            background: #2a1114
+        }
+
+        @media(max-width:700px) {
+            .form-grid {
+                grid-template-columns: 1fr
+            }
+
+            .form-group.full {
+                grid-column: auto
+            }
+
+            .verify-row {
+                flex-direction: column
+            }
+
+            .profile-editor {
+                align-items: flex-start;
+                flex-direction: column
+            }
+        }
     </style>
 </head>
 
@@ -345,11 +517,12 @@
     <div id="loginView" class="auth">
         <div class="auth-card">
             <h1>Telemetry Hub</h1>
-            <p>Customer Portal<br>Sign in to view your registered vehicles and telemetry.</p>
+            <p>Customer Portal<br>Register your account and vehicles, then manage your information.</p>
             <div id="googleSignInButton" style="display:flex;justify-content:center"></div>
             <p id="loginMessage" style="margin-top:1rem;font-size:.75rem;margin-bottom:0"></p>
         </div>
     </div>
+
     <div id="appView" hidden>
         <header class="topbar">
             <div class="brand">TELEMETRY HUB</div>
@@ -360,31 +533,40 @@
             </div>
         </header>
         <main>
-            <nav class="nav"><button onclick="customerShow('customer-dashboard')">Dashboard</button><button
-                    onclick="customerShow('customer-vehicles')">My Vehicles</button><button
-                    onclick="customerShow('customer-account')">My Account</button></nav>
+            <nav class="nav">
+                <button onclick="customerShow('customer-dashboard')">Dashboard</button>
+                <button onclick="customerShow('customer-vehicles')">My Vehicles</button>
+                <button onclick="customerShow('customer-account')">My Account</button>
+            </nav>
+
             <section id="customer-dashboard">
                 <div class="header">
                     <h2 id="welcomeTitle">Welcome back 👋</h2>
-                    <p>Here's an overview of your registered vehicles.</p>
+                    <p>Manage your account and registered vehicles.</p>
                 </div>
                 <div class="stats">
                     <div class="stat"><span>Total Vehicles</span><strong id="customerVehicleCount">0</strong></div>
                     <div class="stat"><span>Active Vehicles</span><strong id="customerActiveCount">0</strong></div>
-                    <div class="stat"><span>Account Tier</span><strong id="customerTier">—</strong></div>
+                    <div class="stat"><span>Account Status</span><strong id="customerStatus">Active</strong></div>
                 </div>
                 <div class="header">
                     <h2 style="font-size:1.25rem">Your Vehicles</h2>
                 </div>
                 <div id="dashboardVehicles" class="vehicle-grid"></div>
+                <div class="actions" style="margin-top:1rem"><button class="primary"
+                        onclick="openVehicleRegistration()">+ Register Vehicle</button></div>
             </section>
+
             <section id="customer-vehicles" hidden>
                 <div class="header">
                     <h2>My Vehicles</h2>
-                    <p>Vehicles registered to your account.</p>
+                    <p>Register vehicles and manage the information you are allowed to change.</p>
                 </div>
                 <div id="vehicleList" class="vehicle-grid"></div>
+                <div class="actions" style="margin-top:1rem"><button class="primary"
+                        onclick="openVehicleRegistration()">+ Register Vehicle</button></div>
             </section>
+
             <section id="customer-vehicle-details" hidden>
                 <div class="header">
                     <h2 id="vehicleDetailsTitle">Vehicle</h2>
@@ -393,1224 +575,263 @@
                 <div class="card">
                     <div id="vehicleDetails" class="detail-grid"></div>
                     <div class="actions" style="margin-top:1rem"><button class="primary"
-                            onclick="customerOpenTelemetry()">View Telemetry</button><button class="secondary"
+                            onclick="openVehicleEditor()">Edit Vehicle</button><button class="secondary"
                             onclick="customerShow('customer-vehicles')">← My Vehicles</button></div>
                 </div>
             </section>
-            <section id="customer-telemetry" hidden>
+
+            <section id="customer-register-vehicle" hidden>
                 <div class="header">
-                    <h2 id="telemetryTitle">Telemetry</h2>
-                    <p id="telemetrySub"></p>
+                    <h2>Register a Vehicle</h2>
+                    <p>Enter your vehicle information and verify the MAC address supplied with your telemetry dongle.
+                    </p>
                 </div>
+                <div class="section-note"><strong>Dongle verification</strong><br>The MAC address is checked against the
+                    registered dongle inventory. It must be a real Telemetry Hub dongle and it must not already be
+                    assigned to another vehicle.</div>
                 <div class="card">
-                    <div id="telemetryMetrics" class="metrics"></div>
-                </div>
-                <div class="card">
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Time</th>
-                                    <th>Speed</th>
-                                    <th>RPM</th>
-                                    <th>Coolant</th>
-                                    <th>Fuel</th>
-                                    <th>Voltage</th>
-                                    <th>Throttle</th>
-                                    <th>Load</th>
-                                </tr>
-                            </thead>
-                            <tbody id="telemetryBody"></tbody>
-                        </table>
-                    </div>
+                    <form id="registerVehicleForm" onsubmit="registerVehicle(event)">
+                        <div class="form-grid">
+                            <div class="form-group"><label for="regMake">Make</label><input id="regMake" required
+                                    placeholder="BMW"></div>
+                            <div class="form-group"><label for="regModel">Model</label><input id="regModel" required
+                                    placeholder="X5"></div>
+                            <div class="form-group"><label for="regYear">Year</label><input id="regYear" type="number"
+                                    min="1900" max="2100" required placeholder="2008"></div>
+                            <div class="form-group"><label for="regPlate">Registration / Plate</label><input
+                                    id="regPlate" required placeholder="LAG-123-AB"></div>
+                            <div class="form-group"><label for="regVin">VIN</label><input id="regVin" required
+                                    placeholder="17-character VIN"></div>
+                            <div class="form-group"><label for="regNickname">Vehicle Nickname</label><input
+                                    id="regNickname" placeholder="My X5"><span class="field-help">Optional name shown in
+                                    your portal.</span></div>
+                            <div class="form-group full"><label for="regMac">Dongle MAC Address</label>
+                                <div class="verify-row"><input id="regMac" required placeholder="00:10:CC:4F:36:03"
+                                        autocomplete="off"><button type="button" class="secondary"
+                                        onclick="verifyRegistrationMac()">Verify MAC</button></div>
+                                <div id="macVerification" class="verification"></div><span class="field-help">Use the
+                                    MAC address printed/supplied with your Telemetry Hub dongle.</span>
+                            </div>
+                        </div>
+                        <div class="actions" style="margin-top:1rem"><button class="primary" type="submit">Register
+                                Vehicle</button><button class="secondary" type="button"
+                                onclick="customerShow('customer-vehicles')">Cancel</button></div>
+                    </form>
                 </div>
             </section>
+
+            <section id="customer-edit-vehicle" hidden>
+                <div class="header">
+                    <h2>Edit Vehicle</h2>
+                    <p>Only customer-editable information can be changed here.</p>
+                </div>
+                <div class="card">
+                    <form id="editVehicleForm" onsubmit="saveVehicleEdits(event)">
+                        <div class="form-grid">
+                            <div class="form-group"><label for="editMake">Make</label><input id="editMake"
+                                    readonly><span class="locked">Locked — protected vehicle information.</span></div>
+                            <div class="form-group"><label for="editModel">Model</label><input id="editModel"
+                                    readonly><span class="locked">Locked — protected vehicle information.</span></div>
+                            <div class="form-group"><label for="editYear">Year</label><input id="editYear"
+                                    readonly><span class="locked">Locked — protected vehicle information.</span></div>
+                            <div class="form-group"><label for="editVin">VIN</label><input id="editVin" readonly><span
+                                    class="locked">Locked — protected vehicle information.</span></div>
+                            <div class="form-group"><label for="editMac">Dongle MAC Address</label><input id="editMac"
+                                    readonly><span class="locked">Locked after verification. Use the replacement process
+                                    if your dongle changes.</span></div>
+                            <div class="form-group"><label for="editPlate">Registration / Plate</label><input
+                                    id="editPlate" required></div>
+                            <div class="form-group full"><label for="editNickname">Vehicle Nickname</label><input
+                                    id="editNickname" placeholder="My X5"></div>
+                        </div>
+                        <div class="actions" style="margin-top:1rem"><button class="primary" type="submit">Save
+                                Changes</button><button class="secondary" type="button"
+                                onclick="customerOpenVehicle(customerVehicle?.id)">Cancel</button></div>
+                    </form>
+                </div>
+            </section>
+
             <section id="customer-account" hidden>
                 <div class="header">
                     <h2>My Account</h2>
-                    <p>Review your customer information.</p>
+                    <p>Manage your customer profile. Your Google sign-in email is your account identity.</p>
                 </div>
                 <div class="card">
-                    <div id="accountDetails" class="detail-grid"></div>
+                    <div class="profile-editor"><img id="profilePreview" class="profile-preview" alt="Profile picture">
+                        <div><strong>Profile Picture</strong>
+                            <div class="field-help">Choose a new picture for your Telemetry Hub profile.</div><input
+                                id="profilePictureInput" type="file" accept="image/*" style="margin-top:.55rem">
+                        </div>
+                    </div>
+                    <form onsubmit="saveAccount(event)">
+                        <div class="form-grid">
+                            <div class="form-group"><label for="accountName">Full Name</label><input id="accountName"
+                                    required></div>
+                            <div class="form-group"><label for="accountEmail">Google Email</label><input
+                                    id="accountEmail" readonly></div>
+                            <div class="form-group"><label for="accountPhone">Phone</label><input id="accountPhone"
+                                    placeholder="Phone number"></div>
+                            <div class="form-group"><label for="accountCompany">Company</label><input
+                                    id="accountCompany" placeholder="Company / Organisation"></div>
+                        </div>
+                        <div class="actions" style="margin-top:1rem"><button class="primary" type="submit">Save
+                                Profile</button></div>
+                    </form>
+                </div>
+            </section>
+
+            <section id="customer-onboarding" hidden>
+                <div class="header">
+                    <h2>Complete Your Profile</h2>
+                    <p>Your Google account has been authenticated. Set up your Telemetry Hub customer account.</p>
+                </div>
+                <div class="card">
+                    <form onsubmit="completeOnboarding(event)">
+                        <div class="form-grid">
+                            <div class="form-group"><label for="onboardName">Full Name</label><input id="onboardName"
+                                    required></div>
+                            <div class="form-group"><label for="onboardEmail">Google Email</label><input
+                                    id="onboardEmail" readonly></div>
+                            <div class="form-group"><label for="onboardPhone">Phone</label><input id="onboardPhone">
+                            </div>
+                            <div class="form-group"><label for="onboardCompany">Company</label><input
+                                    id="onboardCompany"></div>
+                        </div>
+                        <div class="actions" style="margin-top:1rem"><button class="primary" type="submit">Create My
+                                Account</button></div>
+                    </form>
                 </div>
             </section>
         </main>
     </div>
+
     <script>
-        const MOCK_DATABASE = [
-            {
-                id: 1,
-                name: "Deji Ayeni",
-                email: "anywashng@gmail.com.ng",
-                company: "JaFaFa",
-                tier: "Enterprise",
-                cars: [
-                    {
-                        id: "00:10:CC:4F:36:03",
-                        make: "BMW",
-                        model: "X5",
-                        year: 2024,
-                        plate: "LAG-500-DJ",
-                        status: "Active",
-                        mileage: "4,200 mi",
-                        telemetry: [
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:07",
-                                speed: 0,
-                                rpm: 675,
-                                maf: 4.14,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.24,
-                                evap: 58.43,
-                                timing: -2,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 14.12,
-                                load: 25.49,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:07",
-                                speed: 0,
-                                rpm: 675,
-                                maf: 4.14,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.24,
-                                evap: 58.43,
-                                timing: -2,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 14.12,
-                                load: 25.49,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:07",
-                                speed: 0,
-                                rpm: 675,
-                                maf: 4.14,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 58.43,
-                                timing: -2,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 14.12,
-                                load: 25.49,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:08",
-                                speed: 0,
-                                rpm: 671,
-                                maf: 4,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 56.08,
-                                timing: 1,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 25.1,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:08",
-                                speed: 0,
-                                rpm: 671,
-                                maf: 4,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 56.08,
-                                timing: 1,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 25.1,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:09",
-                                speed: 0,
-                                rpm: 671,
-                                maf: 4,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 56.08,
-                                timing: 1,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 25.1,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:10",
-                                speed: 0,
-                                rpm: 671,
-                                maf: 4,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 56.08,
-                                timing: 1,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 25.1,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:11",
-                                speed: 0,
-                                rpm: 671,
-                                maf: 4,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 56.08,
-                                timing: 1,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 25.1,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:13",
-                                speed: 0,
-                                rpm: 671,
-                                maf: 4,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 56.08,
-                                timing: 1,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 25.1,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:14",
-                                speed: 0,
-                                rpm: 673,
-                                maf: 3.97,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 55.69,
-                                timing: 1,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 24.31,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:15",
-                                speed: 0,
-                                rpm: 673,
-                                maf: 3.97,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 55.69,
-                                timing: 1,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 24.31,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:16",
-                                speed: 0,
-                                rpm: 673,
-                                maf: 3.97,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 55.69,
-                                timing: 1,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 24.31,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:17",
-                                speed: 0,
-                                rpm: 673,
-                                maf: 3.97,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 55.69,
-                                timing: 1,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 24.31,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:18",
-                                speed: 0,
-                                rpm: 673,
-                                maf: 3.97,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 55.69,
-                                timing: 1,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 24.31,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:19",
-                                speed: 0,
-                                rpm: 673,
-                                maf: 3.97,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 55.69,
-                                timing: 1,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 24.31,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:20",
-                                speed: 0,
-                                rpm: 675,
-                                maf: 3.97,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 56.08,
-                                timing: 0,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 24.71,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:21",
-                                speed: 0,
-                                rpm: 675,
-                                maf: 3.97,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 56.08,
-                                timing: 0,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 24.71,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:22",
-                                speed: 0,
-                                rpm: 675,
-                                maf: 3.97,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 56.08,
-                                timing: 0,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 24.71,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:23",
-                                speed: 0,
-                                rpm: 675,
-                                maf: 3.97,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 56.08,
-                                timing: 0,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 24.71,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:24",
-                                speed: 0,
-                                rpm: 675,
-                                maf: 3.97,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.32,
-                                evap: 56.08,
-                                timing: 0,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 24.71,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:25",
-                                speed: 0,
-                                rpm: 675,
-                                maf: 3.97,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.03,
-                                evap: 56.08,
-                                timing: 0,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 24.71,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:26",
-                                speed: 0,
-                                rpm: 663,
-                                maf: 5.66,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.03,
-                                evap: 52.55,
-                                timing: -2,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 13.73,
-                                load: 33.33,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:27",
-                                speed: 0,
-                                rpm: 663,
-                                maf: 5.66,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.03,
-                                evap: 52.55,
-                                timing: -2,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 14.51,
-                                load: 33.33,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:28",
-                                speed: 0,
-                                rpm: 663,
-                                maf: 5.66,
-                                ctemp: 78,
-                                fuel: 41.57,
-                                voltage: 14.03,
-                                evap: 52.55,
-                                timing: -2,
-                                etemp: 78,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 14.51,
-                                load: 33.33,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:29",
-                                speed: 0,
-                                rpm: 663,
-                                maf: 5.66,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.03,
-                                evap: 52.55,
-                                timing: -2,
-                                etemp: 79,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 14.51,
-                                load: 33.33,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:30",
-                                speed: 0,
-                                rpm: 663,
-                                maf: 5.66,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.03,
-                                evap: 52.55,
-                                timing: -2,
-                                etemp: 79,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 14.51,
-                                load: 33.33,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:31",
-                                speed: 0,
-                                rpm: 663,
-                                maf: 5.66,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.19,
-                                evap: 52.55,
-                                timing: -2,
-                                etemp: 79,
-                                mpg: 0,
-                                iat: 30,
-                                throttle: 14.51,
-                                load: 33.33,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:33",
-                                speed: 1,
-                                rpm: 679,
-                                maf: 5.28,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.19,
-                                evap: 69.02,
-                                timing: -6,
-                                etemp: 79,
-                                mpg: 0.13,
-                                iat: 30,
-                                throttle: 14.51,
-                                load: 37.25,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:34",
-                                speed: 1,
-                                rpm: 679,
-                                maf: 5.28,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.19,
-                                evap: 69.02,
-                                timing: -6,
-                                etemp: 79,
-                                mpg: 0.13,
-                                iat: 30,
-                                throttle: 15.29,
-                                load: 37.25,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:35",
-                                speed: 1,
-                                rpm: 679,
-                                maf: 5.28,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.19,
-                                evap: 69.02,
-                                timing: -6,
-                                etemp: 79,
-                                mpg: 0.13,
-                                iat: 30,
-                                throttle: 15.29,
-                                load: 37.25,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:36",
-                                speed: 1,
-                                rpm: 679,
-                                maf: 5.28,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.19,
-                                evap: 69.02,
-                                timing: -6,
-                                etemp: 79,
-                                mpg: 0.13,
-                                iat: 30,
-                                throttle: 15.29,
-                                load: 37.25,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:37",
-                                speed: 1,
-                                rpm: 679,
-                                maf: 5.28,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.19,
-                                evap: 69.02,
-                                timing: -6,
-                                etemp: 79,
-                                mpg: 0.13,
-                                iat: 30,
-                                throttle: 15.29,
-                                load: 37.25,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:38",
-                                speed: 1,
-                                rpm: 679,
-                                maf: 5.28,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.16,
-                                evap: 69.02,
-                                timing: -6,
-                                etemp: 79,
-                                mpg: 0.13,
-                                iat: 30,
-                                throttle: 15.29,
-                                load: 37.25,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:39",
-                                speed: 0,
-                                rpm: 670,
-                                maf: 5.49,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.16,
-                                evap: 67.84,
-                                timing: -8,
-                                etemp: 79,
-                                mpg: 0.12,
-                                iat: 30,
-                                throttle: 15.29,
-                                load: 31.76,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:40",
-                                speed: 0,
-                                rpm: 670,
-                                maf: 5.49,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.16,
-                                evap: 67.84,
-                                timing: -8,
-                                etemp: 79,
-                                mpg: 0.12,
-                                iat: 30,
-                                throttle: 15.29,
-                                load: 31.76,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:41",
-                                speed: 0,
-                                rpm: 670,
-                                maf: 5.49,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.16,
-                                evap: 67.84,
-                                timing: -8,
-                                etemp: 79,
-                                mpg: 0.12,
-                                iat: 30,
-                                throttle: 15.29,
-                                load: 31.76,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:42",
-                                speed: 0,
-                                rpm: 670,
-                                maf: 5.49,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.16,
-                                evap: 67.84,
-                                timing: -8,
-                                etemp: 79,
-                                mpg: 0.12,
-                                iat: 30,
-                                throttle: 15.29,
-                                load: 31.76,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:43",
-                                speed: 0,
-                                rpm: 670,
-                                maf: 5.49,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.16,
-                                evap: 67.84,
-                                timing: -8,
-                                etemp: 79,
-                                mpg: 0.12,
-                                iat: 30,
-                                throttle: 15.29,
-                                load: 31.76,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:44",
-                                speed: 0,
-                                rpm: 670,
-                                maf: 5.49,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.25,
-                                evap: 67.84,
-                                timing: -8,
-                                etemp: 79,
-                                mpg: 0.12,
-                                iat: 30,
-                                throttle: 15.29,
-                                load: 31.76,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:46",
-                                speed: 2,
-                                rpm: 643,
-                                maf: 4.91,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.25,
-                                evap: 63.92,
-                                timing: -5,
-                                etemp: 79,
-                                mpg: 0.35,
-                                iat: 30,
-                                throttle: 15.29,
-                                load: 33.33,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:47",
-                                speed: 2,
-                                rpm: 643,
-                                maf: 4.91,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.25,
-                                evap: 63.92,
-                                timing: -5,
-                                etemp: 79,
-                                mpg: 0.35,
-                                iat: 30,
-                                throttle: 15.29,
-                                load: 33.33,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:48",
-                                speed: 2,
-                                rpm: 643,
-                                maf: 4.91,
-                                ctemp: 79,
-                                fuel: 41.57,
-                                voltage: 14.25,
-                                evap: 63.92,
-                                timing: -5,
-                                etemp: 79,
-                                mpg: 0.35,
-                                iat: 30,
-                                throttle: 15.29,
-                                load: 33.33,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:49",
-                                speed: 2,
-                                rpm: 643,
-                                maf: 4.91,
-                                ctemp: 81,
-                                fuel: 41.57,
-                                voltage: 14.25,
-                                evap: 63.92,
-                                timing: -5,
-                                etemp: 81,
-                                mpg: 0.35,
-                                iat: 30,
-                                throttle: 15.29,
-                                load: 33.33,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:50",
-                                speed: 2,
-                                rpm: 643,
-                                maf: 4.91,
-                                ctemp: 81,
-                                fuel: 41.57,
-                                voltage: 14.25,
-                                evap: 63.92,
-                                timing: -5,
-                                etemp: 81,
-                                mpg: 0.35,
-                                iat: 30,
-                                throttle: 15.29,
-                                load: 33.33,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:51",
-                                speed: 2,
-                                rpm: 643,
-                                maf: 4.91,
-                                ctemp: 81,
-                                fuel: 41.57,
-                                voltage: 14.19,
-                                evap: 63.92,
-                                timing: -5,
-                                etemp: 81,
-                                mpg: 0.35,
-                                iat: 30,
-                                throttle: 15.29,
-                                load: 33.33,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:52",
-                                speed: 2,
-                                rpm: 720,
-                                maf: 7.94,
-                                ctemp: 81,
-                                fuel: 41.57,
-                                voltage: 14.19,
-                                evap: 70.2,
-                                timing: -11,
-                                etemp: 81,
-                                mpg: 0.47,
-                                iat: 30,
-                                throttle: 16.86,
-                                load: 43.14,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:53",
-                                speed: 2,
-                                rpm: 720,
-                                maf: 7.94,
-                                ctemp: 81,
-                                fuel: 41.57,
-                                voltage: 14.19,
-                                evap: 70.2,
-                                timing: -11,
-                                etemp: 81,
-                                mpg: 0.47,
-                                iat: 30,
-                                throttle: 16.86,
-                                load: 43.14,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:54",
-                                speed: 2,
-                                rpm: 720,
-                                maf: 7.94,
-                                ctemp: 81,
-                                fuel: 41.57,
-                                voltage: 14.19,
-                                evap: 70.2,
-                                timing: -11,
-                                etemp: 81,
-                                mpg: 0.47,
-                                iat: 30,
-                                throttle: 16.86,
-                                load: 43.14,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:55",
-                                speed: 2,
-                                rpm: 720,
-                                maf: 7.94,
-                                ctemp: 82,
-                                fuel: 41.57,
-                                voltage: 14.19,
-                                evap: 70.2,
-                                timing: -11,
-                                etemp: 82,
-                                mpg: 0.47,
-                                iat: 30,
-                                throttle: 16.86,
-                                load: 43.14,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:56",
-                                speed: 2,
-                                rpm: 720,
-                                maf: 7.94,
-                                ctemp: 82,
-                                fuel: 41.57,
-                                voltage: 14.19,
-                                evap: 70.2,
-                                timing: -11,
-                                etemp: 82,
-                                mpg: 0.47,
-                                iat: 30,
-                                throttle: 16.86,
-                                load: 43.14,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:57",
-                                speed: 0,
-                                rpm: 662,
-                                maf: 7.94,
-                                ctemp: 82,
-                                fuel: 41.57,
-                                voltage: 13.07,
-                                evap: 70.2,
-                                timing: -11,
-                                etemp: 82,
-                                mpg: 0.47,
-                                iat: 30,
-                                throttle: 16.86,
-                                load: 43.14,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2705:59:58",
-                                speed: 0,
-                                rpm: 662,
-                                maf: 5.06,
-                                ctemp: 82,
-                                fuel: 41.57,
-                                voltage: 13.07,
-                                evap: 49.8,
-                                timing: -4,
-                                etemp: 82,
-                                mpg: 0.44,
-                                iat: 30,
-                                throttle: 15.69,
-                                load: 38.82,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2706:00:00",
-                                speed: 0,
-                                rpm: 662,
-                                maf: 5.06,
-                                ctemp: 82,
-                                fuel: 41.57,
-                                voltage: 13.07,
-                                evap: 49.8,
-                                timing: -4,
-                                etemp: 82,
-                                mpg: 0.44,
-                                iat: 30,
-                                throttle: 15.69,
-                                load: 38.82,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2706:00:01",
-                                speed: 0,
-                                rpm: 662,
-                                maf: 5.06,
-                                ctemp: 82,
-                                fuel: 40.39,
-                                voltage: 13.07,
-                                evap: 49.8,
-                                timing: -4,
-                                etemp: 82,
-                                mpg: 0.44,
-                                iat: 30,
-                                throttle: 15.69,
-                                load: 38.82,
-                                atemp: 25,
-                                bpressure: 100
-                            },
-                            {
-                                vehicleId: "00:10:CC:4F:36:03",
-                                time: "2026-07-2706:00:02",
-                                speed: 0,
-                                rpm: 662,
-                                maf: 5.06,
-                                ctemp: 82,
-                                fuel: 40.39,
-                                voltage: 13.07,
-                                evap: 49.8,
-                                timing: -4,
-                                etemp: 82,
-                                mpg: 0.44,
-                                iat: 30,
-                                throttle: 15.69,
-                                load: 38.82,
-                                atemp: 25,
-                                bpressure: 100
-                            }
-                        ],
-                    },
-                ],
-            },
-            {
-                id: 2,
-                name: "Morenike Ayeni",
-                email: "morenike.ayeni@gmail.com",
-                company: "Layer3 Limited",
-                tier: "Enterprise",
-                cars: [
-                    {
-                        id: "00:10:CC:4F:36:03",
-                        make: "Lexus",
-                        model: "LX 600",
-                        year: 2024,
-                        plate: "VI-600-MO",
-                        status: "Active",
-                        mileage: "3,500 mi",
-                        telemetry: [],
-                    },
-                ],
-            },
-            {
-                id: 3,
-                name: "Michael Ayeni",
-                email: "michaelkage9@gmail.com",
-                company: "HyperSpace Technologies",
-                tier: "Enterprise",
-                cars: [
-                    {
-                        id: "00:10:CC:4F:36:03",
-                        make: "Land Rover",
-                        model: "Defender 110 V8",
-                        year: 2023,
-                        plate: "LAG-110-MA",
-                        status: "Active",
-                        mileage: "11,300 mi",
-                        telemetry: [],
-                    },
-                ],
-            },
-            {
-                id: 4,
-                name: "Gabriel Blitzer",
-                email: "ayobamicadel@gmail.com",
-                company: "Blitz Aero",
-                tier: "Pro",
-                cars: [
-                    {
-                        id: "00:10:CC:4F:36:03",
-                        make: "BMW",
-                        model: "M4 Competition",
-                        year: 2023,
-                        plate: "GBL-004-M",
-                        status: "Active",
-                        mileage: "7,800 mi",
-                        telemetry: [],
-                    },
-                ],
-            },
-            {
-                id: 5,
-                name: "Elizabeth Ayeni",
-                email: "elizabeth.ayeni@alphahealth.org",
-                company: "Alpha Medical Centers",
-                tier: "Pro",
-                cars: [
-                    {
-                        id: "00:10:CC:4F:36:03",
-                        make: "Mercedes-Benz",
-                        model: "GLE 450",
-                        year: 2024,
-                        plate: "KRD-450-EL",
-                        status: "Active",
-                        mileage: "1,900 mi",
-                        telemetry: [],
-                    },
-                ],
-            },
+        const STORAGE_KEY = "telemetryHubCustomerPortalDatabase";
+        const DEVICE_KEY = "telemetryHubDongleInventory";
+        const DEFAULT_DEVICES = [
+            { mac: "00:10:CC:4F:36:03", status: "assigned", vehicleId: "vehicle-001" },
+            { mac: "00:10:CC:4F:36:04", status: "available", vehicleId: null },
+            { mac: "00:10:CC:4F:36:05", status: "available", vehicleId: null },
+            { mac: "00:10:CC:4F:36:06", status: "disabled", vehicleId: null },
+            { mac: "00:10:CC:4F:36:07", status: "available", vehicleId: null }
         ];
-        let customerUser = null, customerVehicle = null;
-        function esc(v) { return String(v ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m])) }
-        const GOOGLE_CLIENT_ID = "618464687927-3qhsv0r9012cn0e50g963vk4n71pb54r.apps.googleusercontent.com";
-        function parseJwtToken(token) { try { const base64Url = token.split(".")[1]; const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/"); return JSON.parse(atob(base64)); } catch (e) { return null } }
+        const DEFAULT_DATABASE = [
+            { id: 1, name: "Deji Ayeni", email: "anywashng@gmail.com.ng", company: "JaFaFa", phone: "", tier: "Enterprise", status: "Active", picture: "", cars: [{ id: "vehicle-001", make: "BMW", model: "X5", year: 2024, plate: "LAG-500-DJ", vin: "WBA00000000000001", nickname: "My X5", status: "Active", mac: "00:10:CC:4F:36:03" }] },
+            { id: 2, name: "Morenike Ayeni", email: "morenike.ayeni@gmail.com", company: "Layer3 Limited", phone: "", tier: "Enterprise", status: "Active", picture: "", cars: [{ id: "vehicle-002", make: "Lexus", model: "LX 600", year: 2024, plate: "VI-600-MO", vin: "JTJ00000000000002", nickname: "LX 600", status: "Active", mac: null }] },
+            { id: 3, name: "Michael Ayeni", email: "michaelkage9@gmail.com", company: "HyperSpace Technologies", phone: "", tier: "Enterprise", status: "Active", picture: "", cars: [{ id: "vehicle-003", make: "Land Rover", model: "Defender 110 V8", year: 2023, plate: "LAG-110-MA", vin: "SAL00000000000003", nickname: "Defender", status: "Active", mac: null }] },
+            { id: 4, name: "Gabriel Blitzer", email: "ayobamicadel@gmail.com", company: "Blitz Aero", phone: "", tier: "Pro", status: "Active", picture: "", cars: [{ id: "vehicle-004", make: "BMW", model: "M4 Competition", year: 2023, plate: "GBL-004-M", vin: "WBS00000000000004", nickname: "M4", status: "Active", mac: null }] },
+            { id: 5, name: "Elizabeth Ayeni", email: "elizabeth.ayeni@alphahealth.org", company: "Alpha Medical Centers", phone: "", tier: "Pro", status: "Active", picture: "", cars: [{ id: "vehicle-005", make: "Mercedes-Benz", model: "GLE 450", year: 2024, plate: "KRD-450-EL", vin: "W1N00000000000005", nickname: "GLE", status: "Active", mac: null }] }
+        ];
+        let MOCK_DATABASE = loadJson(STORAGE_KEY, null) || structuredClone(DEFAULT_DATABASE);
+        let DONGLE_INVENTORY = loadJson(DEVICE_KEY, null) || structuredClone(DEFAULT_DEVICES);
+        let customerUser = null, customerVehicle = null, pendingGoogleUser = null, verifiedRegistrationMac = null;
+
+        function loadJson(key, fallback) { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch (e) { return fallback; } }
+        function saveDatabase() { localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_DATABASE)); }
+        function saveDevices() { localStorage.setItem(DEVICE_KEY, JSON.stringify(DONGLE_INVENTORY)); }
+        function esc(v) { return String(v ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m])); }
+        function normalizeMac(value) { return String(value || "").trim().toUpperCase().replace(/[^0-9A-F]/g, "").replace(/(.{2})(?=.)/g, "$1:").slice(0, 17); }
+        function isValidMac(mac) { return /^([0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(mac); }
+        function makeId(prefix) { return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+        function parseJwtToken(token) { try { const base64Url = token.split(".")[1]; const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/"); return JSON.parse(atob(base64)); } catch (e) { return null; } }
         function initCustomerGoogleAuth() {
             if (!window.google?.accounts?.id) return;
             google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCustomerCredentialResponse, auto_select: false, cancel_on_tap_outside: false });
             google.accounts.id.renderButton(document.getElementById("googleSignInButton"), { theme: "outline", size: "large", shape: "rectangular", text: "signin_with", logo_alignment: "left", width: 300 });
         }
+        const GOOGLE_CLIENT_ID = "618464687927-3qhsv0r9012cn0e50g963vk4n71pb54r.apps.googleusercontent.com";
         function handleCustomerCredentialResponse(response) {
             const googleUser = parseJwtToken(response.credential);
             if (!googleUser?.email) { showCustomerLoginMessage("Google could not provide your email address."); return; }
             const email = String(googleUser.email).trim().toLowerCase();
-            customerUser = MOCK_DATABASE.find(c => String(c.email || "").trim().toLowerCase() === email);
-            if (!customerUser) {
-                customerUser = null;
-                showCustomerLoginMessage(`No Telemetry Hub customer account is registered for ${googleUser.email}. Please contact the administrator.`);
-                if (window.google?.accounts?.id) google.accounts.id.disableAutoSelect();
-                return;
-            }
+            customerUser = MOCK_DATABASE.find(c => String(c.email || "").trim().toLowerCase() === email) || null;
+            pendingGoogleUser = googleUser;
             loginView.hidden = true; appView.hidden = false;
+            if (!customerUser) {
+                onboardName.value = googleUser.name || googleUser.given_name || ""; onboardEmail.value = email;
+                customerShow("customer-onboarding"); return;
+            }
+            enterCustomerApp(googleUser);
+        }
+        function enterCustomerApp(googleUser) {
             customerName.textContent = customerUser.name; customerEmail.textContent = customerUser.email;
-            customerAvatar.src = googleUser.picture || ("https://ui-avatars.com/api/?name=" + encodeURIComponent(customerUser.name));
+            customerAvatar.src = customerUser.picture || googleUser?.picture || avatarUrl(customerUser.name);
+            profilePreview.src = customerUser.picture || googleUser?.picture || avatarUrl(customerUser.name);
             renderCustomer(); customerShow("customer-dashboard");
         }
-        function showCustomerLoginMessage(message) { const el = document.getElementById("loginMessage"); if (el) { el.textContent = message; el.style.color = "#f87171" } }
-        function customerLogout() { customerUser = null; customerVehicle = null; appView.hidden = true; loginView.hidden = false; if (window.google?.accounts?.id) google.accounts.id.disableAutoSelect(); showCustomerLoginMessage("") }
-        function customerShow(id) { ["customer-dashboard", "customer-vehicles", "customer-vehicle-details", "customer-telemetry", "customer-account"].forEach(x => { const e = document.getElementById(x); if (e) e.hidden = x !== id }); scrollTo({ top: 0, behavior: "smooth" }) }
-        function renderCustomer() { const cars = customerUser.cars || []; welcomeTitle.textContent = `Welcome back, ${customerUser.name.split(" ")[0]} 👋`; customerVehicleCount.textContent = cars.length; customerActiveCount.textContent = cars.filter(c => c.status === "Active").length; customerTier.textContent = customerUser.tier || "Standard"; const cards = cars.map(car => { const l = car.telemetry?.[car.telemetry.length - 1] || {}; return `<article class="vehicle-card"><div class="vehicle-title">${esc(`${car.year || ""} ${car.make || ""} ${car.model || ""}`.trim())}</div><div class="vehicle-sub">${esc(car.plate || "No plate")}</div><span class="status">${esc(car.status || "Active")}</span><div class="metrics"><div class="metric"><span>Speed</span><strong>${l.speed ?? "—"} km/h</strong></div><div class="metric"><span>RPM</span><strong>${l.rpm ?? "—"}</strong></div><div class="metric"><span>Coolant</span><strong>${l.ctemp ?? "—"}°C</strong></div></div><div class="actions"><button class="primary" onclick="customerOpenVehicle('${String(car.id).replace(/'/g, "\\'")}')">View Vehicle</button></div></article>` }).join(""); dashboardVehicles.innerHTML = cards || "<div class='card'>No vehicles are currently registered.</div>"; vehicleList.innerHTML = cards || "<div class='card'>No vehicles are currently registered.</div>"; accountDetails.innerHTML = `<div class="detail"><b>Name</b>${esc(customerUser.name)}</div><div class="detail"><b>Email</b>${esc(customerUser.email)}</div><div class="detail"><b>Phone</b>${esc(customerUser.phone || "—")}</div><div class="detail"><b>Company</b>${esc(customerUser.company || "—")}</div><div class="detail"><b>Tier</b>${esc(customerUser.tier || "Standard")}</div><div class="detail"><b>Status</b>${esc(customerUser.status || "Active")}</div>` }
-        function customerOpenVehicle(id) { customerVehicle = (customerUser.cars || []).find(c => String(c.id) === String(id)); if (!customerVehicle) return; vehicleDetailsTitle.textContent = `${customerVehicle.year || ""} ${customerVehicle.make || ""} ${customerVehicle.model || ""}`.trim(); vehicleDetailsSub.textContent = `${customerVehicle.plate || "No plate"} • ${customerVehicle.status || "Active"}`; vehicleDetails.innerHTML = `<div class="detail"><b>Vehicle ID</b>${esc(customerVehicle.id)}</div><div class="detail"><b>VIN</b>${esc(customerVehicle.vin || "—")}</div><div class="detail"><b>Make</b>${esc(customerVehicle.make)}</div><div class="detail"><b>Model</b>${esc(customerVehicle.model)}</div><div class="detail"><b>Year</b>${esc(customerVehicle.year)}</div><div class="detail"><b>License Plate</b>${esc(customerVehicle.plate || "—")}</div><div class="detail"><b>Mileage</b>${esc(customerVehicle.mileage || "—")}</div><div class="detail"><b>Status</b>${esc(customerVehicle.status || "Active")}</div>`; customerShow("customer-vehicle-details") }
-        function customerOpenTelemetry() { if (!customerVehicle) return; const logs = Array.isArray(customerVehicle.telemetry) ? customerVehicle.telemetry : [], l = logs[logs.length - 1] || {}; telemetryTitle.textContent = `${customerVehicle.year || ""} ${customerVehicle.make || ""} ${customerVehicle.model || ""} Telemetry`.trim(); telemetrySub.textContent = `${customerVehicle.plate || "No plate"} • ${logs.length} recorded log(s)`; telemetryMetrics.innerHTML = `<div class="metric"><span>Speed</span><strong>${l.speed ?? "—"} km/h</strong></div><div class="metric"><span>RPM</span><strong>${l.rpm ?? "—"}</strong></div><div class="metric"><span>MAF</span><strong>${l.maf ?? "—"}</strong></div><div class="metric"><span>Coolant</span><strong>${l.ctemp ?? "—"}°C</strong></div><div class="metric"><span>Fuel</span><strong>${l.fuel ?? "—"}%</strong></div><div class="metric"><span>Voltage</span><strong>${l.voltage ?? "—"} V</strong></div>`; telemetryBody.innerHTML = logs.length ? logs.map(x => `<tr><td>${esc(x.time)}</td><td>${x.speed ?? "—"}</td><td>${x.rpm ?? "—"}</td><td>${x.ctemp ?? "—"}°C</td><td>${x.fuel ?? "—"}%</td><td>${x.voltage ?? "—"} V</td><td>${x.throttle ?? "—"}%</td><td>${x.load ?? "—"}%</td></tr>`).join("") : "<tr><td colspan='8'>No telemetry records available.</td></tr>"; customerShow("customer-telemetry") }
+        function avatarUrl(name) { return "https://ui-avatars.com/api/?name=" + encodeURIComponent(name || "Customer") + "&background=0f172a&color=38bdf8"; }
+        function showCustomerLoginMessage(message) { const el = document.getElementById("loginMessage"); if (el) { el.textContent = message; el.style.color = "#f87171"; } }
+        function customerLogout() { customerUser = null; customerVehicle = null; pendingGoogleUser = null; appView.hidden = true; loginView.hidden = false; if (window.google?.accounts?.id) google.accounts.id.disableAutoSelect(); showCustomerLoginMessage(""); }
+        function customerShow(id) { ["customer-dashboard", "customer-vehicles", "customer-vehicle-details", "customer-register-vehicle", "customer-edit-vehicle", "customer-account", "customer-onboarding"].forEach(x => { const e = document.getElementById(x); if (e) e.hidden = x !== id; }); scrollTo({ top: 0, behavior: "smooth" }); }
+
+        function renderCustomer() {
+            if (!customerUser) return;
+            const cars = customerUser.cars || [];
+            welcomeTitle.textContent = `Welcome back, ${(customerUser.name || "Customer").split(" ")[0]} 👋`;
+            customerVehicleCount.textContent = cars.length;
+            customerActiveCount.textContent = cars.filter(c => c.status === "Active").length;
+            customerStatus.textContent = customerUser.status || "Active";
+            const cards = cars.map(car => `<article class="vehicle-card"><div class="vehicle-title">${esc(`${car.year || ""} ${car.make || ""} ${car.model || ""}`.trim())}</div><div class="vehicle-sub">${esc(car.nickname || car.plate || "No nickname")}${car.plate ? ` • ${esc(car.plate)}` : ""}</div><span class="status">${esc(car.status || "Active")}</span>${car.mac ? `<div class="device-badge"><span class="device-dot"></span> Dongle verified</div>` : `<div class="device-badge" style="color:#fbbf24"><span class="device-dot" style="background:#fbbf24"></span> Dongle not assigned</div>`}<div class="actions" style="margin-top:1rem"><button class="primary" onclick="customerOpenVehicle('${String(car.id).replace(/'/g, "\'")}')">Manage Vehicle</button></div></article>`).join("");
+            const empty = "<div class='empty-state'>No vehicles are currently registered. Register your first vehicle to get started.</div>";
+            dashboardVehicles.innerHTML = cards || empty; vehicleList.innerHTML = cards || empty;
+            accountName.value = customerUser.name || ""; accountEmail.value = customerUser.email || ""; accountPhone.value = customerUser.phone || ""; accountCompany.value = customerUser.company || "";
+            profilePreview.src = customerUser.picture || pendingGoogleUser?.picture || avatarUrl(customerUser.name);
+        }
+
+        function openVehicleRegistration() {
+            document.getElementById("registerVehicleForm").reset(); verifiedRegistrationMac = null; macVerification.className = "verification"; macVerification.textContent = ""; customerShow("customer-register-vehicle");
+        }
+        function verifyRegistrationMac() {
+            const input = document.getElementById("regMac"); const mac = normalizeMac(input.value); input.value = mac;
+            const box = document.getElementById("macVerification"); verifiedRegistrationMac = null;
+            if (!isValidMac(mac)) { box.className = "verification bad"; box.textContent = "Invalid MAC address format. Use six hexadecimal pairs, e.g. 00:10:CC:4F:36:03."; return false; }
+            const device = DONGLE_INVENTORY.find(d => d.mac === mac);
+            if (!device) { box.className = "verification bad"; box.textContent = "This MAC address is not registered as a Telemetry Hub dongle."; return false; }
+            if (device.status !== "available" || device.vehicleId) { box.className = "verification bad"; box.textContent = device.status === "disabled" ? "This dongle has been disabled and cannot be registered." : "This dongle is already assigned to a vehicle."; return false; }
+            verifiedRegistrationMac = mac; box.className = "verification ok"; box.textContent = "Dongle verified ✓ This MAC is valid and currently available."; return true;
+        }
+        function registerVehicle(e) {
+            e.preventDefault();
+            if (!customerUser) return;
+            if (!verifyRegistrationMac() || !verifiedRegistrationMac) { alert("Please verify a valid and unused Telemetry Hub dongle MAC address before registering the vehicle."); return; }
+            const vin = regVin.value.trim().toUpperCase();
+            if (customerUser.cars?.some(c => String(c.vin || "").toUpperCase() === vin)) { alert("A vehicle with this VIN is already registered to your account."); return; }
+            const vehicle = { id: makeId("vehicle-"), make: regMake.value.trim(), model: regModel.value.trim(), year: Number(regYear.value), plate: regPlate.value.trim().toUpperCase(), vin, nickname: regNickname.value.trim(), status: "Active", mac: verifiedRegistrationMac };
+            customerUser.cars = customerUser.cars || []; customerUser.cars.push(vehicle);
+            const device = DONGLE_INVENTORY.find(d => d.mac === verifiedRegistrationMac); device.status = "assigned"; device.vehicleId = vehicle.id;
+            saveDatabase(); saveDevices(); customerVehicle = vehicle; verifiedRegistrationMac = null; renderCustomer(); customerOpenVehicle(vehicle.id);
+        }
+        function customerOpenVehicle(id) {
+            customerVehicle = (customerUser?.cars || []).find(c => String(c.id) === String(id)); if (!customerVehicle) return;
+            vehicleDetailsTitle.textContent = `${customerVehicle.year || ""} ${customerVehicle.make || ""} ${customerVehicle.model || ""}`.trim();
+            vehicleDetailsSub.textContent = `${customerVehicle.plate || "No plate"} • ${customerVehicle.status || "Active"}`;
+            vehicleDetails.innerHTML = `<div class="detail"><b>Vehicle ID</b>${esc(customerVehicle.id)}</div><div class="detail"><b>VIN</b>${esc(customerVehicle.vin || "—")}</div><div class="detail"><b>Make</b>${esc(customerVehicle.make || "—")}</div><div class="detail"><b>Model</b>${esc(customerVehicle.model || "—")}</div><div class="detail"><b>Year</b>${esc(customerVehicle.year || "—")}</div><div class="detail"><b>License Plate</b>${esc(customerVehicle.plate || "—")}</div><div class="detail"><b>Vehicle Nickname</b>${esc(customerVehicle.nickname || "—")}</div><div class="detail"><b>Dongle MAC</b>${esc(customerVehicle.mac || "Not assigned")}</div><div class="detail"><b>Dongle Status</b>${customerVehicle.mac ? "<span style='color:#4ade80'>Verified & assigned</span>" : "<span style='color:#fbbf24'>Not assigned</span>"}</div><div class="detail"><b>Vehicle Status</b>${esc(customerVehicle.status || "Active")}</div>`;
+            customerShow("customer-vehicle-details");
+        }
+        function openVehicleEditor() {
+            if (!customerVehicle) return;
+            editMake.value = customerVehicle.make || ""; editModel.value = customerVehicle.model || ""; editYear.value = customerVehicle.year || ""; editVin.value = customerVehicle.vin || ""; editMac.value = customerVehicle.mac || "Not assigned"; editPlate.value = customerVehicle.plate || ""; editNickname.value = customerVehicle.nickname || ""; customerShow("customer-edit-vehicle");
+        }
+        function saveVehicleEdits(e) {
+            e.preventDefault(); if (!customerVehicle || !customerUser) return;
+            customerVehicle.plate = editPlate.value.trim().toUpperCase(); customerVehicle.nickname = editNickname.value.trim(); saveDatabase(); renderCustomer(); customerOpenVehicle(customerVehicle.id);
+        }
+        function saveAccount(e) {
+            e.preventDefault(); if (!customerUser) return;
+            customerUser.name = accountName.value.trim(); customerUser.phone = accountPhone.value.trim(); customerUser.company = accountCompany.value.trim();
+            const file = profilePictureInput.files?.[0];
+            if (file) { const reader = new FileReader(); reader.onload = () => { customerUser.picture = reader.result; saveDatabase(); pendingGoogleUser = null; enterCustomerApp(); }; reader.readAsDataURL(file); }
+            else { saveDatabase(); pendingGoogleUser = null; enterCustomerApp(); }
+        }
+        profilePictureInput.addEventListener("change", () => { const f = profilePictureInput.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => profilePreview.src = r.result; r.readAsDataURL(f); } });
+        function completeOnboarding(e) {
+            e.preventDefault();
+            const email = String(onboardEmail.value || pendingGoogleUser?.email || "").trim().toLowerCase();
+            if (!email) return;
+            customerUser = { id: Date.now(), name: onboardName.value.trim(), email, phone: onboardPhone.value.trim(), company: onboardCompany.value.trim(), tier: "Standard", status: "Active", picture: pendingGoogleUser?.picture || "", cars: [] };
+            MOCK_DATABASE.push(customerUser); saveDatabase(); enterCustomerApp(pendingGoogleUser); alert("Your Telemetry Hub account has been created. You can now register a vehicle.");
+        }
     </script>
     <script src="https://accounts.google.com/gsi/client" async defer onload="initCustomerGoogleAuth()"></script>
 </body>
