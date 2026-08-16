@@ -76,7 +76,27 @@ $('profileForm').addEventListener('submit',e=>{e.preventDefault();const d=db(),c
 $('registerForm').addEventListener('submit',e=>{e.preventDefault();const btn=$('registerSubmit'),result=$('macResult');btn.disabled=true;btn.textContent='Verifying dongle…';result.className='notice';result.textContent='Checking the MAC against registered JaFaFa devices.';result.classList.remove('hidden');const check=findDongle($('vMac').value);if(!check.ok){result.className='notice error';result.textContent=check.reason;btn.disabled=false;btn.textContent='Verify & register vehicle';return}const d=db(),c=d.find(x=>String(x.id)===String(account.id));if(!c){toast('Customer account not found.');btn.disabled=false;return}const mac=check.mac,id=uid('JFV'),plate=$('vPlate').value.trim();const v={id,recordId:id,customerId:String(c.id),make:$('vMake').value.trim(),model:$('vModel').value.trim(),year:Number($('vYear').value),vin:$('vVin').value.trim().toUpperCase(),plate,registration:plate,nickname:$('vNickname').value.trim(),image:$('vImage').value.trim(),dongleMac:mac,deviceId:mac,obdId:mac,status:'Active',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};c.cars=Array.isArray(c.cars)?c.cars:[];c.vehicleIds=Array.isArray(c.vehicleIds)?c.vehicleIds.map(String):[];c.cars.push(v);c.vehicleIds.push(id);c.updatedAt=new Date().toISOString();saveDb(d);account={...c};result.className='notice ok';result.textContent=`Dongle ${mac} verified and locked to this vehicle.`;e.target.reset();btn.disabled=false;btn.textContent='Verify & register vehicle';toast('Vehicle registered successfully.');setTimeout(()=>navigate('vehicles'),500)});
 $('vMac').addEventListener('input',()=>{const raw=$('vMac').value,el=$('macResult');if(!raw){el.className='notice hidden';return}const r=findDongle(raw);el.className=r.ok?'notice ok':'notice warn';el.textContent=r.ok?`✓ ${r.mac} is registered and available.`:r.reason;el.classList.remove('hidden')});
 $('logout').onclick=logout;function logout(){localStorage.removeItem(SESSION_KEY);account=null;$('app').classList.add('hidden');$('authView').classList.remove('hidden')}
-function restore(){const s=session();if(!s){initGoogle();return}const c=customerById(s.id)||customerByEmail(s.email);if(!c){localStorage.removeItem(SESSION_KEY);initGoogle();return}account={...c};showApp();initGoogle()}
+  function restore() {
+    const s = read(SESSION_KEY, null);
+
+    if (!s) {
+      initGoogle();
+      return;
+    }
+
+    const c = customerById(s.id) || customerByEmail(s.email);
+
+    if (!c) {
+      localStorage.removeItem(SESSION_KEY);
+      initGoogle();
+      return;
+    }
+
+    account = { ...c };
+    showApp();
+    initGoogle();
+  }
+  
 window.openEdit=openEdit;setupNav();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',restore);else restore();window.addEventListener('storage',e=>{if([DB_KEY,CLAIM_KEY,DONGLE_KEY].includes(e.key)&&account){const c=customerById(account.id);if(c){account={...c};renderAll()}}});
 })();
 </script>
