@@ -1,104 +1,950 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
-<meta name="description" content="JaFaFa Customer Portal — account and vehicle registration management.">
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<title>JaFaFa — Customer Portal</title>
-<style>
-:root{--bg:#030712;--panel:#08111f;--panel2:rgba(10,20,36,.78);--line:rgba(148,163,184,.14);--line2:rgba(56,189,248,.3);--text:#e5eef8;--muted:#8ea0b8;--cyan:#38bdf8;--cyan2:#22d3ee;--green:#4ade80;--amber:#fbbf24;--red:#fb7185}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:radial-gradient(circle at 15% 0%,rgba(14,165,233,.11),transparent 30%),radial-gradient(circle at 90% 20%,rgba(34,211,238,.07),transparent 25%),var(--bg)}
-button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden,[hidden]{display:none!important}
-.top{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--line);background:rgba(3,7,18,.78);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
-.nav{max-width:1250px;margin:auto;padding:13px 22px;display:flex;align-items:center;gap:18px}.brand{font-weight:950;letter-spacing:.08em;white-space:nowrap}.brand span{color:var(--cyan)}
-.navlinks{display:flex;gap:5px;flex:1}.navlinks button,.logout{border:1px solid transparent;background:transparent;color:var(--muted);padding:9px 12px;border-radius:10px;font-size:.76rem;font-weight:800}.navlinks button:hover,.navlinks button.active{color:#dff7ff;background:rgba(56,189,248,.08);border-color:var(--line2)}
-.userchip{margin-left:auto;display:flex;align-items:center;gap:9px;font-size:.74rem;color:var(--muted)}.avatar{width:31px;height:31px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--cyan),var(--cyan2));color:#02111b;font-weight:950;overflow:hidden}.avatar img{width:100%;height:100%;object-fit:cover}
-main{max-width:1250px;margin:auto;padding:38px 22px 80px}.view{display:none}.view.active{display:block}
-.hero{display:flex;justify-content:space-between;align-items:end;gap:22px;margin-bottom:25px}.eyebrow{font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--cyan);font-weight:900}.hero h1{font-size:clamp(2rem,5vw,3.5rem);line-height:1;margin:8px 0 10px;letter-spacing:-.05em}.hero p{color:var(--muted);max-width:700px;line-height:1.6}
-.btn{border:1px solid var(--line2);border-radius:11px;padding:10px 14px;background:rgba(56,189,248,.09);color:#dff8ff;font-weight:900;font-size:.76rem}.btn:hover{background:rgba(56,189,248,.16)}.btn.secondary{background:rgba(15,23,42,.65);border-color:var(--line);color:#cbd5e1}.btn.danger{border-color:rgba(251,113,133,.25);background:rgba(251,113,133,.06);color:#fecdd3}
-.grid{display:grid;gap:12px}.stats{grid-template-columns:repeat(3,1fr)}.stat,.card{border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,rgba(12,23,40,.88),rgba(7,14,26,.9));box-shadow:0 25px 80px rgba(0,0,0,.25)}.stat{padding:18px}.stat b{font-size:1.7rem}.stat span{display:block;color:var(--muted);font-size:.64rem;text-transform:uppercase;letter-spacing:.1em;margin-top:5px}
-.section{margin-top:30px}.sectionhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.sectionhead h2{margin:0;font-size:1rem}.sectionhead span{color:var(--muted);font-size:.7rem}
-.vehicles{grid-template-columns:repeat(2,1fr)}.vehicle{padding:20px;position:relative;overflow:hidden;transition:.25s transform,.25s border-color}.vehicle:hover{transform:translateY(-3px);border-color:var(--line2)}.vehiclehead{display:flex;justify-content:space-between;gap:15px}.vehicle h3{margin:0;font-size:1.08rem}.reg{color:var(--muted);font-size:.7rem;margin-top:5px}.status{display:inline-flex;align-items:center;gap:6px;font-size:.62rem;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}.dot.pending{background:var(--amber);box-shadow:0 0 10px var(--amber)}.dot.off{background:#64748b;box-shadow:none}
-.vehicle-meta{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:18px}.metric{padding:11px;border:1px solid var(--line);border-radius:10px;background:rgba(3,7,18,.3)}.metric small{display:block;color:#64748b;font-size:.57rem;text-transform:uppercase;letter-spacing:.06em}.metric b{display:block;margin-top:4px;font-size:.75rem}.vehiclefoot{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}
-.panel{padding:20px}.profile{max-width:850px}.notice{padding:13px 15px;border:1px solid var(--line2);border-radius:12px;background:rgba(56,189,248,.05);color:#9ddff7;font-size:.72rem;line-height:1.55;margin-bottom:16px}.notice.warn{border-color:rgba(251,191,36,.25);background:rgba(251,191,36,.05);color:#fde68a}.notice.error{border-color:rgba(251,113,133,.25);background:rgba(251,113,133,.05);color:#fecdd3}.notice.ok{border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.05);color:#bbf7d0}
-.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.field label{display:block;color:#8ea0b8;font-size:.63rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}.field input,.field textarea,.field select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#050c18;color:var(--text);outline:none}.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--line2)}.field input[disabled]{opacity:.65;cursor:not-allowed}.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:15px;flex-wrap:wrap}
-.locked{position:relative}.locked:after{content:"🔒";position:absolute;right:11px;bottom:10px;font-size:.7rem;opacity:.75}.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;border:1px solid var(--line);font-size:.62rem;font-weight:900}.pill.ok{color:#bbf7d0;border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.05)}.pill.warn{color:#fde68a;border-color:rgba(251,191,36,.25);background:rgba(251,191,36,.05)}.pill.bad{color:#fecdd3;border-color:rgba(251,113,133,.25);background:rgba(251,113,133,.05)}
-.empty{padding:38px 20px;text-align:center;border:1px dashed var(--line);border-radius:16px;color:var(--muted);background:rgba(3,7,18,.22)}.empty strong{display:block;color:var(--text);margin-bottom:6px}.empty button{margin-top:14px}
-.auth{min-height:100vh;display:grid;place-items:center;padding:25px;background:radial-gradient(circle at 50% 15%,rgba(56,189,248,.12),transparent 35%)}.authbox{width:min(480px,100%);padding:30px;border:1px solid var(--line2);border-radius:22px;background:rgba(7,14,26,.84);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);box-shadow:0 35px 120px rgba(0,0,0,.55)}.authbox h1{font-size:2rem;margin:10px 0}.authbox p{color:var(--muted);font-size:.78rem;line-height:1.6}.google{display:flex;justify-content:center;min-height:44px;margin-top:18px}.divider{display:flex;align-items:center;gap:10px;color:#64748b;font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;margin:17px 0}.divider:before,.divider:after{content:"";height:1px;background:var(--line);flex:1}
-.modal{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(2,6,23,.75)}.modal.open{display:flex}.modalcard{width:min(720px,100%);max-height:90vh;overflow:auto;padding:22px;border:1px solid var(--line2);border-radius:18px;background:rgba(7,14,26,.98);box-shadow:0 40px 120px rgba(0,0,0,.58)}.modalcard h2{margin:0 0 8px}.modalcard>p{color:var(--muted);font-size:.74rem;line-height:1.5}
-.toast{position:fixed;right:18px;bottom:18px;z-index:200;max-width:380px;padding:12px 15px;border:1px solid var(--line);border-radius:12px;background:rgba(7,14,26,.96);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);font-size:.72rem;opacity:0;transform:translateY(10px);pointer-events:none;transition:.25s}.toast.show{opacity:1;transform:none}
-@media(max-width:850px){.stats,.vehicles{grid-template-columns:1fr}.hero{align-items:flex-start;flex-direction:column}.navlinks{display:none}.formgrid{grid-template-columns:1fr}.nav{padding:12px 14px}main{padding:28px 14px 60px}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
+  <meta name="description" content="JaFaFa Customer Portal — account and vehicle registration management.">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <title>JaFaFa — Customer Portal</title>
+  <style>
+    :root {
+      --bg: #030712;
+      --panel: #08111f;
+      --panel2: rgba(10, 20, 36, .78);
+      --line: rgba(148, 163, 184, .14);
+      --line2: rgba(56, 189, 248, .3);
+      --text: #e5eef8;
+      --muted: #8ea0b8;
+      --cyan: #38bdf8;
+      --cyan2: #22d3ee;
+      --green: #4ade80;
+      --amber: #fbbf24;
+      --red: #fb7185
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html {
+      scroll-behavior: smooth
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at 15% 0%, rgba(14, 165, 233, .11), transparent 30%), radial-gradient(circle at 90% 20%, rgba(34, 211, 238, .07), transparent 25%), var(--bg)
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit
+    }
+
+    button {
+      cursor: pointer
+    }
+
+    .hidden,
+    [hidden] {
+      display: none !important
+    }
+
+    .top {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: 1px solid var(--line);
+      background: rgba(3, 7, 18, .78);
+      -webkit-backdrop-filter: blur(18px);
+      backdrop-filter: blur(18px)
+    }
+
+    .nav {
+      padding: 13px 22px
+    }
+
+    .brand {
+      font-weight: 950;
+      letter-spacing: .08em;
+      white-space: nowrap
+    }
+
+    .brand span {
+      color: var(--cyan)
+    }
+
+    .navlinks button,
+    .logout {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      padding: 9px 12px;
+      border-radius: 10px;
+      font-size: .76rem;
+      font-weight: 800
+    }
+
+    .navlinks button:hover,
+    .navlinks button.active {
+      color: #dff7ff;
+      background: rgba(56, 189, 248, .08);
+      border-color: var(--line2)
+    }
+
+    .userchip {
+      font-size: .74rem;
+      color: var(--muted)
+    }
+
+    .avatar {
+      width: 31px;
+      height: 31px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--cyan), var(--cyan2));
+      color: #02111b;
+      font-weight: 950;
+      overflow: hidden
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover
+    }
+
+    main {
+      padding: 38px 22px 80px
+    }
+
+    .view {
+      display: none
+    }
+
+    .view.active {
+      display: block
+    }
+
+    .hero {
+      margin-bottom: 25px
+    }
+
+    .eyebrow {
+      font-size: .65rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      font-weight: 900
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      line-height: 1;
+      margin: 8px 0 10px;
+      letter-spacing: -.05em
+    }
+
+    .hero p {
+      color: var(--muted);
+      max-width: 700px;
+      line-height: 1.6
+    }
+
+    .btn {
+      border: 1px solid var(--line2);
+      border-radius: 11px;
+      padding: 10px 14px;
+      background: rgba(56, 189, 248, .09);
+      color: #dff8ff;
+      font-weight: 900;
+      font-size: .76rem
+    }
+
+    .btn:hover {
+      background: rgba(56, 189, 248, .16)
+    }
+
+    .btn.secondary {
+      background: rgba(15, 23, 42, .65);
+      border-color: var(--line);
+      color: #cbd5e1
+    }
+
+    .btn.danger {
+      border-color: rgba(251, 113, 133, .25);
+      background: rgba(251, 113, 133, .06);
+      color: #fecdd3
+    }
+
+    .stat,
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(12, 23, 40, .88), rgba(7, 14, 26, .9));
+      box-shadow: 0 25px 80px rgba(0, 0, 0, .25)
+    }
+
+    .stat {
+      padding: 18px
+    }
+
+    .stat b {
+      font-size: 1.7rem
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: .64rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-top: 5px
+    }
+
+    .section {
+      margin-top: 30px
+    }
+
+    .sectionhead {
+      margin-bottom: 12px
+    }
+
+    .sectionhead h2 {
+      margin: 0;
+      font-size: 1rem
+    }
+
+    .sectionhead span {
+      color: var(--muted);
+      font-size: .7rem
+    }
+
+    .vehicle {
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: .25s transform, .25s border-color
+    }
+
+    .vehicle:hover {
+      transform: translateY(-3px);
+      border-color: var(--line2)
+    }
+
+    .vehiclehead {
+      gap: 15px
+    }
+
+    .vehicle h3 {
+      margin: 0;
+      font-size: 1.08rem
+    }
+
+    .reg {
+      color: var(--muted);
+      font-size: .7rem;
+      margin-top: 5px
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .62rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .08em
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 10px var(--green)
+    }
+
+    .dot.pending {
+      background: var(--amber);
+      box-shadow: 0 0 10px var(--amber)
+    }
+
+    .dot.off {
+      background: #64748b;
+      box-shadow: none
+    }
+
+    .vehicle-meta {
+      margin-top: 18px
+    }
+
+    .metric {
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(3, 7, 18, .3)
+    }
+
+    .metric small {
+      display: block;
+      color: #64748b;
+      font-size: .57rem;
+      text-transform: uppercase;
+      letter-spacing: .06em
+    }
+
+    .metric b {
+      display: block;
+      margin-top: 4px;
+      font-size: .75rem
+    }
+
+    .vehiclefoot {
+      margin-top: 15px
+    }
+
+    .panel {
+      padding: 20px
+    }
+
+    .profile {
+      max-width: 850px
+    }
+
+    .notice {
+      padding: 13px 15px;
+      border: 1px solid var(--line2);
+      border-radius: 12px;
+      background: rgba(56, 189, 248, .05);
+      color: #9ddff7;
+      font-size: .72rem;
+      line-height: 1.55;
+      margin-bottom: 16px
+    }
+
+    .notice.warn {
+      border-color: rgba(251, 191, 36, .25);
+      background: rgba(251, 191, 36, .05);
+      color: #fde68a
+    }
+
+    .notice.error {
+      border-color: rgba(251, 113, 133, .25);
+      background: rgba(251, 113, 133, .05);
+      color: #fecdd3
+    }
+
+    .notice.ok {
+      border-color: rgba(74, 222, 128, .25);
+      background: rgba(74, 222, 128, .05);
+      color: #bbf7d0
+    }
+
+    .field label {
+      display: block;
+      color: #8ea0b8;
+      font-size: .63rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 6px
+    }
+
+    .field input,
+    .field textarea,
+    .field select {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #050c18;
+      color: var(--text);
+      outline: none
+    }
+
+    .field input:focus,
+    .field textarea:focus,
+    .field select:focus {
+      border-color: var(--line2)
+    }
+
+    .field input[disabled] {
+      opacity: .65;
+      cursor: not-allowed
+    }
+
+    .locked {
+      position: relative
+    }
+
+    .locked:after {
+      content: "🔒";
+      position: absolute;
+      right: 11px;
+      bottom: 10px;
+      font-size: .7rem;
+      opacity: .75
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      font-size: .62rem;
+      font-weight: 900
+    }
+
+    .pill.ok {
+      color: #bbf7d0;
+      border-color: rgba(74, 222, 128, .25);
+      background: rgba(74, 222, 128, .05)
+    }
+
+    .pill.warn {
+      color: #fde68a;
+      border-color: rgba(251, 191, 36, .25);
+      background: rgba(251, 191, 36, .05)
+    }
+
+    .pill.bad {
+      color: #fecdd3;
+      border-color: rgba(251, 113, 133, .25);
+      background: rgba(251, 113, 133, .05)
+    }
+
+    .empty {
+      padding: 38px 20px;
+      text-align: center;
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      color: var(--muted);
+      background: rgba(3, 7, 18, .22)
+    }
+
+    .empty strong {
+      display: block;
+      color: var(--text);
+      margin-bottom: 6px
+    }
+
+    .empty button {
+      margin-top: 14px
+    }
+
+    .auth {
+      min-height: 100vh;
+      padding: 25px;
+      background: radial-gradient(circle at 50% 15%, rgba(56, 189, 248, .12), transparent 35%)
+    }
+
+    .authbox {
+      width: min(480px, 100%);
+      padding: 30px;
+      border: 1px solid var(--line2);
+      border-radius: 22px;
+      background: rgba(7, 14, 26, .84);
+      -webkit-backdrop-filter: blur(22px);
+      backdrop-filter: blur(22px);
+      box-shadow: 0 35px 120px rgba(0, 0, 0, .55)
+    }
+
+    .authbox h1 {
+      font-size: 2rem;
+      margin: 10px 0
+    }
+
+    .authbox p {
+      color: var(--muted);
+      font-size: .78rem;
+      line-height: 1.6
+    }
+
+    .google {
+      min-height: 44px;
+      margin-top: 18px
+    }
+
+    .divider {
+      color: #64748b;
+      font-size: .62rem;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      margin: 17px 0
+    }
+
+    .divider:before,
+    .divider:after {
+      content: "";
+      height: 1px;
+      background: var(--line);
+      flex: 1
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      padding: 20px;
+      background: rgba(2, 6, 23, .75)
+    }
+
+    .modal.open {
+      display: flex
+    }
+
+    .modalcard {
+      width: min(720px, 100%);
+      max-height: 90vh;
+      overflow: auto;
+      padding: 22px;
+      border: 1px solid var(--line2);
+      border-radius: 18px;
+      background: rgba(7, 14, 26, .98);
+      box-shadow: 0 40px 120px rgba(0, 0, 0, .58)
+    }
+
+    .modalcard h2 {
+      margin: 0 0 8px
+    }
+
+    .modalcard>p {
+      color: var(--muted);
+      font-size: .74rem;
+      line-height: 1.5
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 200;
+      max-width: 380px;
+      padding: 12px 15px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(7, 14, 26, .96);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      font-size: .72rem;
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: .25s
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: none
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation: none !important;
+        transition: none !important
+      }
+    }
+  </style>
+  <style id="jafafa-uiux-pass">
+    /* ============================================================
+   JaFaFa UI/UX POLISH — Bootstrap remains structural
+   ============================================================ */
+    :root {
+      --jf-focus: rgba(0, 229, 255, .72);
+      --jf-focus-ring: 0 0 0 .2rem rgba(0, 229, 255, .16);
+      --jf-radius-sm: .65rem;
+      --jf-radius-md: .9rem;
+      --jf-radius-lg: 1.15rem;
+    }
+
+    :where(button, a, input, select, textarea, [tabindex]):focus-visible {
+      outline: 2px solid var(--jf-focus);
+      outline-offset: 2px;
+      box-shadow: var(--jf-focus-ring);
+    }
+
+    :where(button, .btn, [role="button"]) {
+      min-height: 38px
+    }
+
+    .btn:disabled,
+    .btn.disabled,
+    [aria-disabled="true"] {
+      cursor: not-allowed
+    }
+
+    .jf-loading {
+      position: relative;
+      pointer-events: none;
+      opacity: .72
+    }
+
+    .jf-loading::after {
+      content: "";
+      width: 1rem;
+      height: 1rem;
+      border: .16rem solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      display: inline-block;
+      vertical-align: -.15rem;
+      margin-left: .5rem;
+      animation: jf-spin .65s linear infinite
+    }
+
+    @keyframes jf-spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .jf-empty-state {
+      padding: 2rem 1.25rem;
+      text-align: center;
+      border: 1px dashed rgba(255, 255, 255, .14);
+      border-radius: var(--jf-radius-md);
+      color: rgba(255, 255, 255, .68)
+    }
+
+    .jf-empty-state strong {
+      display: block;
+      color: rgba(255, 255, 255, .92);
+      margin-bottom: .3rem
+    }
+
+    .jf-status-dot {
+      display: inline-block;
+      width: .55rem;
+      height: .55rem;
+      border-radius: 50%;
+      margin-right: .4rem;
+      box-shadow: 0 0 10px currentColor
+    }
+
+    .jf-status-live {
+      color: #28f7a5
+    }
+
+    .jf-status-recent {
+      color: #55d9ff
+    }
+
+    .jf-status-stale {
+      color: #ffc857
+    }
+
+    .jf-status-offline {
+      color: #ff5f6d
+    }
+
+    .jf-status-unknown {
+      color: #98a2b3
+    }
+
+    table thead th {
+      white-space: nowrap
+    }
+
+    table tbody tr {
+      transition: background-color .15s ease
+    }
+
+    table tbody tr:hover {
+      background: rgba(0, 229, 255, .035)
+    }
+
+    .badge,
+    [class*="status"],
+    [class*="chip"] {
+      white-space: nowrap
+    }
+
+    @media (max-width:767.98px) {
+      .table-responsive {
+        border-radius: var(--jf-radius-md)
+      }
+
+      .modal-dialog {
+        margin: .65rem
+      }
+
+      .modal-body {
+        max-height: 70vh;
+        overflow: auto
+      }
+
+      .modal-footer,
+      .modal-header {
+        gap: .5rem;
+        flex-wrap: wrap
+      }
+
+      .modal-footer>* {
+        margin: 0 !important
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important
+      }
+    }
+
+
+    #vehiclesList>*,
+    #vehicleList>* {
+      transition: transform .18s ease, border-color .18s ease, background-color .18s ease
+    }
+
+    #vehiclesList>*:hover,
+    #vehicleList>*:hover {
+      transform: translateY(-1px)
+    }
+
+    .jf-health-explanation {
+      border-left: 3px solid rgba(0, 229, 255, .65);
+      padding-left: .85rem
+    }
+
+    .jf-telemetry-value {
+      font-variant-numeric: tabular-nums
+    }
+  </style>
 </head>
+
 <body>
-<section id="authView" class="auth"><div class="authbox"><div class="brand">JA<span>FA</span>FA</div><div class="eyebrow">Customer + Vehicle Registration</div><h1>Welcome to JaFaFa.</h1><p>Sign in with Google to manage your account and register the JaFaFa vehicle dongle you received. Telemetry and device administration stay in the admin portal.</p><div id="googleSignIn" class="google"></div><div class="divider"><span>secure account access</span></div><div class="notice">Your Google email identifies your JaFaFa customer account. A vehicle is only registered after its dongle MAC is verified against an available JaFaFa device.</div><div class="notice warn">Prototype note: this page currently uses the shared browser data layer. Production authorization must be enforced by the backend.</div></div></section>
-<div id="app" class="hidden"><header class="top"><nav class="nav"><div class="brand">JA<span>FA</span>FA</div><div class="navlinks"><button data-view="dashboard" class="active">Dashboard</button><button data-view="vehicles">My Vehicles</button><button data-view="account">My Account</button></div><div class="userchip"><div class="avatar" id="avatar">C</div><span id="navName">Customer</span><button class="logout" id="logout">Sign out</button></div></nav></header>
-<main>
-<section id="dashboard" class="view active"><div class="hero"><div><div class="eyebrow">Customer portal</div><h1>Good to see you<span id="heroName"></span>.</h1><p>Manage your account and keep your registered vehicles up to date. Your telemetry stays in the JaFaFa admin environment.</p></div><button class="btn" data-view="register">+ Register vehicle</button></div><div class="grid stats"><div class="stat"><b id="statVehicles">0</b><span>My vehicles</span></div><div class="stat"><b id="statPending">0</b><span>Pending registration</span></div><div class="stat"><b id="statDevices">0</b><span>Verified dongles</span></div></div><div class="section"><div class="sectionhead"><h2>My garage</h2><span>Vehicle management</span></div><div id="dashboardVehicles" class="grid vehicles"></div></div><div class="section"><div class="sectionhead"><h2>What's happening?</h2><span>Account activity</span></div><div id="dashboardActivity"></div></div></section>
-<section id="vehicles" class="view"><div class="hero"><div><div class="eyebrow">Your garage</div><h1>My vehicles.</h1><p>Register a vehicle with its JaFaFa dongle, then edit only the customer-facing information you control.</p></div><button class="btn" data-view="register">+ Register vehicle</button></div><div id="vehiclesList" class="grid vehicles"></div></section>
-<section id="register" class="view"><div class="hero"><div><div class="eyebrow">Vehicle registration</div><h1>Register a vehicle.</h1><p>Enter the vehicle information and the MAC address printed on the JaFaFa dongle you received.</p></div></div><div class="card panel"><div class="notice">The dongle MAC is verified before registration. Once assigned, the MAC becomes locked and cannot be changed from the customer portal.</div><form id="registerForm"><div class="formgrid"><div class="field"><label>Make</label><input id="vMake" required placeholder="BMW"></div><div class="field"><label>Model</label><input id="vModel" required placeholder="X5 E70"></div><div class="field"><label>Year</label><input id="vYear" type="number" min="1886" max="2100" required placeholder="2008"></div><div class="field"><label>VIN</label><input id="vVin" maxlength="17" required placeholder="17-character VIN"></div><div class="field"><label>Registration / plate</label><input id="vPlate" placeholder="ABC-123-XY"></div><div class="field"><label>Vehicle nickname</label><input id="vNickname" placeholder="Dad's X5"></div><div class="field"><label>Vehicle image URL</label><input id="vImage" type="url" placeholder="https://..."></div><div class="field"><label>Dongle MAC address</label><input id="vMac" required placeholder="00:10:CC:4F:36:03" autocomplete="off"></div></div><div id="macResult" class="notice hidden" style="margin-top:14px"></div><div class="actions"><button type="button" class="btn secondary" data-view="vehicles">Cancel</button><button class="btn" id="registerSubmit">Verify & register vehicle</button></div></form></div></section>
-<section id="account" class="view"><div class="hero"><div><div class="eyebrow">My account</div><h1>Your profile.</h1><p>Keep your customer information current. Your Google email remains the account identifier.</p></div></div><div class="card panel profile"><form id="profileForm"><div class="formgrid"><div class="field"><label>Full name</label><input id="profileName" required></div><div class="field"><label>Google account email</label><input id="profileEmail" type="email" disabled></div><div class="field"><label>Phone</label><input id="profilePhone" placeholder="+234..."></div><div class="field"><label>Company</label><input id="profileCompany" placeholder="Company name"></div><div class="field"><label>Profile picture URL</label><input id="profilePicture" type="url" placeholder="https://..."></div><div class="field locked"><label>Customer ID</label><input id="profileId" disabled></div></div><div class="actions"><button class="btn">Save profile</button></div></form></div></section>
-</main></div>
-<div id="vehicleModal" class="modal"><div class="modalcard"><div class="eyebrow">Vehicle management</div><h2 id="modalTitle">Vehicle</h2><p>Protected device information is visible for reference but cannot be changed here.</p><form id="vehicleEditForm"><input id="editId" type="hidden"><div class="formgrid"><div class="field locked"><label>Make</label><input id="editMake" disabled></div><div class="field locked"><label>Model</label><input id="editModel" disabled></div><div class="field locked"><label>Year</label><input id="editYear" disabled></div><div class="field locked"><label>VIN</label><input id="editVin" disabled></div><div class="field"><label>Registration / plate</label><input id="editPlate"></div><div class="field"><label>Vehicle nickname</label><input id="editNickname"></div><div class="field"><label>Vehicle image URL</label><input id="editImage" type="url"></div><div class="field locked"><label>Dongle MAC</label><input id="editMac" disabled></div><div class="field locked"><label>Device status</label><input id="editStatus" disabled></div><div class="field locked"><label>Internal vehicle ID</label><input id="editInternalId" disabled></div></div><div class="actions"><button type="button" class="btn secondary" id="closeModal">Cancel</button><button class="btn">Save permitted changes</button></div></form></div></div><div id="toast" class="toast"></div>
-<script>
-(()=>{'use strict';
-const DB_KEY='jafafa_fleet_suite_v3',CLAIM_KEY='jafafa_vehicle_claims_v1',SESSION_KEY='jafafa_customer_session_v3',DONGLE_KEY='jafafa_dongle_registry_v1',GOOGLE_CLIENT_ID='618464687927-3qhsv0r9012cn0e50g963vk4n71pb54r.apps.googleusercontent.com';
-const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),email=v=>String(v??'').trim().toLowerCase(),uid=p=>`${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
-const read=(key,fallback)=>{try{const v=JSON.parse(localStorage.getItem(key)||'null');return v??fallback}catch{return fallback}},write=(key,value)=>localStorage.setItem(key,JSON.stringify(value));
-const normalizeMac=v=>String(v??'').trim().toUpperCase().replace(/[-.\s]/g,':').replace(/:{2,}/g,':'),validMac=v=>/^([0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(normalizeMac(v));
-const db=()=>{const d=read(DB_KEY,[]);return Array.isArray(d)?d:[]},claims=()=>{const d=read(CLAIM_KEY,[]);return Array.isArray(d)?d:[]};let account=null;
-function saveDb(d){write(DB_KEY,d)}function customerById(id){return db().find(c=>String(c.id)===String(id))||null}function customerByEmail(e){const n=email(e);return db().find(c=>email(c.email||c.auth?.email)===n)||null}
-function owned(c){return(c?.cars||[]).filter(v=>String(v.customerId||c.id)===String(c.id)&&!['deleted','unassigned'].includes(String(v.status||'').toLowerCase()))}
-function allVehicles(){return db().flatMap(c=>(c.cars||[]).map(v=>({c,v})))}
-function allKnownDongles(){const registry=read(DONGLE_KEY,[]),set=new Map();if(Array.isArray(registry))registry.forEach(d=>{const mac=normalizeMac(d.mac||d.deviceId||d.obdId);if(validMac(mac))set.set(mac,{...d,mac})});allVehicles().forEach(({c,v})=>{const mac=normalizeMac(v.dongleMac||v.mac||v.deviceMac||v.deviceId||v.obdId||'');if(validMac(mac)&&!set.has(mac))set.set(mac,{mac,disabled:false,assignedTo:v.customerId||c.id,vehicleId:v.id,source:'vehicle'})});claims().forEach(r=>{const mac=normalizeMac(r.deviceId||r.dongleMac||r.mac||'');if(validMac(mac)&&!set.has(mac))set.set(mac,{mac,disabled:false,assignedTo:r.status==='APPROVED'?r.customerId:null,claimId:r.id,source:'claim'})});return[...set.values()]}
-function findDongle(raw){const mac=normalizeMac(raw);if(!validMac(mac))return{ok:false,reason:'Enter a valid MAC address in the form XX:XX:XX:XX:XX:XX.'};const d=allKnownDongles().find(x=>x.mac===mac);if(!d)return{ok:false,reason:'This dongle is not registered with JaFaFa. Ask an administrator to register the device first.'};if(d.disabled||String(d.status||'').toLowerCase()==='disabled')return{ok:false,reason:'This dongle is disabled and cannot be assigned.'};const assigned=allVehicles().find(({v})=>normalizeMac(v.dongleMac||v.mac||v.deviceMac||v.deviceId||v.obdId||'')===mac);if(assigned)return{ok:false,reason:'This dongle is already assigned to a vehicle and cannot be registered again.',assigned:true};const claim=claims().find(r=>normalizeMac(r.deviceId||r.dongleMac||r.mac||'')===mac&&['PENDING','APPROVED'].includes(String(r.status||'').toUpperCase()));if(claim)return{ok:false,reason:'A registration request for this dongle is already pending.',pending:true};return{ok:true,mac,device:d}}
-function ensureCustomerFromGoogle(payload){const e=email(payload.email);if(!e)throw Error('Google did not provide an email address.');const d=db();let c=d.find(x=>email(x.email||x.auth?.email)===e);if(!c){c={id:uid('CUS'),name:payload.name||'',email:e,phone:'',company:'',picture:payload.picture||'',auth:{provider:'google',email:e,googleSub:payload.sub||''},cars:[],vehicleIds:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};d.push(c)}else{c.email=e;c.auth={...(c.auth||{}),provider:'google',email:e,googleSub:payload.sub||c.auth?.googleSub||''};if(!c.picture&&payload.picture)c.picture=payload.picture;if(!c.name&&payload.name)c.name=payload.name;c.updatedAt=new Date().toISOString()}saveDb(d);account={...c};write(SESSION_KEY,{id:c.id,email:e,name:c.name,picture:c.picture||''});return c}
-function decodeJwt(credential){const parts=String(credential||'').split('.');if(parts.length!==3)throw Error('Invalid Google credential.');const b64=parts[1].replace(/-/g,'+').replace(/_/g,'/');const json=decodeURIComponent(atob(b64.padEnd(b64.length+((4-b64.length%4)%4),'=')).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));return JSON.parse(json)}
-function handleGoogle(response){try{const p=decodeJwt(response.credential);ensureCustomerFromGoogle(p);showApp();toast('Signed in with Google.')}catch(e){toast(e.message||'Google sign-in failed.')}}
-function initGoogle(){if(!window.google?.accounts?.id){setTimeout(initGoogle,400);return}google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:handleGoogle});google.accounts.id.renderButton($('googleSignIn'),{theme:'outline',size:'large',shape:'rectangular',width:320})}
-function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2800)}
-function navigate(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$(id)?.classList.add('active');document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='dashboard')renderDashboard();if(id==='vehicles')renderVehicles();if(id==='account')renderAccount();scrollTo({top:0,behavior:'smooth'})}
-function setupNav(){document.querySelectorAll('[data-view]').forEach(b=>{if(!b.dataset.bound){b.dataset.bound='1';b.addEventListener('click',()=>navigate(b.dataset.view))}})}
-function showApp(){const c=customerById(account?.id)||customerByEmail(account?.email);if(!c){logout();return}account={...c};$('authView').classList.add('hidden');$('app').classList.remove('hidden');renderAll()}
-function renderIdentity(){const n=account?.name||'Customer';$('navName').textContent=n;$('heroName').textContent=n?', '+esc(n.split(/\s+/)[0]):'';const av=$('avatar');if(account?.picture){av.innerHTML=`<img src="${esc(account.picture)}" alt="">`}else av.textContent=(n[0]||'C').toUpperCase()}
-function renderDashboard(){renderIdentity();const vs=owned(customerById(account.id)),pending=claims().filter(r=>String(r.customerId)===String(account.id)&&String(r.status).toUpperCase()==='PENDING');$('statVehicles').textContent=vs.length;$('statPending').textContent=pending.length;$('statDevices').textContent=vs.filter(v=>validMac(v.dongleMac||v.mac||v.deviceId||v.obdId)).length;$('dashboardVehicles').innerHTML=vs.length?vs.map(vehicleCard).join(''):`<div class="empty"><strong>No vehicles yet</strong>Register your first vehicle and verify its JaFaFa dongle.<br><button class="btn" data-view="register">+ Register vehicle</button></div>`;$('dashboardActivity').innerHTML=pending.length?pending.map(r=>`<div class="notice warn"><strong>Registration pending</strong><br>${esc(r.make)} ${esc(r.model)} · dongle ${esc(r.deviceId||r.dongleMac||'—')} is awaiting approval.</div>`).join(''):`<div class="notice ok">Your account is ready. Vehicle registration and dongle management are available from <strong>My Vehicles</strong>.</div>`;setupNav()}
-function vehicleCard(v){const name=esc(v.nickname||`${v.make||''} ${v.model||''}`.trim()||'Vehicle'),mac=normalizeMac(v.dongleMac||v.mac||v.deviceId||v.obdId||'');return`<article class="card vehicle"><div class="vehiclehead"><div><h3>${name}</h3><div class="reg">${esc(v.make)} ${esc(v.model)} · ${esc(v.year||'Year N/A')} · ${esc(v.plate||v.registration||'No plate')}</div></div><div class="status"><i class="dot"></i>REGISTERED</div></div><div class="vehicle-meta"><div class="metric"><small>VIN</small><b>${esc(v.vin||'—')}</b></div><div class="metric"><small>Dongle MAC</small><b>${esc(mac||'—')}</b></div><div class="metric"><small>Device assignment</small><b>Locked</b></div><div class="metric"><small>Telemetry</small><b>Admin only</b></div></div><div class="vehiclefoot"><button class="btn secondary" onclick="openEdit('${esc(v.id)}')">Manage vehicle →</button></div></article>`}
-function renderVehicles(){const c=customerById(account.id),vs=owned(c);$('vehiclesList').innerHTML=vs.length?vs.map(vehicleCard).join(''):`<div class="empty"><strong>Your garage is empty</strong>Register a vehicle using its JaFaFa dongle MAC.<br><button class="btn" data-view="register">+ Register vehicle</button></div>`;setupNav()}
-function renderAccount(){const c=customerById(account.id);if(!c)return;$('profileName').value=c.name||'';$('profileEmail').value=c.email||'';$('profilePhone').value=c.phone||'';$('profileCompany').value=c.company||'';$('profilePicture').value=c.picture||'';$('profileId').value=c.id||''}
-function renderAll(){renderDashboard();renderVehicles();renderAccount()}
-function openEdit(id){const c=customerById(account.id),v=(c?.cars||[]).find(x=>String(x.id)===String(id));if(!v)return;$('editId').value=v.id;$('modalTitle').textContent=v.nickname||`${v.make} ${v.model}`;$('editMake').value=v.make||'';$('editModel').value=v.model||'';$('editYear').value=v.year||'';$('editVin').value=v.vin||'';$('editPlate').value=v.plate||v.registration||'';$('editNickname').value=v.nickname||'';$('editImage').value=v.image||v.imageUrl||'';$('editMac').value=normalizeMac(v.dongleMac||v.mac||v.deviceId||v.obdId||'');$('editStatus').value=v.status||'Active';$('editInternalId').value=v.id||'';$('vehicleModal').classList.add('open')}
-function closeEdit(){$('vehicleModal').classList.remove('open')}
-$('vehicleEditForm').addEventListener('submit',e=>{e.preventDefault();const d=db(),c=d.find(x=>String(x.id)===String(account.id)),v=c?.cars?.find(x=>String(x.id)===String($('editId').value));if(!c||!v)return;v.plate=$('editPlate').value.trim();v.registration=v.plate;v.nickname=$('editNickname').value.trim();v.image=$('editImage').value.trim();v.updatedAt=new Date().toISOString();c.updatedAt=new Date().toISOString();saveDb(d);account={...c};closeEdit();renderAll();toast('Vehicle details updated.')});
-$('closeModal').onclick=closeEdit;
-$('profileForm').addEventListener('submit',e=>{e.preventDefault();const d=db(),c=d.find(x=>String(x.id)===String(account.id));if(!c)return;c.name=$('profileName').value.trim();c.phone=$('profilePhone').value.trim();c.company=$('profileCompany').value.trim();c.picture=$('profilePicture').value.trim();c.updatedAt=new Date().toISOString();saveDb(d);account={...c};write(SESSION_KEY,{id:c.id,email:c.email,name:c.name,picture:c.picture||''});renderAll();toast('Profile saved.')});
-$('registerForm').addEventListener('submit',e=>{e.preventDefault();const btn=$('registerSubmit'),result=$('macResult');btn.disabled=true;btn.textContent='Verifying dongle…';result.className='notice';result.textContent='Checking the MAC against registered JaFaFa devices.';result.classList.remove('hidden');const check=findDongle($('vMac').value);if(!check.ok){result.className='notice error';result.textContent=check.reason;btn.disabled=false;btn.textContent='Verify & register vehicle';return}const d=db(),c=d.find(x=>String(x.id)===String(account.id));if(!c){toast('Customer account not found.');btn.disabled=false;return}const mac=check.mac,id=uid('JFV'),plate=$('vPlate').value.trim();const v={id,recordId:id,customerId:String(c.id),make:$('vMake').value.trim(),model:$('vModel').value.trim(),year:Number($('vYear').value),vin:$('vVin').value.trim().toUpperCase(),plate,registration:plate,nickname:$('vNickname').value.trim(),image:$('vImage').value.trim(),dongleMac:mac,deviceId:mac,obdId:mac,status:'Active',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};c.cars=Array.isArray(c.cars)?c.cars:[];c.vehicleIds=Array.isArray(c.vehicleIds)?c.vehicleIds.map(String):[];c.cars.push(v);c.vehicleIds.push(id);c.updatedAt=new Date().toISOString();saveDb(d);account={...c};result.className='notice ok';result.textContent=`Dongle ${mac} verified and locked to this vehicle.`;e.target.reset();btn.disabled=false;btn.textContent='Verify & register vehicle';toast('Vehicle registered successfully.');setTimeout(()=>navigate('vehicles'),500)});
-$('vMac').addEventListener('input',()=>{const raw=$('vMac').value,el=$('macResult');if(!raw){el.className='notice hidden';return}const r=findDongle(raw);el.className=r.ok?'notice ok':'notice warn';el.textContent=r.ok?`✓ ${r.mac} is registered and available.`:r.reason;el.classList.remove('hidden')});
-$('logout').onclick=logout;function logout(){localStorage.removeItem(SESSION_KEY);account=null;$('app').classList.add('hidden');$('authView').classList.remove('hidden')}
-  function restore() {
-    const s = read(SESSION_KEY, null);
-
-    if (!s) {
-      initGoogle();
-      return;
-    }
-
-    const c = customerById(s.id) || customerByEmail(s.email);
-
-    if (!c) {
-      localStorage.removeItem(SESSION_KEY);
-      initGoogle();
-      return;
-    }
-
-    account = { ...c };
-    showApp();
-    initGoogle();
-  }
-  
-window.openEdit=openEdit;setupNav();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',restore);else restore();window.addEventListener('storage',e=>{if([DB_KEY,CLAIM_KEY,DONGLE_KEY].includes(e.key)&&account){const c=customerById(account.id);if(c){account={...c};renderAll()}}});
-})();
-</script>
+  <section id="authView" class="auth d-flex align-items-center justify-content-center">
+    <div class="authbox">
+      <div class="brand">JA<span>FA</span>FA</div>
+      <div class="eyebrow">Customer + Vehicle Registration</div>
+      <h1>Welcome to JaFaFa.</h1>
+      <p>Sign in with Google to manage your account and register the JaFaFa vehicle dongle you received.
+        Telemetry and device administration stay in the admin portal.</p>
+      <div id="googleSignIn" class="google d-flex justify-content-center"></div>
+      <div class="divider d-flex align-items-center gap-2"><span>secure account access</span></div>
+      <div class="notice">Your Google email identifies your JaFaFa customer account. A vehicle is only registered after
+        its dongle MAC is verified against an available JaFaFa device.</div>
+      <div class="notice warn">Prototype note: this page currently uses the shared browser data layer.
+        Production authorization must be enforced by the backend.</div>
+    </div>
+  </section>
+  <div id="app" class="hidden">
+    <header class="top">
+      <nav class="nav container-fluid d-flex align-items-center flex-wrap gap-3">
+        <div class="brand">JA<span>FA</span>FA</div>
+        <div class="navlinks d-flex flex-wrap gap-1 flex-grow-1"><button data-view="dashboard"
+            class="active">Dashboard</button><button data-view="vehicles">My Vehicles</button><button
+            data-view="account">My Account</button></div>
+        <div class="userchip d-flex align-items-center gap-2 ms-auto">
+          <div class="avatar" id="avatar">C</div><span id="navName">Customer</span><button class="logout"
+            id="logout">Sign out</button>
+        </div>
+      </nav>
+    </header>
+    <main class="container-fluid px-3 px-lg-4">
+      <section id="dashboard" class="view active">
+        <div
+          class="hero d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-end gap-4">
+          <div>
+            <div class="eyebrow">Customer portal</div>
+            <h1>Good to see you<span id="heroName"></span>.</h1>
+            <p>Manage your account and keep your registered vehicles up to date.
+              Your telemetry stays in the JaFaFa admin environment.</p>
+          </div><button class="btn" data-view="register">+ Register vehicle</button>
+        </div>
+        <div class="row g-3">
+          <div class="stat col-12 col-md-4"><b id="statVehicles">0</b><span>My vehicles</span></div>
+          <div class="stat col-12 col-md-4"><b id="statPending">0</b><span>Pending registration</span></div>
+          <div class="stat col-12 col-md-4"><b id="statDevices">0</b><span>Verified dongles</span></div>
+        </div>
+        <div class="section">
+          <div class="sectionhead d-flex justify-content-between align-items-center gap-3">
+            <h2>My garage</h2><span>Vehicle management</span>
+          </div>
+          <div id="dashboardVehicles" class="row g-3"></div>
+        </div>
+        <div class="section">
+          <div class="sectionhead d-flex justify-content-between align-items-center gap-3">
+            <h2>What's happening?</h2><span>Account activity</span>
+          </div>
+          <div id="dashboardActivity"></div>
+        </div>
+      </section>
+      <section id="vehicles" class="view">
+        <div
+          class="hero d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-end gap-4">
+          <div>
+            <div class="eyebrow">Your garage</div>
+            <h1>My vehicles.</h1>
+            <p>Register a vehicle with its JaFaFa dongle, then edit only the customer-facing information you control.
+            </p>
+          </div><button class="btn" data-view="register">+ Register vehicle</button>
+        </div>
+        <div id="vehiclesList" class="row g-3"></div>
+      </section>
+      <section id="register" class="view">
+        <div class="hero">
+          <div>
+            <div class="eyebrow">Vehicle registration</div>
+            <h1>Register a vehicle.</h1>
+            <p>Enter the vehicle information and the MAC address printed on the JaFaFa dongle you received.</p>
+          </div>
+        </div>
+        <div class="card panel">
+          <div class="notice">The dongle MAC is verified before registration.
+            Once assigned, the MAC becomes locked and cannot be changed from the customer portal.</div>
+          <form id="registerForm">
+            <div class="row g-3">
+              <div class="field col-12 col-md-6"><label>Make</label><input id="vMake" class="form-control" required
+                  placeholder="BMW"></div>
+              <div class="field col-12 col-md-6"><label>Model</label><input id="vModel" class="form-control" required
+                  placeholder="X5 E70"></div>
+              <div class="field col-12 col-md-6"><label>Year</label><input id="vYear" class="form-control" type="number"
+                  min="1886" max="2100" required placeholder="2008"></div>
+              <div class="field col-12 col-md-6"><label>VIN</label><input id="vVin" class="form-control" maxlength="17"
+                  required placeholder="17-character VIN"></div>
+              <div class="field col-12 col-md-6"><label>Registration / plate</label><input id="vPlate"
+                  class="form-control" placeholder="ABC-123-XY"></div>
+              <div class="field col-12 col-md-6"><label>Vehicle nickname</label><input id="vNickname"
+                  class="form-control" placeholder="Dad's X5"></div>
+              <div class="field col-12 col-md-6"><label>Vehicle image URL</label><input id="vImage" class="form-control"
+                  type="url" placeholder="https://..."></div>
+              <div class="field col-12 col-md-6"><label>Dongle MAC address</label><input id="vMac" class="form-control"
+                  required placeholder="00:10:CC:4F:36:03" autocomplete="off"></div>
+            </div>
+            <div id="macResult" class="notice hidden" style="margin-top:14px"></div>
+            <div class="d-flex flex-wrap justify-content-end gap-2 mt-3"><button type="button" class="btn secondary"
+                data-view="vehicles">Cancel</button><button class="btn" id="registerSubmit">Verify & register
+                vehicle</button></div>
+          </form>
+        </div>
+      </section>
+      <section id="account" class="view">
+        <div class="hero">
+          <div>
+            <div class="eyebrow">My account</div>
+            <h1>Your profile.</h1>
+            <p>Keep your customer information current.
+              Your Google email remains the account identifier.</p>
+          </div>
+        </div>
+        <div class="card panel profile">
+          <form id="profileForm">
+            <div class="row g-3">
+              <div class="field col-12 col-md-6"><label>Full name</label><input id="profileName" class="form-control"
+                  required></div>
+              <div class="field col-12 col-md-6"><label>Google account email</label><input id="profileEmail"
+                  class="form-control" type="email" disabled></div>
+              <div class="field col-12 col-md-6"><label>Phone</label><input id="profilePhone" class="form-control"
+                  placeholder="+234..."></div>
+              <div class="field col-12 col-md-6"><label>Company</label><input id="profileCompany" class="form-control"
+                  placeholder="Company name"></div>
+              <div class="field col-12 col-md-6"><label>Profile picture URL</label><input id="profilePicture"
+                  class="form-control" type="url" placeholder="https://..."></div>
+              <div class="field locked col-12 col-md-6"><label>Customer ID</label><input id="profileId"
+                  class="form-control" disabled></div>
+            </div>
+            <div class="d-flex flex-wrap justify-content-end gap-2 mt-3"><button class="btn">Save profile</button></div>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div id="vehicleModal" class="modal align-items-center justify-content-center">
+    <div class="modalcard">
+      <div class="eyebrow">Vehicle management</div>
+      <h2 id="modalTitle">Vehicle</h2>
+      <p>Protected device information is visible for reference but cannot be changed here.</p>
+      <form id="vehicleEditForm"><input id="editId" type="hidden">
+        <div class="row g-3">
+          <div class="field locked col-12 col-md-6"><label>Make</label><input id="editMake" class="form-control"
+              disabled></div>
+          <div class="field locked col-12 col-md-6"><label>Model</label><input id="editModel" class="form-control"
+              disabled></div>
+          <div class="field locked col-12 col-md-6"><label>Year</label><input id="editYear" class="form-control"
+              disabled></div>
+          <div class="field locked col-12 col-md-6"><label>VIN</label><input id="editVin" class="form-control" disabled>
+          </div>
+          <div class="field col-12 col-md-6"><label>Registration / plate</label><input id="editPlate"
+              class="form-control"></div>
+          <div class="field col-12 col-md-6"><label>Vehicle nickname</label><input id="editNickname"
+              class="form-control"></div>
+          <div class="field col-12 col-md-6"><label>Vehicle image URL</label><input id="editImage" class="form-control"
+              type="url"></div>
+          <div class="field locked col-12 col-md-6"><label>Dongle MAC</label><input id="editMac" class="form-control"
+              disabled></div>
+          <div class="field locked col-12 col-md-6"><label>Device status</label><input id="editStatus"
+              class="form-control" disabled></div>
+          <div class="field locked col-12 col-md-6"><label>Internal vehicle ID</label><input id="editInternalId"
+              class="form-control" disabled></div>
+        </div>
+        <div class="d-flex flex-wrap justify-content-end gap-2 mt-3"><button type="button" class="btn secondary"
+            id="closeModal">Cancel</button><button class="btn">Save permitted changes</button></div>
+      </form>
+    </div>
+  </div>
+  <div id="toast" class="toast"></div>
+  <script>
+    (() => {
+      'use strict';
+      const DB_KEY = 'jafafa_fleet_suite_v3', CLAIM_KEY = 'jafafa_vehicle_claims_v1', SESSION_KEY = 'jafafa_customer_session_v3', DONGLE_KEY = 'jafafa_dongle_registry_v1', GOOGLE_CLIENT_ID = '618464687927-3qhsv0r9012cn0e50g963vk4n71pb54r.apps.googleusercontent.com';
+      const $ = id => document.getElementById(id), esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])), email = v => String(v ?? '').trim().toLowerCase(), uid = p => `${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+      const read = (key, fallback) => { try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v ?? fallback } catch { return fallback } }, write = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+      const normalizeMac = v => String(v ?? '').trim().toUpperCase().replace(/[-.\s]/g, ':').replace(/:{2,}/g, ':'), validMac = v => /^([0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(normalizeMac(v));
+      const db = () => { const d = read(DB_KEY, []); return Array.isArray(d) ? d : [] }, claims = () => { const d = read(CLAIM_KEY, []); return Array.isArray(d) ? d : [] }, session = () => read(SESSION_KEY, null); let account = null;
+      function saveDb(d) { write(DB_KEY, d) } function customerById(id) { return db().find(c => String(c.id) === String(id)) || null } function customerByEmail(e) { const n = email(e); return db().find(c => email(c.email || c.auth?.email) === n) || null }
+      function owned(c) { return (c?.cars || []).filter(v => String(v.customerId || c.id) === String(c.id) && !['deleted', 'unassigned'].includes(String(v.status || '').toLowerCase())) }
+      function allVehicles() { return db().flatMap(c => (c.cars || []).map(v => ({ c, v }))) }
+      function allKnownDongles() { const registry = read(DONGLE_KEY, []), set = new Map(); if (Array.isArray(registry)) registry.forEach(d => { const mac = normalizeMac(d.mac || d.deviceId || d.obdId); if (validMac(mac)) set.set(mac, { ...d, mac }) }); allVehicles().forEach(({ c, v }) => { const mac = normalizeMac(v.dongleMac || v.mac || v.deviceMac || v.deviceId || v.obdId || ''); if (validMac(mac) && !set.has(mac)) set.set(mac, { mac, disabled: false, assignedTo: v.customerId || c.id, vehicleId: v.id, source: 'vehicle' }) }); claims().forEach(r => { const mac = normalizeMac(r.deviceId || r.dongleMac || r.mac || ''); if (validMac(mac) && !set.has(mac)) set.set(mac, { mac, disabled: false, assignedTo: r.status === 'APPROVED' ? r.customerId : null, claimId: r.id, source: 'claim' }) }); return [...set.values()] }
+      function findDongle(raw) { const mac = normalizeMac(raw); if (!validMac(mac)) return { ok: false, reason: 'Enter a valid MAC address in the form XX:XX:XX:XX:XX:XX.' }; const d = allKnownDongles().find(x => x.mac === mac); if (!d) return { ok: false, reason: 'This dongle is not registered with JaFaFa. Ask an administrator to register the device first.' }; if (d.disabled || String(d.status || '').toLowerCase() === 'disabled') return { ok: false, reason: 'This dongle is disabled and cannot be assigned.' }; const assigned = allVehicles().find(({ v }) => normalizeMac(v.dongleMac || v.mac || v.deviceMac || v.deviceId || v.obdId || '') === mac); if (assigned) return { ok: false, reason: 'This dongle is already assigned to a vehicle and cannot be registered again.', assigned: true }; const claim = claims().find(r => normalizeMac(r.deviceId || r.dongleMac || r.mac || '') === mac && ['PENDING', 'APPROVED'].includes(String(r.status || '').toUpperCase())); if (claim) return { ok: false, reason: 'A registration request for this dongle is already pending.', pending: true }; return { ok: true, mac, device: d } }
+      function ensureCustomerFromGoogle(payload) { const e = email(payload.email); if (!e) throw Error('Google did not provide an email address.'); const d = db(); let c = d.find(x => email(x.email || x.auth?.email) === e); if (!c) { c = { id: uid('CUS'), name: payload.name || '', email: e, phone: '', company: '', picture: payload.picture || '', auth: { provider: 'google', email: e, googleSub: payload.sub || '' }, cars: [], vehicleIds: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }; d.push(c) } else { c.email = e; c.auth = { ...(c.auth || {}), provider: 'google', email: e, googleSub: payload.sub || c.auth?.googleSub || '' }; if (!c.picture && payload.picture) c.picture = payload.picture; if (!c.name && payload.name) c.name = payload.name; c.updatedAt = new Date().toISOString() } saveDb(d); account = { ...c }; write(SESSION_KEY, { id: c.id, email: e, name: c.name, picture: c.picture || '' }); return c }
+      function decodeJwt(credential) { const parts = String(credential || '').split('.'); if (parts.length !== 3) throw Error('Invalid Google credential.'); const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/'); const bytes = atob(b64.padEnd(b64.length + ((4 - b64.length % 4) % 4), '=')); const json = decodeURIComponent(Array.from(bytes, c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')); return JSON.parse(json) }
+      function handleGoogle(response) { try { const p = decodeJwt(response.credential); ensureCustomerFromGoogle(p); showApp(); toast('Signed in with Google.') } catch (e) { toast(e.message || 'Google sign-in failed.') } }
+      function initGoogle() { if (!window.google?.accounts?.id) { setTimeout(initGoogle, 400); return } google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogle }); google.accounts.id.renderButton($('googleSignIn'), { theme: 'outline', size: 'large', shape: 'rectangular', width: 320 }) }
+      function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2800) }
+      function navigate(id) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); $(id)?.classList.add('active'); document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === id)); if (id === 'dashboard') renderDashboard(); if (id === 'vehicles') renderVehicles(); if (id === 'account') renderAccount(); scrollTo({ top: 0, behavior: 'smooth' }) }
+      function setupNav() { document.querySelectorAll('[data-view]').forEach(b => { if (!b.dataset.bound) { b.dataset.bound = '1'; b.addEventListener('click', () => navigate(b.dataset.view)) } }) }
+      function showApp() { const c = customerById(account?.id) || customerByEmail(account?.email); if (!c) { logout(); return } account = { ...c }; $('authView').classList.add('hidden'); $('app').classList.remove('hidden'); renderAll() }
+      function renderIdentity() { const n = account?.name || 'Customer'; $('navName').textContent = n; $('heroName').textContent = n ? ', ' + esc(n.split(/\s+/)[0]) : ''; const av = $('avatar'); if (account?.picture) { av.innerHTML = `<img src="${esc(account.picture)}" alt="">` } else av.textContent = (n[0] || 'C').toUpperCase() }
+      function renderDashboard() { renderIdentity(); const vs = owned(customerById(account.id)), pending = claims().filter(r => String(r.customerId) === String(account.id) && String(r.status).toUpperCase() === 'PENDING'); $('statVehicles').textContent = vs.length; $('statPending').textContent = pending.length; $('statDevices').textContent = vs.filter(v => validMac(v.dongleMac || v.mac || v.deviceId || v.obdId)).length; $('dashboardVehicles').innerHTML = vs.length ? vs.map(vehicleCard).join('') : `<div class="empty col-12"><strong>No vehicles yet</strong>Register your first vehicle and verify its JaFaFa dongle.<br><button class="btn" data-view="register">+ Register vehicle</button></div>`; $('dashboardActivity').innerHTML = pending.length ? pending.map(r => `<div class="notice warn"><strong>Registration pending</strong><br>${esc(r.make)} ${esc(r.model)} · dongle ${esc(r.deviceId || r.dongleMac || '—')} is awaiting approval.</div>`).join('') : `<div class="notice ok">Your account is ready. Vehicle registration and dongle management are available from <strong>My Vehicles</strong>.</div>`; setupNav() }
+      function vehicleCard(v) { const name = esc(v.nickname || `${v.make || ''} ${v.model || ''}`.trim() || 'Vehicle'), mac = normalizeMac(v.dongleMac || v.mac || v.deviceId || v.obdId || ''); return `<article class="card vehicle col-12 col-md-6"><div class="vehiclehead d-flex justify-content-between align-items-start"><div><h3>${name}</h3><div class="reg">${esc(v.make)} ${esc(v.model)} · ${esc(v.year || 'Year N/A')} · ${esc(v.plate || v.registration || 'No plate')}</div></div><div class="status"><i class="dot"></i>REGISTERED</div></div><div class="vehicle-meta row g-2"><div class="metric col-12 col-md-6"><small>VIN</small><b>${esc(v.vin || '—')}</b></div><div class="metric col-12 col-md-6"><small>Dongle MAC</small><b>${esc(mac || '—')}</b></div><div class="metric col-12 col-md-6"><small>Device assignment</small><b>Locked</b></div><div class="metric col-12 col-md-6"><small>Telemetry</small><b>Admin only</b></div></div><div class="vehiclefoot d-flex justify-content-end gap-2"><button class="btn secondary" onclick="openEdit('${esc(v.id)}')">Manage vehicle →</button></div></article>` }
+      function renderVehicles() { const c = customerById(account.id), vs = owned(c); $('vehiclesList').innerHTML = vs.length ? vs.map(vehicleCard).join('') : `<div class="empty col-12"><strong>Your garage is empty</strong>Register a vehicle using its JaFaFa dongle MAC.<br><button class="btn" data-view="register">+ Register vehicle</button></div>`; setupNav() }
+      function renderAccount() { const c = customerById(account.id); if (!c) return; $('profileName').value = c.name || ''; $('profileEmail').value = c.email || ''; $('profilePhone').value = c.phone || ''; $('profileCompany').value = c.company || ''; $('profilePicture').value = c.picture || ''; $('profileId').value = c.id || '' }
+      function renderAll() { renderDashboard(); renderVehicles(); renderAccount() }
+      function openEdit(id) { const c = customerById(account.id), v = (c?.cars || []).find(x => String(x.id) === String(id)); if (!v) return; $('editId').value = v.id; $('modalTitle').textContent = v.nickname || `${v.make} ${v.model}`; $('editMake').value = v.make || ''; $('editModel').value = v.model || ''; $('editYear').value = v.year || ''; $('editVin').value = v.vin || ''; $('editPlate').value = v.plate || v.registration || ''; $('editNickname').value = v.nickname || ''; $('editImage').value = v.image || v.imageUrl || ''; $('editMac').value = normalizeMac(v.dongleMac || v.mac || v.deviceId || v.obdId || ''); $('editStatus').value = v.status || 'Active'; $('editInternalId').value = v.id || ''; $('vehicleModal').classList.add('open') }
+      function closeEdit() { $('vehicleModal').classList.remove('open') }
+      $('vehicleEditForm').addEventListener('submit', e => { e.preventDefault(); const d = db(), c = d.find(x => String(x.id) === String(account.id)), v = c?.cars?.find(x => String(x.id) === String($('editId').value)); if (!c || !v) return; v.plate = $('editPlate').value.trim(); v.registration = v.plate; v.nickname = $('editNickname').value.trim(); v.image = $('editImage').value.trim(); v.updatedAt = new Date().toISOString(); c.updatedAt = new Date().toISOString(); saveDb(d); account = { ...c }; closeEdit(); renderAll(); toast('Vehicle details updated.') });
+      $('closeModal').onclick = closeEdit;
+      $('profileForm').addEventListener('submit', e => { e.preventDefault(); const d = db(), c = d.find(x => String(x.id) === String(account.id)); if (!c) return; c.name = $('profileName').value.trim(); c.phone = $('profilePhone').value.trim(); c.company = $('profileCompany').value.trim(); c.picture = $('profilePicture').value.trim(); c.updatedAt = new Date().toISOString(); saveDb(d); account = { ...c }; write(SESSION_KEY, { id: c.id, email: c.email, name: c.name, picture: c.picture || '' }); renderAll(); toast('Profile saved.') });
+      $('registerForm').addEventListener('submit', e => { e.preventDefault(); const btn = $('registerSubmit'), result = $('macResult'); btn.disabled = true; btn.textContent = 'Verifying dongle…'; result.className = 'notice'; result.textContent = 'Checking the MAC against registered JaFaFa devices.'; result.classList.remove('hidden'); const check = findDongle($('vMac').value); if (!check.ok) { result.className = 'notice error'; result.textContent = check.reason; btn.disabled = false; btn.textContent = 'Verify & register vehicle'; return } const d = db(), c = d.find(x => String(x.id) === String(account.id)); if (!c) { toast('Customer account not found.'); btn.disabled = false; return } const mac = check.mac, id = uid('JFV'), plate = $('vPlate').value.trim(); const v = { id, recordId: id, customerId: String(c.id), make: $('vMake').value.trim(), model: $('vModel').value.trim(), year: Number($('vYear').value), vin: $('vVin').value.trim().toUpperCase(), plate, registration: plate, nickname: $('vNickname').value.trim(), image: $('vImage').value.trim(), dongleMac: mac, deviceId: mac, obdId: mac, status: 'Active', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }; c.cars = Array.isArray(c.cars) ? c.cars : []; c.vehicleIds = Array.isArray(c.vehicleIds) ? c.vehicleIds.map(String) : []; c.cars.push(v); c.vehicleIds.push(id); c.updatedAt = new Date().toISOString(); saveDb(d); account = { ...c }; result.className = 'notice ok'; result.textContent = `Dongle ${mac} verified and locked to this vehicle.`; e.target.reset(); btn.disabled = false; btn.textContent = 'Verify & register vehicle'; toast('Vehicle registered successfully.'); setTimeout(() => navigate('vehicles'), 500) });
+      $('vMac').addEventListener('input', () => { const raw = $('vMac').value, el = $('macResult'); if (!raw) { el.className = 'notice hidden'; return } const r = findDongle(raw); el.className = r.ok ? 'notice ok' : 'notice warn'; el.textContent = r.ok ? `✓ ${r.mac} is registered and available.` : r.reason; el.classList.remove('hidden') });
+      $('logout').onclick = logout; function logout() { localStorage.removeItem(SESSION_KEY); account = null; $('app').classList.add('hidden'); $('authView').classList.remove('hidden') }
+      function restore() { const s = session(); if (!s) { initGoogle(); return } const c = customerById(s.id) || customerByEmail(s.email); if (!c) { localStorage.removeItem(SESSION_KEY); initGoogle(); return } account = { ...c }; showApp(); initGoogle() }
+      window.openEdit = openEdit; setupNav(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', restore); else restore(); window.addEventListener('storage', e => { if ([DB_KEY, CLAIM_KEY, DONGLE_KEY].includes(e.key) && account) { const c = customerById(account.id); if (c) { account = { ...c }; renderAll() } } });
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
