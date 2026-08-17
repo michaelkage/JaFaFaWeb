@@ -936,14 +936,16 @@
       $('profileForm').addEventListener('submit', e => { e.preventDefault(); const d = db(), c = d.find(x => String(x.id) === String(account.id)); if (!c) return; c.name = $('profileName').value.trim(); c.phone = $('profilePhone').value.trim(); c.company = $('profileCompany').value.trim(); c.picture = $('profilePicture').value.trim(); c.updatedAt = new Date().toISOString(); saveDb(d); account = { ...c }; write(SESSION_KEY, { id: c.id, email: c.email, name: c.name, picture: c.picture || '' }); renderAll(); toast('Profile saved.') });
       $('registerForm').addEventListener('submit', e => {
         e.preventDefault();
-        const btn=$('registerSubmit'),result=$('activationResult');
-        btn.disabled=true;btn.textContent='Verifying activation…';result.className='notice';result.textContent='Checking the one-time activation code.';result.classList.remove('hidden');
+        const btn=$('registerSubmit'), result=$('activationResult');
+        btn.disabled=true; btn.textContent='Verifying activation…';
+        result.className='notice'; result.textContent='Checking the one-time activation code.'; result.classList.remove('hidden');
         const check=window.JaFaFaActivation?.verify($('vActivationCode').value);
-        if(!check?.ok){result.className='notice error';result.textContent=check?.reason||'Activation code verification failed.';btn.disabled=false;btn.textContent='Verify & register vehicle';return;}
-        const d=db(),c=d.find(x=>String(x.id)===String(account.id));if(!c){toast('Customer account not found.');btn.disabled=false;btn.textContent='Verify & register vehicle';return;}
-        const id=uid('JFV'),plate=$('vPlate').value.trim();
+        if(!check?.ok){ result.className='notice error'; result.textContent=check?.reason||'Activation code verification failed.'; btn.disabled=false; btn.textContent='Verify & register vehicle'; return; }
+        const d=db(), c=d.find(x=>String(x.id)===String(account.id));
+        if(!c){ toast('Customer account not found.'); btn.disabled=false; btn.textContent='Verify & register vehicle'; return; }
+        const id=uid('JFV'), plate=$('vPlate').value.trim();
         const v={id,recordId:id,customerId:String(c.id),make:$('vMake').value.trim(),model:$('vModel').value.trim(),year:Number($('vYear').value),vin:$('vVin').value.trim().toUpperCase(),plate,registration:plate,nickname:$('vNickname').value.trim(),image:$('vImage').value.trim(),status:'Active',activationStatus:'Verified',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
-        c.cars=Array.isArray(c.cars)?c.cars:[];c.vehicleIds=Array.isArray(c.vehicleIds)?c.vehicleIds.map(String):[];c.cars.push(v);c.vehicleIds.push(id);
+        c.cars=Array.isArray(c.cars)?c.cars:[]; c.vehicleIds=Array.isArray(c.vehicleIds)?c.vehicleIds.map(String):[]; c.cars.push(v); c.vehicleIds.push(id);
         const consumed=window.JaFaFaActivation.consume($('vActivationCode').value,c.id,id);
         if(!consumed.ok){c.cars=c.cars.filter(x=>x!==v);c.vehicleIds=c.vehicleIds.filter(x=>String(x)!==String(id));result.className='notice error';result.textContent=consumed.reason||'Activation failed.';btn.disabled=false;btn.textContent='Verify & register vehicle';return;}
         c.updatedAt=new Date().toISOString();saveDb(d);account={...c};result.className='notice ok';result.textContent='Activation verified and consumed. This vehicle is now registered.';e.target.reset();btn.disabled=false;btn.textContent='Verify & register vehicle';toast('Vehicle registered successfully.');setTimeout(()=>navigate('vehicles'),500);
