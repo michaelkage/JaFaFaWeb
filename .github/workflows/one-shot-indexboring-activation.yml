@@ -1,0 +1,110 @@
+name: One-shot indexboring activation manager
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.head_commit.message != 'feat: add activation manager to indexboring'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch indexboring.html and remove this workflow
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('indexboring.html')
+          text = p.read_text(encoding='utf-8')
+
+          if 'id="activation-manager"' not in text:
+              block = r'''
+
+          <section id="activation-manager" class="selected-summary-card" aria-labelledby="activation-manager-title">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:1rem">
+              <div>
+                <h2 id="activation-manager-title" style="color:#38bdf8;margin-bottom:.35rem">Activation Codes</h2>
+                <p style="color:#94a3b8">Generate one-time product activation codes. Codes are consumed by the customer portal and cannot be reused after activation.</p>
+              </div>
+              <button id="generateActivationCode" class="btn-action" type="button">Generate activation code</button>
+            </div>
+            <div id="activationCodeOutput" hidden style="margin-bottom:1rem"></div>
+            <div class="table-container" style="max-height:420px">
+              <table class="telemetry-table" aria-label="Activation code inventory">
+                <thead><tr><th>Code</th><th>Status</th><th>Created</th><th>Activated</th><th>Customer</th><th>Vehicle</th><th>Action</th></tr></thead>
+                <tbody id="activationCodeRows"><tr><td colspan="7" style="color:#94a3b8">Loading activation codes…</td></tr></tbody>
+              </table>
+            </div>
+          </section>
+
+          <script>
+          (() => {
+            const KEY = 'jafafaActivationCodes';
+            const load = () => { try { const value = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(value) ? value : []; } catch { return []; } };
+            const save = value => localStorage.setItem(KEY, JSON.stringify(value));
+            const random = length => { const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let out = ''; for (let i = 0; i < length; i++) out += chars[Math.floor(Math.random() * chars.length)]; return out; };
+            const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
+            const formatDate = value => value ? new Date(value).toLocaleString() : '—';
+
+            function renderCodes() {
+              const rows = document.getElementById('activationCodeRows');
+              if (!rows) return;
+              const codes = load();
+              rows.innerHTML = codes.length ? codes.map(item => `
+                <tr>
+                  <td><code>${escapeHtml(item.code)}</code></td>
+                  <td>${escapeHtml(item.status || 'AVAILABLE')}</td>
+                  <td>${escapeHtml(formatDate(item.createdAt))}</td>
+                  <td>${escapeHtml(formatDate(item.activatedAt))}</td>
+                  <td>${escapeHtml(item.customerId || '—')}</td>
+                  <td>${escapeHtml(item.vehicleId || '—')}</td>
+                  <td>${item.status === 'AVAILABLE' ? `<button type="button" class="btn-back" data-disable-code="${escapeHtml(item.code)}">Disable</button>` : '—'}</td>
+                </tr>`).join('') : '<tr><td colspan="7" style="color:#94a3b8">No activation codes yet.</td></tr>';
+
+              rows.querySelectorAll('[data-disable-code]').forEach(button => {
+                button.addEventListener('click', () => {
+                  const codes = load();
+                  const item = codes.find(entry => entry.code === button.dataset.disableCode);
+                  if (!item || item.status !== 'AVAILABLE') return;
+                  item.status = 'DISABLED';
+                  save(codes);
+                  renderCodes();
+                });
+              });
+            }
+
+            function generateCode() {
+              const codes = load();
+              let code;
+              do { code = `JFF-${random(4)}-${random(4)}-${random(4)}`; } while (codes.some(item => item.code === code));
+              codes.push({ code, status: 'AVAILABLE', createdAt: new Date().toISOString(), activatedAt: null, customerId: null, vehicleId: null });
+              save(codes);
+              const output = document.getElementById('activationCodeOutput');
+              if (output) {
+                output.hidden = false;
+                output.innerHTML = `<div style="padding:.9rem 1rem;border:1px solid #38bdf8;border-radius:8px;background:#0f172a"><strong style="color:#4ade80">New activation code:</strong> <code style="font-size:1.1rem;color:#f8fafc">${escapeHtml(code)}</code><div style="color:#94a3b8;font-size:.78rem;margin-top:.35rem">Write this code onto the physical product package. It is one-time use.</div></div>`;
+              }
+              renderCodes();
+            }
+
+            document.getElementById('generateActivationCode')?.addEventListener('click', generateCode);
+            renderCodes();
+          })();
+          </script>
+          '''
+              text = text.replace('</body>', block + '\n</body>', 1)
+              p.write_text(text, encoding='utf-8')
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add indexboring.html
+          git commit -m 'feat: add activation manager to indexboring'
+          git rm .github/workflows/one-shot-indexboring-activation.yml
+          git commit -m 'chore: remove one-shot activation patch workflow'
+          git push
