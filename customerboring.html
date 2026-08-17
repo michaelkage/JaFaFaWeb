@@ -782,12 +782,12 @@
             customerVehicle = (customerUser?.cars || []).find(c => String(c.id) === String(id)); if (!customerVehicle) return;
             vehicleDetailsTitle.textContent = `${customerVehicle.year || ""} ${customerVehicle.make || ""} ${customerVehicle.model || ""}`.trim();
             vehicleDetailsSub.textContent = `${customerVehicle.plate || "No plate"} • ${customerVehicle.status || "Active"}`;
-            vehicleDetails.innerHTML = `<div class="detail"><b>VIN</b>${esc(customerVehicle.vin || "—")}</div><div class="detail"><b>Make</b>${esc(customerVehicle.make || "—")}</div><div class="detail"><b>Model</b>${esc(customerVehicle.model || "—")}</div><div class="detail"><b>Year</b>${esc(customerVehicle.year || "—")}</div><div class="detail"><b>License Plate</b>${esc(customerVehicle.plate || "—")}</div><div class="detail"><b>Vehicle Nickname</b>${esc(customerVehicle.nickname || "—")}</div><div class="detail"><b>Activation</b><span style="color:#4ade80">Verified · Locked</span></div><div class="detail"><b>Activation Status</b><span style="color:#4ade80">Verified · Locked</span></div><div class="detail"><b>Vehicle Status</b>${esc(customerVehicle.status || "Active")}</div>`;
+            vehicleDetails.innerHTML = `<div class="detail"><b>VIN</b>${esc(customerVehicle.vin || "—")}</div><div class="detail"><b>Make</b>${esc(customerVehicle.make || "—")}</div><div class="detail"><b>Model</b>${esc(customerVehicle.model || "—")}</div><div class="detail"><b>Year</b>${esc(customerVehicle.year || "—")}</div><div class="detail"><b>License Plate</b>${esc(customerVehicle.plate || "—")}</div><div class="detail"><b>Vehicle Nickname</b>${esc(customerVehicle.nickname || "—")}</div><div class="detail"><b>Activation</b><span style="color:#4ade80">Verified · Locked</span></div><div class="detail"><b>Vehicle Status</b>${esc(customerVehicle.status || "Active")}</div>`;
             customerShow("customer-vehicle-details");
         }
         function openVehicleEditor() {
             if (!customerVehicle) return;
-            editMake.value = customerVehicle.make || ""; editModel.value = customerVehicle.model || ""; editYear.value = customerVehicle.year || ""; editVin.value = customerVehicle.vin || ""; editMac.value = "Verified · Locked"; editPlate.value = customerVehicle.plate || ""; editNickname.value = customerVehicle.nickname || ""; customerShow("customer-edit-vehicle");
+            editMake.value = customerVehicle.make || ""; editModel.value = customerVehicle.model || ""; editYear.value = customerVehicle.year || ""; editVin.value = customerVehicle.vin || ""; editPlate.value = customerVehicle.plate || ""; editNickname.value = customerVehicle.nickname || ""; customerShow("customer-edit-vehicle");
         }
         function saveVehicleEdits(e) {
             e.preventDefault(); if (!customerVehicle || !customerUser) return;
