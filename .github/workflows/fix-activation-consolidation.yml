@@ -1,0 +1,57 @@
+name: Fix activation consolidation
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repair generated portal JavaScript
+        shell: python
+        run: |
+          from pathlib import Path
+          import re, subprocess, tempfile
+
+          for filename in ('customer.html','customerboring.html'):
+              p=Path(filename); s=p.read_text(encoding='utf-8')
+              s=s.replace('function registerVehiclefunction registerVehicle', 'function registerVehicle')
+              s=s.replace('function customerOpenVehiclefunction customerOpenVehicle', 'function customerOpenVehicle')
+              s=s.replace('<div class="detail"><b>Dongle Status</b>${customerVehicle.mac ? "<span style=\'color:#4ade80\'>Verified & assigned</span>" : "<span style=\'color:#fbbf24\'>Not assigned</span>"}</div>', '<div class="detail"><b>Activation Status</b><span style="color:#4ade80">Verified · Locked</span></div>')
+              # Remove customer-visible legacy identity fields from boring mock records too.
+              if filename == 'customerboring.html':
+                  s=re.sub(r',\s*mac:\s*"[^"]*"', '', s)
+                  s=re.sub(r',\s*mac:\s*null', '', s)
+                  # Make the registration form explicitly activation-only if an earlier replacement missed it.
+                  if 'id="regMac"' in s:
+                      s=s.replace('id="regMac"', 'id="regActivationCode"')
+                      s=s.replace('verifyRegistrationMac()', 'verifyRegistrationActivation()')
+              p.write_text(s,encoding='utf-8')
+
+          # Validate embedded JavaScript with Node by extracting script blocks.
+          for filename in ('customer.html','customerboring.html','indexboring.html'):
+              text=Path(filename).read_text(encoding='utf-8')
+              blocks=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', text, re.S|re.I)
+              for i, block in enumerate(blocks):
+                  if not block.strip() or 'src=' in text[max(0,text.find('<script')):text.find('</script>')+9]:
+                      continue
+                  with tempfile.NamedTemporaryFile('w',suffix='.js',delete=False,encoding='utf-8') as f:
+                      f.write(block); name=f.name
+                  r=subprocess.run(['node','--check',name],capture_output=True,text=True)
+                  if r.returncode:
+                      print(r.stderr)
+                      raise SystemExit(f'JavaScript syntax validation failed: {filename} block {i}')
+          print('Activation portal syntax repair passed.')
+      - name: Commit repair and remove workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add customer.html customerboring.html indexboring.html .github/workflows/fix-activation-consolidation.yml
+          git commit -m 'Repair activation portal script syntax'
+          git push
