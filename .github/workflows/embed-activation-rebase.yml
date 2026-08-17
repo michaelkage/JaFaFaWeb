@@ -1,4 +1,4 @@
-name: Embed activation rebase
+name: Finalize JaFaFa activation system
 
 on:
   push:
@@ -8,11 +8,11 @@ permissions:
   contents: write
 
 concurrency:
-  group: jafafa-activation-embed
+  group: jafafa-activation-finalize
   cancel-in-progress: true
 
 jobs:
-  embed:
+  finalize:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
@@ -20,95 +20,97 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Inline activation layer
+      - name: Finish plain admin activation UI
         shell: python
         run: |
           from pathlib import Path
           import re
 
-          js_path = Path('activation-codes.js')
-          if not js_path.exists():
-              print('activation-codes.js is already consolidated; nothing to do.')
-              raise SystemExit(0)
+          p = Path('indexboring.html')
+          s = p.read_text(encoding='utf-8')
 
-          js = js_path.read_text(encoding='utf-8')
-          marker = '<!-- JAFAFA ACTIVATION CODE LAYER -->'
+          if 'id="screen-activation-codes"' not in s:
+              nav_anchor = '<button onclick="openAddVehicleForCustomer()">+ Vehicle</button>'
+              nav_button = '<button onclick="showScreen(\'screen-activation-codes\')">Activation Codes</button>'
+              if nav_anchor not in s:
+                  raise RuntimeError('Plain admin navigation anchor not found')
+              s = s.replace(nav_anchor, nav_anchor + '\n        ' + nav_button, 1)
 
-          for name in ('index.html', 'customer.html', 'indexboring.html', 'customerboring.html'):
-              p = Path(name)
-              if not p.exists():
-                  print(f'Skipping missing {name}')
-                  continue
+              section = '''
+      <section id="screen-activation-codes" hidden>
+        <div class="breadcrumb">
+          <button class="btn-back" onclick="showScreen('screen-admin-dashboard')">← Dashboard</button>
+        </div>
+        <div class="view-header">
+          <h2>Activation Codes</h2>
+          <p>Provision one-time activation codes for physical JaFaFa dongles.</p>
+        </div>
+        <div class="management-card">
+          <h3>Issue Activation Code</h3>
+          <p style="color:#94a3b8;margin:.4rem 0 1rem">Generate a single-use code and write it onto the physical product package. The customer enters this code during vehicle registration.</p>
+          <div class="management-actions" style="justify-content:flex-start">
+            <button class="btn-action" type="button" onclick="jafafaGenerateActivationCode()">Generate One-Time Code</button>
+          </div>
+          <div id="activation-code-output" style="margin-top:1rem"></div>
+        </div>
+        <div class="management-card">
+          <h3 style="margin-bottom:1rem">Activation Inventory</h3>
+          <div class="table-container" style="overflow:auto">
+            <table class="telemetry-table" style="min-width:900px">
+              <thead><tr><th>Code</th><th>Status</th><th>Created</th><th>Activated</th><th>Customer</th><th>Vehicle</th><th>Action</th></tr></thead>
+              <tbody id="activation-code-rows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+'''
+              marker = '      <section id="screen-telemetry" hidden>'
+              if marker not in s:
+                  raise RuntimeError('Telemetry section anchor not found')
+              s = s.replace(marker, section + marker, 1)
 
-              s = p.read_text(encoding='utf-8')
+          p.write_text(s, encoding='utf-8')
 
-              # Remove any external activation layer reference.
-              s = re.sub(
-                  r'\s*<script\s+src=["\']activation-codes\.js["\']\s*></script>',
-                  '',
-                  s,
-                  flags=re.I,
-              )
-
-              # Replace an existing inline layer so repeated workflow runs are idempotent.
-              pattern = re.compile(
-                  re.escape(marker) + r'\s*<script>.*?</script>',
-                  flags=re.I | re.S,
-              )
-              inline = marker + '\n<script>\n' + js + '\n</script>'
-
-              if pattern.search(s):
-                  s = pattern.sub(inline, s, count=1)
-              else:
-                  if '</body>' not in s.lower():
-                      raise RuntimeError(f'{name} has no closing body tag')
-                  s = re.sub(r'</body>', inline + '\n</body>', s, count=1, flags=re.I)
-
-              p.write_text(s, encoding='utf-8')
-              print(f'Inlined activation layer into {name}')
-
-          js_path.unlink()
-          print('Removed activation-codes.js')
-
-      - name: Validate HTML JavaScript blocks
+      - name: Validate activation and plain portals
         shell: python
         run: |
           from pathlib import Path
-          import re
-          import subprocess
+          import re, subprocess, tempfile
+          for filename in ('index.html','customer.html','indexboring.html','customerboring.html'):
+              text = Path(filename).read_text(encoding='utf-8')
+              for i, block in enumerate(re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', text, flags=re.I|re.S), 1):
+                  if not block.strip():
+                      continue
+                  with tempfile.NamedTemporaryFile('w', suffix='.js', delete=False, encoding='utf-8') as f:
+                      f.write(block); name=f.name
+                  r=subprocess.run(['node','--check',name],capture_output=True,text=True)
+                  if r.returncode:
+                      print(r.stderr)
+                      raise SystemExit(f'JavaScript syntax error: {filename} block {i}')
+              print(f'Validated {filename}')
 
-          for name in ('index.html', 'customer.html', 'indexboring.html', 'customerboring.html'):
-              text = Path(name).read_text(encoding='utf-8')
-              blocks = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', text, flags=re.I | re.S)
-              for i, block in enumerate(blocks, 1):
-                  tmp = Path(f'/tmp/{name}.{i}.js')
-                  tmp.write_text(block, encoding='utf-8')
-                  result = subprocess.run(['node', '--check', str(tmp)], capture_output=True, text=True)
-                  if result.returncode:
-                      print(result.stderr)
-                      raise SystemExit(f'JavaScript syntax error in {name}, script block {i}')
-              print(f'Validated {name}')
+          if Path('activation-codes.js').exists():
+              raise SystemExit('activation-codes.js must not remain; activation is inline.')
 
-      - name: Commit and push with retry
+      - name: Remove obsolete activation workflows and commit
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          git diff --cached --quiet && exit 0
-          git commit -m 'Consolidate activation code layer into HTML'
-
-          for attempt in 1 2 3 4 5; do
-            git fetch origin main
-            git rebase origin/main || { git rebase --abort; git reset --hard origin/main; exit 1; }
-            if git push origin HEAD:main; then
-              echo 'Push succeeded.'
-              exit 0
-            fi
-            echo "Push attempt ${attempt} failed; retrying..."
-            sleep $((attempt * 2))
+          for f in \
+            activation-finalizer.yml \
+            cleanup-activation-temp.yml \
+            consolidate-activation-final.yml \
+            consolidate-activation-system.yml \
+            embed-activation-js.yml \
+            finalize-customer-activation.yml \
+            final-customer-activation-patch.yml \
+            fix-main-customer-activation.yml \
+            finalize-boring-activation.yml; do
+            git rm -f ".github/workflows/$f" || true
           done
-
-          echo 'Unable to push activation consolidation after retries.'
-          exit 1
+          git add indexboring.html
+          git rm -f .github/workflows/embed-activation-rebase.yml || true
+          git commit -m 'Finalize inline activation system' || exit 0
+          git push origin HEAD:main
