@@ -776,7 +776,7 @@
         <div class="row g-3">
           <div class="stat col-12 col-md-4"><b id="statVehicles">0</b><span>My vehicles</span></div>
           <div class="stat col-12 col-md-4"><b id="statPending">0</b><span>Pending registration</span></div>
-          <div class="stat col-12 col-md-4"><b id="statDevices">0</b><span>Verified dongles</span></div>
+          <div class="stat col-12 col-md-4"><b id="statDevices">0</b><span>Activated vehicles</span></div>
         </div>
         <div class="section">
           <div class="sectionhead d-flex justify-content-between align-items-center gap-3">
@@ -797,7 +797,7 @@
           <div>
             <div class="eyebrow">Your garage</div>
             <h1>My vehicles.</h1>
-            <p>Register a vehicle with its JaFaFa dongle, then edit only the customer-facing information you control.
+            <p>Register a vehicle with the one-time JaFaFa activation code supplied with your physical dongle, then edit only the customer-facing information you control.
             </p>
           </div><button class="btn" data-view="register">+ Register vehicle</button>
         </div>
@@ -808,12 +808,12 @@
           <div>
             <div class="eyebrow">Vehicle registration</div>
             <h1>Register a vehicle.</h1>
-            <p>Enter the vehicle information and the MAC address printed on the JaFaFa dongle you received.</p>
+            <p>Enter the vehicle information and the one-time activation code supplied with the JaFaFa dongle you received.</p>
           </div>
         </div>
         <div class="card panel">
-          <div class="notice">The dongle MAC is verified before registration.
-            Once assigned, the MAC becomes locked and cannot be changed from the customer portal.</div>
+          <div class="notice">The one-time activation code is verified before registration.
+            Once consumed, the code cannot be used again. Device identity remains protected from the customer portal.</div>
           <form id="registerForm">
             <div class="row g-3">
               <div class="field col-12 col-md-6"><label>Make</label><input id="vMake" class="form-control" required
@@ -830,10 +830,10 @@
                   class="form-control" placeholder="Dad's X5"></div>
               <div class="field col-12 col-md-6"><label>Vehicle image URL</label><input id="vImage" class="form-control"
                   type="url" placeholder="https://..."></div>
-              <div class="field col-12 col-md-6"><label>Dongle MAC address</label><input id="vMac" class="form-control"
-                  required placeholder="00:10:CC:4F:36:03" autocomplete="off"></div>
+              <div class="field col-12 col-md-6"><label>Activation code</label><input id="vActivationCode" class="form-control"
+                  required placeholder="JFF-ABCD-EFGH-JKLM" autocomplete="off"></div>
             </div>
-            <div id="macResult" class="notice hidden" style="margin-top:14px"></div>
+            <div id="activationResult" class="notice hidden" style="margin-top:14px"></div>
             <div class="d-flex flex-wrap justify-content-end gap-2 mt-3"><button type="button" class="btn secondary"
                 data-view="vehicles">Cancel</button><button class="btn" id="registerSubmit">Verify & register
                 vehicle</button></div>
@@ -892,11 +892,8 @@
               class="form-control"></div>
           <div class="field col-12 col-md-6"><label>Vehicle image URL</label><input id="editImage" class="form-control"
               type="url"></div>
-          <div class="field locked col-12 col-md-6"><label>Dongle MAC</label><input id="editMac" class="form-control"
-              disabled></div>
+          <div class="field locked col-12 col-md-6"><label>Activation</label><input value="Verified · Locked" class="form-control" disabled></div>
           <div class="field locked col-12 col-md-6"><label>Device status</label><input id="editStatus"
-              class="form-control" disabled></div>
-          <div class="field locked col-12 col-md-6"><label>Internal vehicle ID</label><input id="editInternalId"
               class="form-control" disabled></div>
         </div>
         <div class="d-flex flex-wrap justify-content-end gap-2 mt-3"><button type="button" class="btn secondary"
@@ -927,8 +924,8 @@
       function setupNav() { document.querySelectorAll('[data-view]').forEach(b => { if (!b.dataset.bound) { b.dataset.bound = '1'; b.addEventListener('click', () => navigate(b.dataset.view)) } }) }
       function showApp() { const c = customerById(account?.id) || customerByEmail(account?.email); if (!c) { logout(); return } account = { ...c }; $('authView').classList.add('hidden'); $('app').classList.remove('hidden'); renderAll() }
       function renderIdentity() { const n = account?.name || 'Customer'; $('navName').textContent = n; $('heroName').textContent = n ? ', ' + esc(n.split(/\s+/)[0]) : ''; const av = $('avatar'); if (account?.picture) { av.innerHTML = `<img src="${esc(account.picture)}" alt="">` } else av.textContent = (n[0] || 'C').toUpperCase() }
-      function renderDashboard() { renderIdentity(); const vs = owned(customerById(account.id)), pending = claims().filter(r => String(r.customerId) === String(account.id) && String(r.status).toUpperCase() === 'PENDING'); $('statVehicles').textContent = vs.length; $('statPending').textContent = pending.length; $('statDevices').textContent = vs.filter(v => validMac(v.dongleMac || v.mac || v.deviceId || v.obdId)).length; $('dashboardVehicles').innerHTML = vs.length ? vs.map(vehicleCard).join('') : `<div class="empty col-12"><strong>No vehicles yet</strong>Register your first vehicle and verify its JaFaFa dongle.<br><button class="btn" data-view="register">+ Register vehicle</button></div>`; $('dashboardActivity').innerHTML = pending.length ? pending.map(r => `<div class="notice warn"><strong>Registration pending</strong><br>${esc(r.make)} ${esc(r.model)} · dongle ${esc(r.deviceId || r.dongleMac || '—')} is awaiting approval.</div>`).join('') : `<div class="notice ok">Your account is ready. Vehicle registration and dongle management are available from <strong>My Vehicles</strong>.</div>`; setupNav() }
-      function vehicleCard(v) { const name = esc(v.nickname || `${v.make || ''} ${v.model || ''}`.trim() || 'Vehicle'), mac = normalizeMac(v.dongleMac || v.mac || v.deviceId || v.obdId || ''); return `<article class="card vehicle col-12 col-md-6"><div class="vehiclehead d-flex justify-content-between align-items-start"><div><h3>${name}</h3><div class="reg">${esc(v.make)} ${esc(v.model)} · ${esc(v.year || 'Year N/A')} · ${esc(v.plate || v.registration || 'No plate')}</div></div><div class="status"><i class="dot"></i>REGISTERED</div></div><div class="vehicle-meta row g-2"><div class="metric col-12 col-md-6"><small>VIN</small><b>${esc(v.vin || '—')}</b></div><div class="metric col-12 col-md-6"><small>Dongle MAC</small><b>${esc(mac || '—')}</b></div><div class="metric col-12 col-md-6"><small>Device assignment</small><b>Locked</b></div><div class="metric col-12 col-md-6"><small>Telemetry</small><b>Admin only</b></div></div><div class="vehiclefoot d-flex justify-content-end gap-2"><button class="btn secondary" onclick="openEdit('${esc(v.id)}')">Manage vehicle →</button></div></article>` }
+      function renderDashboard() { renderIdentity(); const vs = owned(customerById(account.id)), pending = claims().filter(r => String(r.customerId) === String(account.id) && String(r.status).toUpperCase() === 'PENDING'); $('statVehicles').textContent = vs.length; $('statPending').textContent = pending.length; $('statDevices').textContent = vs.filter(v => String(v.activationStatus || '').toLowerCase() === 'verified').length; $('dashboardVehicles').innerHTML = vs.length ? vs.map(vehicleCard).join('') : `<div class="empty col-12"><strong>No vehicles yet</strong>Register your first vehicle and verify its JaFaFa dongle.<br><button class="btn" data-view="register">+ Register vehicle</button></div>`; $('dashboardActivity').innerHTML = pending.length ? pending.map(r => `<div class="notice warn"><strong>Registration pending</strong><br>${esc(r.make)} ${esc(r.model)} · dongle ${esc(r.deviceId || r.dongleMac || '—')} is awaiting approval.</div>`).join('') : `<div class="notice ok">Your account is ready. Vehicle registration and dongle management are available from <strong>My Vehicles</strong>.</div>`; setupNav() }
+      function vehicleCard(v) { const name = esc(v.nickname || `${v.make || ''} ${v.model || ''}`.trim() || 'Vehicle'), mac = normalizeMac(v.dongleMac || v.mac || v.deviceId || v.obdId || ''); return `<article class="card vehicle col-12 col-md-6"><div class="vehiclehead d-flex justify-content-between align-items-start"><div><h3>${name}</h3><div class="reg">${esc(v.make)} ${esc(v.model)} · ${esc(v.year || 'Year N/A')} · ${esc(v.plate || v.registration || 'No plate')}</div></div><div class="status"><i class="dot"></i>REGISTERED</div></div><div class="vehicle-meta row g-2"><div class="metric col-12 col-md-6"><small>VIN</small><b>${esc(v.vin || '—')}</b></div><div class="metric col-12 col-md-6"><small>Activation</small><b>Verified · Locked</b></div><div class="metric col-12 col-md-6"><small>Device assignment</small><b>Locked</b></div><div class="metric col-12 col-md-6"><small>Telemetry</small><b>Admin only</b></div></div><div class="vehiclefoot d-flex justify-content-end gap-2"><button class="btn secondary" onclick="openEdit('${esc(v.id)}')">Manage vehicle →</button></div></article>` }
       function renderVehicles() { const c = customerById(account.id), vs = owned(c); $('vehiclesList').innerHTML = vs.length ? vs.map(vehicleCard).join('') : `<div class="empty col-12"><strong>Your garage is empty</strong>Register a vehicle using its JaFaFa dongle MAC.<br><button class="btn" data-view="register">+ Register vehicle</button></div>`; setupNav() }
       function renderAccount() { const c = customerById(account.id); if (!c) return; $('profileName').value = c.name || ''; $('profileEmail').value = c.email || ''; $('profilePhone').value = c.phone || ''; $('profileCompany').value = c.company || ''; $('profilePicture').value = c.picture || ''; $('profileId').value = c.id || '' }
       function renderAll() { renderDashboard(); renderVehicles(); renderAccount() }
@@ -937,8 +934,21 @@
       $('vehicleEditForm').addEventListener('submit', e => { e.preventDefault(); const d = db(), c = d.find(x => String(x.id) === String(account.id)), v = c?.cars?.find(x => String(x.id) === String($('editId').value)); if (!c || !v) return; v.plate = $('editPlate').value.trim(); v.registration = v.plate; v.nickname = $('editNickname').value.trim(); v.image = $('editImage').value.trim(); v.updatedAt = new Date().toISOString(); c.updatedAt = new Date().toISOString(); saveDb(d); account = { ...c }; closeEdit(); renderAll(); toast('Vehicle details updated.') });
       $('closeModal').onclick = closeEdit;
       $('profileForm').addEventListener('submit', e => { e.preventDefault(); const d = db(), c = d.find(x => String(x.id) === String(account.id)); if (!c) return; c.name = $('profileName').value.trim(); c.phone = $('profilePhone').value.trim(); c.company = $('profileCompany').value.trim(); c.picture = $('profilePicture').value.trim(); c.updatedAt = new Date().toISOString(); saveDb(d); account = { ...c }; write(SESSION_KEY, { id: c.id, email: c.email, name: c.name, picture: c.picture || '' }); renderAll(); toast('Profile saved.') });
-      $('registerForm').addEventListener('submit', e => { e.preventDefault(); const btn = $('registerSubmit'), result = $('macResult'); btn.disabled = true; btn.textContent = 'Verifying dongle…'; result.className = 'notice'; result.textContent = 'Checking the MAC against registered JaFaFa devices.'; result.classList.remove('hidden'); const check = findDongle($('vMac').value); if (!check.ok) { result.className = 'notice error'; result.textContent = check.reason; btn.disabled = false; btn.textContent = 'Verify & register vehicle'; return } const d = db(), c = d.find(x => String(x.id) === String(account.id)); if (!c) { toast('Customer account not found.'); btn.disabled = false; return } const mac = check.mac, id = uid('JFV'), plate = $('vPlate').value.trim(); const v = { id, recordId: id, customerId: String(c.id), make: $('vMake').value.trim(), model: $('vModel').value.trim(), year: Number($('vYear').value), vin: $('vVin').value.trim().toUpperCase(), plate, registration: plate, nickname: $('vNickname').value.trim(), image: $('vImage').value.trim(), dongleMac: mac, deviceId: mac, obdId: mac, status: 'Active', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }; c.cars = Array.isArray(c.cars) ? c.cars : []; c.vehicleIds = Array.isArray(c.vehicleIds) ? c.vehicleIds.map(String) : []; c.cars.push(v); c.vehicleIds.push(id); c.updatedAt = new Date().toISOString(); saveDb(d); account = { ...c }; result.className = 'notice ok'; result.textContent = `Dongle ${mac} verified and locked to this vehicle.`; e.target.reset(); btn.disabled = false; btn.textContent = 'Verify & register vehicle'; toast('Vehicle registered successfully.'); setTimeout(() => navigate('vehicles'), 500) });
-      $('vMac').addEventListener('input', () => { const raw = $('vMac').value, el = $('macResult'); if (!raw) { el.className = 'notice hidden'; return } const r = findDongle(raw); el.className = r.ok ? 'notice ok' : 'notice warn'; el.textContent = r.ok ? `✓ ${r.mac} is registered and available.` : r.reason; el.classList.remove('hidden') });
+      $('registerForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const btn=$('registerSubmit'),result=$('activationResult');
+        btn.disabled=true;btn.textContent='Verifying activation…';result.className='notice';result.textContent='Checking the one-time activation code.';result.classList.remove('hidden');
+        const check=window.JaFaFaActivation?.verify($('vActivationCode').value);
+        if(!check?.ok){result.className='notice error';result.textContent=check?.reason||'Activation code verification failed.';btn.disabled=false;btn.textContent='Verify & register vehicle';return;}
+        const d=db(),c=d.find(x=>String(x.id)===String(account.id));if(!c){toast('Customer account not found.');btn.disabled=false;btn.textContent='Verify & register vehicle';return;}
+        const id=uid('JFV'),plate=$('vPlate').value.trim();
+        const v={id,recordId:id,customerId:String(c.id),make:$('vMake').value.trim(),model:$('vModel').value.trim(),year:Number($('vYear').value),vin:$('vVin').value.trim().toUpperCase(),plate,registration:plate,nickname:$('vNickname').value.trim(),image:$('vImage').value.trim(),status:'Active',activationStatus:'Verified',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+        c.cars=Array.isArray(c.cars)?c.cars:[];c.vehicleIds=Array.isArray(c.vehicleIds)?c.vehicleIds.map(String):[];c.cars.push(v);c.vehicleIds.push(id);
+        const consumed=window.JaFaFaActivation.consume($('vActivationCode').value,c.id,id);
+        if(!consumed.ok){c.cars=c.cars.filter(x=>x!==v);c.vehicleIds=c.vehicleIds.filter(x=>String(x)!==String(id));result.className='notice error';result.textContent=consumed.reason||'Activation failed.';btn.disabled=false;btn.textContent='Verify & register vehicle';return;}
+        c.updatedAt=new Date().toISOString();saveDb(d);account={...c};result.className='notice ok';result.textContent='Activation verified and consumed. This vehicle is now registered.';e.target.reset();btn.disabled=false;btn.textContent='Verify & register vehicle';toast('Vehicle registered successfully.');setTimeout(()=>navigate('vehicles'),500);
+      });
+      
       $('logout').onclick = logout; function logout() { localStorage.removeItem(SESSION_KEY); account = null; $('app').classList.add('hidden'); $('authView').classList.remove('hidden') }
       function restore() { const s = session(); if (!s) { initGoogle(); return } const c = customerById(s.id) || customerByEmail(s.email); if (!c) { localStorage.removeItem(SESSION_KEY); initGoogle(); return } account = { ...c }; showApp(); initGoogle() }
       window.openEdit = openEdit; setupNav(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', restore); else restore(); window.addEventListener('storage', e => { if ([DB_KEY, CLAIM_KEY, DONGLE_KEY].includes(e.key) && account) { const c = customerById(account.id); if (c) { account = { ...c }; renderAll() } } });
