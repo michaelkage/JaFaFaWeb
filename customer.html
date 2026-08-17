@@ -946,7 +946,69 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="activation-codes.js"></script>
-<script src="customer-activation-ui.js"></script>
+<script>
+/* Customer activation UI hardening: keep device identity private. */
+(()=>{
+  'use strict';
+  if(!location.pathname.toLowerCase().includes('customer')) return;
+  function patch(){
+    document.querySelectorAll('#dashboardVehicles .metric,#vehiclesList .metric').forEach(m=>{
+      const label=m.querySelector('small');
+      if(label&&/dongle\s*mac/i.test(label.textContent||'')){
+        label.textContent='Activation';
+        const value=m.querySelector('b');
+        if(value)value.textContent='Verified · Locked';
+      }
+    });
+    const editLabel=[...document.querySelectorAll('#vehicleModal label')].find(x=>/dongle\s*mac/i.test(x.textContent||''));
+    if(editLabel){editLabel.textContent='Activation status';const input=document.getElementById('editMac');if(input){input.value='Verified · Locked';input.disabled=true;input.type='text'}}
+    document.querySelectorAll('#vehiclesList .empty,#dashboardVehicles .empty').forEach(x=>{x.innerHTML=x.innerHTML.replace(/using its JaFaFa dongle MAC/gi,'using your JaFaFa activation code').replace(/verify its JaFaFa dongle/gi,'verify your JaFaFa activation code')});
+    const note=document.querySelector('#register .notice');if(note&&!note.dataset.activationPrivacy){note.dataset.activationPrivacy='1';note.textContent='Use the one-time activation code supplied with your physical JaFaFa dongle. The device identity is verified internally and remains locked after registration.'}
+  }
+  const observer=new MutationObserver(patch);
+  function start(){patch();observer.observe(document.body,{childList:true,subtree:true});setInterval(patch,1200)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+
+</script>
+<script>
+/* JaFaFa one-time activation code layer. Prototype/localStorage only. */
+(() => {
+  'use strict';
+  const KEY = 'jafafaActivationCodes';
+  const normalize = v => String(v || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
+  const load = () => { try { const v = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; } };
+  const save = v => localStorage.setItem(KEY, JSON.stringify(v));
+  const random = n => { const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<n;i++) s += chars[Math.floor(Math.random()*chars.length)]; return s; };
+  window.JaFaFaActivation = {
+    list: load,
+    save,
+    generate() {
+      const codes = load(); let code;
+      do { code = `JFF-${random(4)}-${random(4)}-${random(4)}`; } while(codes.some(x => x.code === code));
+      const record = { code, status:'AVAILABLE', createdAt:new Date().toISOString(), activatedAt:null, customerId:null, vehicleId:null };
+      codes.push(record); save(codes); return record;
+    },
+    verify(raw) {
+      const code = normalize(raw); if(!/^JFF-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)) return {ok:false, reason:'Invalid activation code format.'};
+      const codes = load(); const item = codes.find(x => x.code === code);
+      if(!item) return {ok:false, reason:'Activation code not found.'};
+      if(item.status === 'ACTIVATED') return {ok:false, reason:'This activation code has already been used.'};
+      if(item.status === 'DISABLED') return {ok:false, reason:'This activation code has been disabled.'};
+      return {ok:true, code, item};
+    },
+    consume(raw, customerId, vehicleId) {
+      const result = this.verify(raw); if(!result.ok) return result;
+      const codes = load(); const item = codes.find(x => x.code === result.code);
+      item.status='ACTIVATED'; item.activatedAt=new Date().toISOString(); item.customerId=String(customerId||''); item.vehicleId=String(vehicleId||''); save(codes); return {ok:true,item};
+    },
+    disable(raw) {
+      const code=normalize(raw); const codes=load(); const item=codes.find(x=>x.code===code); if(!item) return false; if(item.status==='ACTIVATED') return false; item.status='DISABLED'; save(codes); return true;
+    }
+  };
+})();
+
+</script>
 </body>
 
 </html>

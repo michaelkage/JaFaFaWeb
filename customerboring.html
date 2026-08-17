@@ -583,12 +583,10 @@
             <section id="customer-register-vehicle" hidden>
                 <div class="header">
                     <h2>Register a Vehicle</h2>
-                    <p>Enter your vehicle information and verify the MAC address supplied with your telemetry dongle.
+                    <p>Enter your vehicle information and verify the one-time activation code supplied with your physical JaFaFa dongle.
                     </p>
                 </div>
-                <div class="section-note"><strong>Dongle verification</strong><br>The MAC address is checked against the
-                    registered dongle inventory. It must be a real Telemetry Hub dongle and it must not already be
-                    assigned to another vehicle.</div>
+                <div class="section-note"><strong>Activation verification</strong><br>Your one-time activation code proves that the physical JaFaFa dongle was issued for customer activation. A used or disabled code cannot be registered again.</div>
                 <div class="card">
                     <form id="registerVehicleForm" onsubmit="registerVehicle(event)">
                         <div class="form-grid">
@@ -605,14 +603,7 @@
                             <div class="form-group"><label for="regNickname">Vehicle Nickname</label><input
                                     id="regNickname" placeholder="My X5"><span class="field-help">Optional name shown in
                                     your portal.</span></div>
-                            <div class="form-group full"><label for="regMac">Dongle MAC Address</label>
-                                <div class="verify-row"><input id="regMac" required placeholder="00:10:CC:4F:36:03"
-                                        autocomplete="off"><button type="button" class="secondary"
-                                        onclick="verifyRegistrationMac()">Verify MAC</button></div>
-                                <div id="macVerification" class="verification"></div><span class="field-help">Use the
-                                    MAC address printed/supplied with your Telemetry Hub dongle.</span>
-                            </div>
-                        </div>
+                            <div class="form-group full"><label for="regActivationCode">Activation Code</label><div class="verify-row"><input id="regActivationCode" required placeholder="JFF-ABCD-EFGH-JKLM" autocomplete="off"><button type="button" class="secondary" onclick="verifyRegistrationActivation()">Verify Code</button></div><div id="activationVerification" class="verification"></div><span class="field-help">Use the one-time code supplied with your physical JaFaFa dongle. The code is consumed after successful registration.</span></div></div>
                         <div class="actions" style="margin-top:1rem"><button class="primary" type="submit">Register
                                 Vehicle</button><button class="secondary" type="button"
                                 onclick="customerShow('customer-vehicles')">Cancel</button></div>
@@ -636,9 +627,7 @@
                                     readonly><span class="locked">Locked — protected vehicle information.</span></div>
                             <div class="form-group"><label for="editVin">VIN</label><input id="editVin" readonly><span
                                     class="locked">Locked — protected vehicle information.</span></div>
-                            <div class="form-group"><label for="editMac">Dongle MAC Address</label><input id="editMac"
-                                    readonly><span class="locked">Locked after verification. Use the replacement process
-                                    if your dongle changes.</span></div>
+                            <div class="form-group"><label>Activation</label><input value="Verified · Locked" readonly><span class="locked">Locked after activation. Device identity is protected.</span></div>
                             <div class="form-group"><label for="editPlate">Registration / Plate</label><input
                                     id="editPlate" required></div>
                             <div class="form-group full"><label for="editNickname">Vehicle Nickname</label><input
@@ -707,14 +696,6 @@
 
     <script>
         const STORAGE_KEY = "telemetryHubCustomerPortalDatabase";
-        const DEVICE_KEY = "telemetryHubDongleInventory";
-        const DEFAULT_DEVICES = [
-            { mac: "00:10:CC:4F:36:03", status: "assigned", vehicleId: "vehicle-001" },
-            { mac: "00:10:CC:4F:36:04", status: "available", vehicleId: null },
-            { mac: "00:10:CC:4F:36:05", status: "available", vehicleId: null },
-            { mac: "00:10:CC:4F:36:06", status: "disabled", vehicleId: null },
-            { mac: "00:10:CC:4F:36:07", status: "available", vehicleId: null }
-        ];
         const DEFAULT_DATABASE = [
             { id: 1, name: "Deji Ayeni", email: "anywashng@gmail.com.ng", company: "JaFaFa", phone: "", tier: "Enterprise", status: "Active", picture: "", cars: [{ id: "vehicle-001", make: "BMW", model: "X5", year: 2024, plate: "LAG-500-DJ", vin: "WBA00000000000001", nickname: "My X5", status: "Active", mac: "00:10:CC:4F:36:03" }] },
             { id: 2, name: "Morenike Ayeni", email: "morenike.ayeni@gmail.com", company: "Layer3 Limited", phone: "", tier: "Enterprise", status: "Active", picture: "", cars: [{ id: "vehicle-002", make: "Lexus", model: "LX 600", year: 2024, plate: "VI-600-MO", vin: "JTJ00000000000002", nickname: "LX 600", status: "Active", mac: null }] },
@@ -723,15 +704,11 @@
             { id: 5, name: "Elizabeth Ayeni", email: "elizabeth.ayeni@alphahealth.org", company: "Alpha Medical Centers", phone: "", tier: "Pro", status: "Active", picture: "", cars: [{ id: "vehicle-005", make: "Mercedes-Benz", model: "GLE 450", year: 2024, plate: "KRD-450-EL", vin: "W1N00000000000005", nickname: "GLE", status: "Active", mac: null }] }
         ];
         let MOCK_DATABASE = loadJson(STORAGE_KEY, null) || structuredClone(DEFAULT_DATABASE);
-        let DONGLE_INVENTORY = loadJson(DEVICE_KEY, null) || structuredClone(DEFAULT_DEVICES);
-        let customerUser = null, customerVehicle = null, pendingGoogleUser = null, verifiedRegistrationMac = null;
+                let customerUser = null, customerVehicle = null, pendingGoogleUser = null, verifiedRegistrationCode = null;
 
         function loadJson(key, fallback) { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch (e) { return fallback; } }
         function saveDatabase() { localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_DATABASE)); }
-        function saveDevices() { localStorage.setItem(DEVICE_KEY, JSON.stringify(DONGLE_INVENTORY)); }
         function esc(v) { return String(v ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m])); }
-        function normalizeMac(value) { return String(value || "").trim().toUpperCase().replace(/[^0-9A-F]/g, "").replace(/(.{2})(?=.)/g, "$1:").slice(0, 17); }
-        function isValidMac(mac) { return /^([0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(mac); }
         function makeId(prefix) { return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
         function parseJwtToken(token) { try { const base64Url = token.split(".")[1]; const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/"); return JSON.parse(atob(base64)); } catch (e) { return null; } }
@@ -772,7 +749,7 @@
             customerVehicleCount.textContent = cars.length;
             customerActiveCount.textContent = cars.filter(c => c.status === "Active").length;
             customerStatus.textContent = customerUser.status || "Active";
-            const cards = cars.map(car => `<article class="vehicle-card"><div class="vehicle-title">${esc(`${car.year || ""} ${car.make || ""} ${car.model || ""}`.trim())}</div><div class="vehicle-sub">${esc(car.nickname || car.plate || "No nickname")}${car.plate ? ` • ${esc(car.plate)}` : ""}</div><span class="status">${esc(car.status || "Active")}</span>${car.mac ? `<div class="device-badge"><span class="device-dot"></span> Dongle verified</div>` : `<div class="device-badge" style="color:#fbbf24"><span class="device-dot" style="background:#fbbf24"></span> Dongle not assigned</div>`}<div class="actions" style="margin-top:1rem"><button class="primary" onclick="customerOpenVehicle('${String(car.id).replace(/'/g, "\'")}')">Manage Vehicle</button></div></article>`).join("");
+            const cards = cars.map(car => `<article class="vehicle-card"><div class="vehicle-title">${esc(`${car.year || ""} ${car.make || ""} ${car.model || ""}`.trim())}</div><div class="vehicle-sub">${esc(car.nickname || car.plate || "No nickname")}${car.plate ? ` • ${esc(car.plate)}` : ""}</div><span class="status">${esc(car.status || "Active")}</span>${car.activationStatus === "Verified" ? `<div class="device-badge"><span class="device-dot"></span> Activation verified · locked</div>` : `<div class="device-badge" style="color:#fbbf24"><span class="device-dot" style="background:#fbbf24"></span> Activation required</div>`}<div class="actions" style="margin-top:1rem"><button class="primary" onclick="customerOpenVehicle('${String(car.id).replace(/'/g, "\'")}')">Manage Vehicle</button></div></article>`).join("");
             const empty = "<div class='empty-state'>No vehicles are currently registered. Register your first vehicle to get started.</div>";
             dashboardVehicles.innerHTML = cards || empty; vehicleList.innerHTML = cards || empty;
             accountName.value = customerUser.name || ""; accountEmail.value = customerUser.email || ""; accountPhone.value = customerUser.phone || ""; accountCompany.value = customerUser.company || "";
@@ -780,38 +757,37 @@
         }
 
         function openVehicleRegistration() {
-            document.getElementById("registerVehicleForm").reset(); verifiedRegistrationMac = null; macVerification.className = "verification"; macVerification.textContent = ""; customerShow("customer-register-vehicle");
+            document.getElementById("registerVehicleForm").reset(); verifiedRegistrationCode = null; activationVerification.className = "verification"; activationVerification.textContent = ""; customerShow("customer-register-vehicle");
         }
-        function verifyRegistrationMac() {
-            const input = document.getElementById("regMac"); const mac = normalizeMac(input.value); input.value = mac;
-            const box = document.getElementById("macVerification"); verifiedRegistrationMac = null;
-            if (!isValidMac(mac)) { box.className = "verification bad"; box.textContent = "Invalid MAC address format. Use six hexadecimal pairs, e.g. 00:10:CC:4F:36:03."; return false; }
-            const device = DONGLE_INVENTORY.find(d => d.mac === mac);
-            if (!device) { box.className = "verification bad"; box.textContent = "This MAC address is not registered as a Telemetry Hub dongle."; return false; }
-            if (device.status !== "available" || device.vehicleId) { box.className = "verification bad"; box.textContent = device.status === "disabled" ? "This dongle has been disabled and cannot be registered." : "This dongle is already assigned to a vehicle."; return false; }
-            verifiedRegistrationMac = mac; box.className = "verification ok"; box.textContent = "Dongle verified ✓ This MAC is valid and currently available."; return true;
+        function verifyRegistrationActivation() {
+            const input = document.getElementById("regActivationCode"); const code = String(input.value || "").trim().toUpperCase(); input.value = code;
+            const box = document.getElementById("activationVerification"); verifiedRegistrationCode = null;
+            const result = window.JaFaFaActivation.verify(code);
+            if (!result.ok) { box.className = "verification bad"; box.textContent = result.reason; return false; }
+            verifiedRegistrationCode = result.code; box.className = "verification ok"; box.textContent = "Activation code verified ✓ It is available for one-time registration."; return true;
         }
-        function registerVehicle(e) {
+        function registerVehiclefunction registerVehicle(e) {
             e.preventDefault();
             if (!customerUser) return;
-            if (!verifyRegistrationMac() || !verifiedRegistrationMac) { alert("Please verify a valid and unused Telemetry Hub dongle MAC address before registering the vehicle."); return; }
+            if (!verifyRegistrationActivation() || !verifiedRegistrationCode) { alert("Please verify a valid, unused JaFaFa activation code before registering the vehicle."); return; }
             const vin = regVin.value.trim().toUpperCase();
             if (customerUser.cars?.some(c => String(c.vin || "").toUpperCase() === vin)) { alert("A vehicle with this VIN is already registered to your account."); return; }
-            const vehicle = { id: makeId("vehicle-"), make: regMake.value.trim(), model: regModel.value.trim(), year: Number(regYear.value), plate: regPlate.value.trim().toUpperCase(), vin, nickname: regNickname.value.trim(), status: "Active", mac: verifiedRegistrationMac };
+            const vehicle = { id: makeId("vehicle-"), make: regMake.value.trim(), model: regModel.value.trim(), year: Number(regYear.value), plate: regPlate.value.trim().toUpperCase(), vin, nickname: regNickname.value.trim(), status: "Active", activationStatus: "Verified" };
             customerUser.cars = customerUser.cars || []; customerUser.cars.push(vehicle);
-            const device = DONGLE_INVENTORY.find(d => d.mac === verifiedRegistrationMac); device.status = "assigned"; device.vehicleId = vehicle.id;
-            saveDatabase(); saveDevices(); customerVehicle = vehicle; verifiedRegistrationMac = null; renderCustomer(); customerOpenVehicle(vehicle.id);
+            const consumed = window.JaFaFaActivation.consume(verifiedRegistrationCode, customerUser.id, vehicle.id);
+            if (!consumed.ok) { customerUser.cars = customerUser.cars.filter(c => c !== vehicle); alert(consumed.reason || "Activation failed."); return; }
+            saveDatabase(); customerVehicle = vehicle; verifiedRegistrationCode = null; renderCustomer(); customerOpenVehicle(vehicle.id);
         }
-        function customerOpenVehicle(id) {
+        function customerOpenVehiclefunction customerOpenVehicle(id) {
             customerVehicle = (customerUser?.cars || []).find(c => String(c.id) === String(id)); if (!customerVehicle) return;
             vehicleDetailsTitle.textContent = `${customerVehicle.year || ""} ${customerVehicle.make || ""} ${customerVehicle.model || ""}`.trim();
             vehicleDetailsSub.textContent = `${customerVehicle.plate || "No plate"} • ${customerVehicle.status || "Active"}`;
-            vehicleDetails.innerHTML = `<div class="detail"><b>Vehicle ID</b>${esc(customerVehicle.id)}</div><div class="detail"><b>VIN</b>${esc(customerVehicle.vin || "—")}</div><div class="detail"><b>Make</b>${esc(customerVehicle.make || "—")}</div><div class="detail"><b>Model</b>${esc(customerVehicle.model || "—")}</div><div class="detail"><b>Year</b>${esc(customerVehicle.year || "—")}</div><div class="detail"><b>License Plate</b>${esc(customerVehicle.plate || "—")}</div><div class="detail"><b>Vehicle Nickname</b>${esc(customerVehicle.nickname || "—")}</div><div class="detail"><b>Dongle MAC</b>${esc(customerVehicle.mac || "Not assigned")}</div><div class="detail"><b>Dongle Status</b>${customerVehicle.mac ? "<span style='color:#4ade80'>Verified & assigned</span>" : "<span style='color:#fbbf24'>Not assigned</span>"}</div><div class="detail"><b>Vehicle Status</b>${esc(customerVehicle.status || "Active")}</div>`;
+            vehicleDetails.innerHTML = `<div class="detail"><b>VIN</b>${esc(customerVehicle.vin || "—")}</div><div class="detail"><b>Make</b>${esc(customerVehicle.make || "—")}</div><div class="detail"><b>Model</b>${esc(customerVehicle.model || "—")}</div><div class="detail"><b>Year</b>${esc(customerVehicle.year || "—")}</div><div class="detail"><b>License Plate</b>${esc(customerVehicle.plate || "—")}</div><div class="detail"><b>Vehicle Nickname</b>${esc(customerVehicle.nickname || "—")}</div><div class="detail"><b>Activation</b><span style="color:#4ade80">Verified · Locked</span></div><div class="detail"><b>Dongle Status</b>${customerVehicle.mac ? "<span style='color:#4ade80'>Verified & assigned</span>" : "<span style='color:#fbbf24'>Not assigned</span>"}</div><div class="detail"><b>Vehicle Status</b>${esc(customerVehicle.status || "Active")}</div>`;
             customerShow("customer-vehicle-details");
         }
         function openVehicleEditor() {
             if (!customerVehicle) return;
-            editMake.value = customerVehicle.make || ""; editModel.value = customerVehicle.model || ""; editYear.value = customerVehicle.year || ""; editVin.value = customerVehicle.vin || ""; editMac.value = customerVehicle.mac || "Not assigned"; editPlate.value = customerVehicle.plate || ""; editNickname.value = customerVehicle.nickname || ""; customerShow("customer-edit-vehicle");
+            editMake.value = customerVehicle.make || ""; editModel.value = customerVehicle.model || ""; editYear.value = customerVehicle.year || ""; editVin.value = customerVehicle.vin || ""; editMac.value = "Verified · Locked"; editPlate.value = customerVehicle.plate || ""; editNickname.value = customerVehicle.nickname || ""; customerShow("customer-edit-vehicle");
         }
         function saveVehicleEdits(e) {
             e.preventDefault(); if (!customerVehicle || !customerUser) return;

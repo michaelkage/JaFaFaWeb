@@ -3356,6 +3356,20 @@
           }
         }
       </script>
+
+<script>
+(() => {
+  const KEY='jafafaActivationCodes';
+  const load=()=>{try{const v=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(v)?v:[]}catch{return[]}};
+  const save=v=>localStorage.setItem(KEY,JSON.stringify(v));
+  const rand=n=>{const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<n;i++)s+=c[Math.floor(Math.random()*c.length)];return s};
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  window.jafafaGenerateActivationCode=()=>{const a=load();let code;do{code=`JFF-${rand(4)}-${rand(4)}-${rand(4)}`}while(a.some(x=>x.code===code));a.push({code,status:'AVAILABLE',createdAt:new Date().toISOString(),activatedAt:null,customerId:null,vehicleId:null});save(a);jafafaRefreshActivationCodes();document.getElementById('activation-code-output').innerHTML=`<div style="padding:.8rem;border:1px solid #38bdf8;border-radius:8px;background:#0f172a"><strong style="color:#4ade80">New code:</strong> <code style="font-size:1.1rem;color:#f8fafc">${code}</code><br><span style="color:#94a3b8;font-size:.78rem">Write this code onto the physical product package. It is one-time use.</span></div>`};
+  window.jafafaRefreshActivationCodes=()=>{const rows=document.getElementById('activation-code-rows');if(!rows)return;const a=load();rows.innerHTML=a.length?a.map(x=>`<tr><td><code>${esc(x.code)}</code></td><td>${esc(x.status)}</td><td>${esc(x.createdAt?new Date(x.createdAt).toLocaleString():'—')}</td><td>${esc(x.activatedAt?new Date(x.activatedAt).toLocaleString():'—')}</td><td>${esc(x.customerId||'—')}</td><td>${esc(x.vehicleId||'—')}</td><td>${x.status==='AVAILABLE'?`<button class="btn-back" type="button" onclick="jafafaDisableActivationCode('${x.code}')">Disable</button>`:'—'}</td></tr>`).join(''):'<tr><td colspan="7" style="color:#94a3b8">No activation codes yet.</td></tr>'};
+  window.jafafaDisableActivationCode=code=>{const a=load();const x=a.find(v=>v.code===code);if(!x||x.status!=='AVAILABLE')return;x.status='DISABLED';save(a);jafafaRefreshActivationCodes()};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',jafafaRefreshActivationCodes,{once:true});else jafafaRefreshActivationCodes();
+})();
+</script>
 </body>
 
 </html>
