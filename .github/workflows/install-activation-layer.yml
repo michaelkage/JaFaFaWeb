@@ -1,0 +1,57 @@
+name: Install activation layer
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Patch customer session restore
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('customer.html')
+          s=p.read_text(encoding='utf-8')
+          old='const s=session();'
+          new='const s=read(SESSION_KEY,null);'
+          if old in s:
+              s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Load activation layer
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in ('index.html','customer.html'):
+              p=Path(name)
+              s=p.read_text(encoding='utf-8')
+              tag='<script src="activation-codes.js"></script>'
+              if tag not in s:
+                  marker='</body>'
+                  if marker not in s:
+                      raise SystemExit(f'{name}: missing </body>')
+                  s=s.replace(marker, tag+'\n'+marker, 1)
+              p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Commit patched portals
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html customer.html activation-codes.js
+          if git diff --cached --quiet; then
+            echo 'No activation changes required.'
+            exit 0
+          fi
+          git commit -m 'Implement one-time activation codes'
+          git push
