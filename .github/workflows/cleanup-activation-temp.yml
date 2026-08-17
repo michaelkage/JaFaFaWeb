@@ -1,0 +1,45 @@
+name: Cleanup activation temp files
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Final cleanup and syntax check
+        shell: python
+        run: |
+          from pathlib import Path
+          import re, subprocess, tempfile
+          for filename in ('customer.html','customerboring.html'):
+              p=Path(filename); s=p.read_text(encoding='utf-8')
+              s=s.replace('editVin.value = customerVehicle.vin || ""; editMac.value = "Verified · Locked"; editPlate.value', 'editVin.value = customerVehicle.vin || ""; editPlate.value')
+              s=s.replace('<div class="detail"><b>Activation</b><span style="color:#4ade80">Verified · Locked</span></div><div class="detail"><b>Activation Status</b><span style="color:#4ade80">Verified · Locked</span></div>', '<div class="detail"><b>Activation</b><span style="color:#4ade80">Verified · Locked</span></div>')
+              p.write_text(s,encoding='utf-8')
+          # Check every inline script block with Node.
+          for filename in ('customer.html','customerboring.html','indexboring.html'):
+              text=Path(filename).read_text(encoding='utf-8')
+              for i, block in enumerate(re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', text, re.S|re.I)):
+                  if not block.strip(): continue
+                  with tempfile.NamedTemporaryFile('w',suffix='.js',delete=False,encoding='utf-8') as f:
+                      f.write(block); name=f.name
+                  r=subprocess.run(['node','--check',name],capture_output=True,text=True)
+                  if r.returncode:
+                      print(f'JS syntax error in {filename} block {i}:\n{r.stderr}')
+                      raise SystemExit(1)
+          print('Final activation cleanup passed.')
+      - name: Commit and remove temporary workflows
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add customer.html customerboring.html indexboring.html
+          git rm -f .github/workflows/cleanup-activation-temp.yml .github/workflows/fix-activation-consolidation.yml .github/workflows/consolidate-activation-system.yml || true
+          git commit -m 'Finalize activation code portal cleanup'
+          git push
