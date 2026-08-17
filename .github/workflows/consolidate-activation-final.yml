@@ -1,0 +1,35 @@
+name: Consolidate activation final
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  consolidate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inline activation layer
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          js=Path('activation-codes.js').read_text(encoding='utf-8')
+          for name in ('index.html','customer.html'):
+              p=Path(name);s=p.read_text(encoding='utf-8')
+              s=re.sub(r'\s*<script\s+src=["\']activation-codes\.js["\']\s*></script>','',s,flags=re.I)
+              if '<!-- JAFAFA ACTIVATION CODE LAYER -->' not in s:
+                  s=s.replace('</body>','<!-- JAFAFA ACTIVATION CODE LAYER -->\n<script>\n'+js+'\n</script>\n</body>',1)
+              p.write_text(s,encoding='utf-8')
+          Path('activation-codes.js').unlink(missing_ok=True)
+      - name: Commit inline version
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Consolidate activation code layer into HTML' || true
+          git push
