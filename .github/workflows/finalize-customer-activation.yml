@@ -1,0 +1,66 @@
+name: Finalize customer activation flow
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Convert main customer registration from MAC to activation code
+        shell: python
+        run: |
+          from pathlib import Path
+          import re, subprocess, tempfile
+
+          p=Path('customer.html'); s=p.read_text(encoding='utf-8')
+          s=s.replace('Register a vehicle with its JaFaFa dongle, then edit only the customer-facing information you control.', 'Register a vehicle with the one-time JaFaFa activation code supplied with your physical dongle, then edit only the customer-facing information you control.')
+          s=s.replace('Enter the vehicle information and the MAC address printed on the JaFaFa dongle you received.', 'Enter the vehicle information and the one-time activation code supplied with the JaFaFa dongle you received.')
+          s=s.replace('The dongle MAC is verified before registration.\n            Once assigned, the MAC becomes locked and cannot be changed from the customer portal.', 'The one-time activation code is verified before registration.\n            Once consumed, the code cannot be used again. Device identity remains protected from the customer portal.')
+          s=re.sub(r'<div class="field col-12 col-md-6"><label>Dongle MAC address</label><input id="vMac".*?</div>', '<div class="field col-12 col-md-6"><label>Activation code</label><input id="vActivationCode" class="form-control" required placeholder="JFF-ABCD-EFGH-JKLM" autocomplete="off"></div>', s, count=1, flags=re.S)
+          s=s.replace('id="macResult"', 'id="activationResult"').replace('macResult', 'activationResult')
+          s=re.sub(r'<div class="field locked col-12 col-md-6"><label>Dongle MAC</label><input id="editMac" class="form-control"\s*disabled></div>', '', s, count=1, flags=re.S)
+          s=s.replace('<div class="field locked col-12 col-md-6"><label>Device status</label>', '<div class="field locked col-12 col-md-6"><label>Activation</label><input value="Verified · Locked" class="form-control" disabled></div>\n          <div class="field locked col-12 col-md-6"><label>Device status</label>', 1)
+          s=re.sub(r'<div class="field locked col-12 col-md-6"><label>Internal vehicle ID</label>.*?</div>', '', s, count=1, flags=re.S)
+
+          # Customer card: never expose MAC or internal identity.
+          s=s.replace('<div class="metric col-12 col-md-6"><small>Dongle MAC</small><b>${esc(mac || \'—\')}</b></div>', '<div class="metric col-12 col-md-6"><small>Activation</small><b>Verified · Locked</b></div>')
+          s=s.replace('mac = normalizeMac(v.dongleMac || v.mac || v.deviceId || v.obdId || \'\'); return', 'return')
+          s=s.replace('using its JaFaFa dongle MAC.', 'using your one-time JaFaFa activation code.')
+          s=s.replace('verify its JaFaFa dongle.', 'verify your JaFaFa activation code.')
+
+          # Replace the main customer registration handler with activation-code consumption.
+          old=re.search(r"\$\('registerForm'\)\.addEventListener\('submit', e => \{.*?\n      \}\);", s, re.S)
+          new='''$('registerForm').addEventListener('submit', e => {\n        e.preventDefault();\n        const btn = $('registerSubmit'), result = $('activationResult');\n        btn.disabled = true; btn.textContent = 'Verifying activation…';\n        result.className = 'notice'; result.textContent = 'Checking the one-time activation code.'; result.classList.remove('hidden');\n        const check = window.JaFaFaActivation?.verify($('vActivationCode').value);\n        if (!check?.ok) { result.className = 'notice error'; result.textContent = check?.reason || 'Activation code verification failed.'; btn.disabled = false; btn.textContent = 'Verify & register vehicle'; return; }\n        const d = db(), c = d.find(x => String(x.id) === String(account.id));\n        if (!c) { toast('Customer account not found.'); btn.disabled = false; btn.textContent = 'Verify & register vehicle'; return; }\n        const id = uid('JFV'), plate = $('vPlate').value.trim();\n        const v = { id, recordId:id, customerId:String(c.id), make:$('vMake').value.trim(), model:$('vModel').value.trim(), year:Number($('vYear').value), vin:$('vVin').value.trim().toUpperCase(), plate, registration:plate, nickname:$('vNickname').value.trim(), image:$('vImage').value.trim(), status:'Active', activationStatus:'Verified', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() };\n        c.cars = Array.isArray(c.cars) ? c.cars : []; c.vehicleIds = Array.isArray(c.vehicleIds) ? c.vehicleIds.map(String) : []; c.cars.push(v); c.vehicleIds.push(id);\n        const consumed = window.JaFaFaActivation.consume($('vActivationCode').value, c.id, id);\n        if (!consumed.ok) { c.cars = c.cars.filter(x => x !== v); c.vehicleIds = c.vehicleIds.filter(x => String(x) !== String(id)); result.className='notice error'; result.textContent=consumed.reason || 'Activation failed.'; btn.disabled=false; btn.textContent='Verify & register vehicle'; return; }\n        c.updatedAt = new Date().toISOString(); saveDb(d); account={...c}; result.className='notice ok'; result.textContent='Activation verified and consumed. This vehicle is now registered.'; e.target.reset(); btn.disabled=false; btn.textContent='Verify & register vehicle'; toast('Vehicle registered successfully.'); setTimeout(()=>navigate('vehicles'),500);\n      });'''
+          if old: s=s[:old.start()]+new+s[old.end():]
+
+          # Remove the legacy MAC input listener.
+          s=re.sub(r"\$\('vMac'\)\.addEventListener\('input',.*?\n      \}\);", '', s, flags=re.S)
+          # Account/profile/customer ID remain intentional; only device/internal vehicle identity is removed from customer UI.
+          p.write_text(s,encoding='utf-8')
+
+          # Validate all inline scripts.
+          for filename in ('customer.html','customerboring.html','indexboring.html'):
+              text=Path(filename).read_text(encoding='utf-8')
+              for i,block in enumerate(re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',text,re.S|re.I)):
+                  if not block.strip(): continue
+                  with tempfile.NamedTemporaryFile('w',suffix='.js',delete=False,encoding='utf-8') as f:
+                      f.write(block); name=f.name
+                  r=subprocess.run(['node','--check',name],capture_output=True,text=True)
+                  if r.returncode:
+                      print(f'{filename} script {i}:\n{r.stderr}'); raise SystemExit(1)
+          print('Customer activation flow finalized.')
+      - name: Commit and remove temporary workflows
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add customer.html customerboring.html indexboring.html
+          git rm -f .github/workflows/finalize-customer-activation.yml .github/workflows/cleanup-activation-temp.yml .github/workflows/fix-activation-consolidation.yml .github/workflows/consolidate-activation-system.yml || true
+          git commit -m 'Finalize one-time activation registration flow'
+          git push
