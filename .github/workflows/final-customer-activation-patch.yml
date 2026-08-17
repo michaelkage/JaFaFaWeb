@@ -1,0 +1,51 @@
+name: Final customer activation patch
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch main customer activation flow
+        shell: python
+        run: |
+          from pathlib import Path
+          import re, subprocess, tempfile
+          p=Path('customer.html'); s=p.read_text(encoding='utf-8')
+          s=s.replace('<span>Verified dongles</span>', '<span>Activated vehicles</span>')
+          s=s.replace("$('statDevices').textContent = vs.filter(v => validMac(v.dongleMac || v.mac || v.deviceId || v.obdId)).length;", "$('statDevices').textContent = vs.filter(v => String(v.activationStatus || '').toLowerCase() === 'verified').length;")
+          s=s.replace('<div class="metric col-12 col-md-6"><small>Dongle MAC</small><b>${esc(mac || \'—\')}</b></div>', '<div class="metric col-12 col-md-6"><small>Activation</small><b>Verified · Locked</b></div>')
+          pat=r"\$\('registerForm'\)\.addEventListener\('submit', e => \{.*?\}\);"
+          new='''$('registerForm').addEventListener('submit', e => {\n        e.preventDefault();\n        const btn=$('registerSubmit'), result=$('activationResult');\n        btn.disabled=true; btn.textContent='Verifying activation…';\n        result.className='notice'; result.textContent='Checking the one-time activation code.'; result.classList.remove('hidden');\n        const check=window.JaFaFaActivation?.verify($('vActivationCode').value);\n        if(!check?.ok){result.className='notice error';result.textContent=check?.reason||'Activation code verification failed.';btn.disabled=false;btn.textContent='Verify & register vehicle';return;}\n        const d=db(),c=d.find(x=>String(x.id)===String(account.id));\n        if(!c){toast('Customer account not found.');btn.disabled=false;btn.textContent='Verify & register vehicle';return;}\n        const id=uid('JFV'),plate=$('vPlate').value.trim();\n        const v={id,recordId:id,customerId:String(c.id),make:$('vMake').value.trim(),model:$('vModel').value.trim(),year:Number($('vYear').value),vin:$('vVin').value.trim().toUpperCase(),plate,registration:plate,nickname:$('vNickname').value.trim(),image:$('vImage').value.trim(),status:'Active',activationStatus:'Verified',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};\n        c.cars=Array.isArray(c.cars)?c.cars:[];c.vehicleIds=Array.isArray(c.vehicleIds)?c.vehicleIds.map(String):[];c.cars.push(v);c.vehicleIds.push(id);\n        const consumed=window.JaFaFaActivation.consume($('vActivationCode').value,c.id,id);\n        if(!consumed.ok){c.cars=c.cars.filter(x=>x!==v);c.vehicleIds=c.vehicleIds.filter(x=>String(x)!==String(id));result.className='notice error';result.textContent=consumed.reason||'Activation failed.';btn.disabled=false;btn.textContent='Verify & register vehicle';return;}\n        c.updatedAt=new Date().toISOString();saveDb(d);account={...c};result.className='notice ok';result.textContent='Activation verified and consumed. This vehicle is now registered.';e.target.reset();btn.disabled=false;btn.textContent='Verify & register vehicle';toast('Vehicle registered successfully.');setTimeout(()=>navigate('vehicles'),500);\n      });'''
+          if not re.search(pat,s,re.S): raise SystemExit('main register handler not found')
+          s=re.sub(pat,new,s,count=1,flags=re.S)
+          s=re.sub(r"\$\('vMac'\)\.addEventListener\('input',.*?\}\);", '', s, count=1, flags=re.S)
+          if 'id="vActivationCode"' not in s:
+              raise SystemExit('activation input missing')
+          if 'window.JaFaFaActivation' not in s:
+              helper='''<script>\nwindow.JaFaFaActivation=(()=>{const K='jafafaActivationCodes',load=()=>{try{const v=JSON.parse(localStorage.getItem(K)||'[]');return Array.isArray(v)?v:[]}catch{return[]}},save=v=>localStorage.setItem(K,JSON.stringify(v)),norm=v=>String(v||'').trim().toUpperCase().replace(/[^A-Z0-9-]/g,'');return{verify(raw){const code=norm(raw);if(!/^JFF-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code))return{ok:false,reason:'Invalid activation code format.'};const a=load(),x=a.find(v=>v.code===code);if(!x)return{ok:false,reason:'Activation code not found.'};if(x.status==='ACTIVATED')return{ok:false,reason:'This activation code has already been used.'};if(x.status==='DISABLED')return{ok:false,reason:'This activation code has been disabled.'};return{ok:true,code,item:x}},consume(raw,customerId,vehicleId){const r=this.verify(raw);if(!r.ok)return r;const a=load(),x=a.find(v=>v.code===r.code);x.status='ACTIVATED';x.activatedAt=new Date().toISOString();x.customerId=String(customerId||'');x.vehicleId=String(vehicleId||'');save(a);return{ok:true,item:x}}}})();\n</script>\n'''
+              s=s.replace('</body>',helper+'</body>',1)
+          p.write_text(s,encoding='utf-8')
+          for filename in ('customer.html','customerboring.html','indexboring.html'):
+              text=Path(filename).read_text(encoding='utf-8')
+              for i,block in enumerate(re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',text,re.S|re.I)):
+                  if not block.strip(): continue
+                  with tempfile.NamedTemporaryFile('w',suffix='.js',delete=False,encoding='utf-8') as f:f.write(block);name=f.name
+                  r=subprocess.run(['node','--check',name],capture_output=True,text=True)
+                  if r.returncode: print(f'{filename} block {i}:\n{r.stderr}');raise SystemExit(1)
+          print('Final customer activation patch passed.')
+      - name: Commit and remove temporary workflows
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add customer.html
+          git rm -f .github/workflows/final-customer-activation-patch.yml .github/workflows/fix-main-customer-activation.yml .github/workflows/finalize-customer-activation.yml .github/workflows/cleanup-activation-temp.yml .github/workflows/fix-activation-consolidation.yml .github/workflows/consolidate-activation-system.yml || true
+          git commit -m 'Finalize customer activation code flow'
+          git push
