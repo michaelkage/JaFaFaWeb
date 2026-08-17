@@ -735,7 +735,7 @@
         function makeId(prefix) { return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
         function parseJwtToken(token) { try { const base64Url = token.split(".")[1]; const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/"); return JSON.parse(atob(base64)); } catch (e) { return null; } }
-        function initCustomerGoogleAuth() {
+        const GOOGLE_CLIENT_ID = "618464687927-3qhsv0r9012cn0e50g963vk4n71pb54r.apps.googleusercontent.com";\n        function initCustomerGoogleAuth() {
             if (!window.google?.accounts?.id) return;
             google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCustomerCredentialResponse, auto_select: false, cancel_on_tap_outside: false });
             google.accounts.id.renderButton(document.getElementById("googleSignInButton"), { theme: "outline", size: "large", shape: "rectangular", text: "signin_with", logo_alignment: "left", width: 300 });
