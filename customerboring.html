@@ -697,11 +697,11 @@
     <script>
         const STORAGE_KEY = "telemetryHubCustomerPortalDatabase";
         const DEFAULT_DATABASE = [
-            { id: 1, name: "Deji Ayeni", email: "anywashng@gmail.com.ng", company: "JaFaFa", phone: "", tier: "Enterprise", status: "Active", picture: "", cars: [{ id: "vehicle-001", make: "BMW", model: "X5", year: 2024, plate: "LAG-500-DJ", vin: "WBA00000000000001", nickname: "My X5", status: "Active", mac: "00:10:CC:4F:36:03" }] },
-            { id: 2, name: "Morenike Ayeni", email: "morenike.ayeni@gmail.com", company: "Layer3 Limited", phone: "", tier: "Enterprise", status: "Active", picture: "", cars: [{ id: "vehicle-002", make: "Lexus", model: "LX 600", year: 2024, plate: "VI-600-MO", vin: "JTJ00000000000002", nickname: "LX 600", status: "Active", mac: null }] },
-            { id: 3, name: "Michael Ayeni", email: "michaelkage9@gmail.com", company: "HyperSpace Technologies", phone: "", tier: "Enterprise", status: "Active", picture: "", cars: [{ id: "vehicle-003", make: "Land Rover", model: "Defender 110 V8", year: 2023, plate: "LAG-110-MA", vin: "SAL00000000000003", nickname: "Defender", status: "Active", mac: null }] },
-            { id: 4, name: "Gabriel Blitzer", email: "ayobamicadel@gmail.com", company: "Blitz Aero", phone: "", tier: "Pro", status: "Active", picture: "", cars: [{ id: "vehicle-004", make: "BMW", model: "M4 Competition", year: 2023, plate: "GBL-004-M", vin: "WBS00000000000004", nickname: "M4", status: "Active", mac: null }] },
-            { id: 5, name: "Elizabeth Ayeni", email: "elizabeth.ayeni@alphahealth.org", company: "Alpha Medical Centers", phone: "", tier: "Pro", status: "Active", picture: "", cars: [{ id: "vehicle-005", make: "Mercedes-Benz", model: "GLE 450", year: 2024, plate: "KRD-450-EL", vin: "W1N00000000000005", nickname: "GLE", status: "Active", mac: null }] }
+            { id: 1, name: "Deji Ayeni", email: "anywashng@gmail.com.ng", company: "JaFaFa", phone: "", tier: "Enterprise", status: "Active", picture: "", cars: [{ id: "vehicle-001", make: "BMW", model: "X5", year: 2024, plate: "LAG-500-DJ", vin: "WBA00000000000001", nickname: "My X5", status: "Active" }] },
+            { id: 2, name: "Morenike Ayeni", email: "morenike.ayeni@gmail.com", company: "Layer3 Limited", phone: "", tier: "Enterprise", status: "Active", picture: "", cars: [{ id: "vehicle-002", make: "Lexus", model: "LX 600", year: 2024, plate: "VI-600-MO", vin: "JTJ00000000000002", nickname: "LX 600", status: "Active" }] },
+            { id: 3, name: "Michael Ayeni", email: "michaelkage9@gmail.com", company: "HyperSpace Technologies", phone: "", tier: "Enterprise", status: "Active", picture: "", cars: [{ id: "vehicle-003", make: "Land Rover", model: "Defender 110 V8", year: 2023, plate: "LAG-110-MA", vin: "SAL00000000000003", nickname: "Defender", status: "Active" }] },
+            { id: 4, name: "Gabriel Blitzer", email: "ayobamicadel@gmail.com", company: "Blitz Aero", phone: "", tier: "Pro", status: "Active", picture: "", cars: [{ id: "vehicle-004", make: "BMW", model: "M4 Competition", year: 2023, plate: "GBL-004-M", vin: "WBS00000000000004", nickname: "M4", status: "Active" }] },
+            { id: 5, name: "Elizabeth Ayeni", email: "elizabeth.ayeni@alphahealth.org", company: "Alpha Medical Centers", phone: "", tier: "Pro", status: "Active", picture: "", cars: [{ id: "vehicle-005", make: "Mercedes-Benz", model: "GLE 450", year: 2024, plate: "KRD-450-EL", vin: "W1N00000000000005", nickname: "GLE", status: "Active" }] }
         ];
         let MOCK_DATABASE = loadJson(STORAGE_KEY, null) || structuredClone(DEFAULT_DATABASE);
                 let customerUser = null, customerVehicle = null, pendingGoogleUser = null, verifiedRegistrationCode = null;
@@ -766,7 +766,7 @@
             if (!result.ok) { box.className = "verification bad"; box.textContent = result.reason; return false; }
             verifiedRegistrationCode = result.code; box.className = "verification ok"; box.textContent = "Activation code verified ✓ It is available for one-time registration."; return true;
         }
-        function registerVehiclefunction registerVehicle(e) {
+        function registerVehicle(e) {
             e.preventDefault();
             if (!customerUser) return;
             if (!verifyRegistrationActivation() || !verifiedRegistrationCode) { alert("Please verify a valid, unused JaFaFa activation code before registering the vehicle."); return; }
@@ -778,11 +778,11 @@
             if (!consumed.ok) { customerUser.cars = customerUser.cars.filter(c => c !== vehicle); alert(consumed.reason || "Activation failed."); return; }
             saveDatabase(); customerVehicle = vehicle; verifiedRegistrationCode = null; renderCustomer(); customerOpenVehicle(vehicle.id);
         }
-        function customerOpenVehiclefunction customerOpenVehicle(id) {
+        function customerOpenVehicle(id) {
             customerVehicle = (customerUser?.cars || []).find(c => String(c.id) === String(id)); if (!customerVehicle) return;
             vehicleDetailsTitle.textContent = `${customerVehicle.year || ""} ${customerVehicle.make || ""} ${customerVehicle.model || ""}`.trim();
             vehicleDetailsSub.textContent = `${customerVehicle.plate || "No plate"} • ${customerVehicle.status || "Active"}`;
-            vehicleDetails.innerHTML = `<div class="detail"><b>VIN</b>${esc(customerVehicle.vin || "—")}</div><div class="detail"><b>Make</b>${esc(customerVehicle.make || "—")}</div><div class="detail"><b>Model</b>${esc(customerVehicle.model || "—")}</div><div class="detail"><b>Year</b>${esc(customerVehicle.year || "—")}</div><div class="detail"><b>License Plate</b>${esc(customerVehicle.plate || "—")}</div><div class="detail"><b>Vehicle Nickname</b>${esc(customerVehicle.nickname || "—")}</div><div class="detail"><b>Activation</b><span style="color:#4ade80">Verified · Locked</span></div><div class="detail"><b>Dongle Status</b>${customerVehicle.mac ? "<span style='color:#4ade80'>Verified & assigned</span>" : "<span style='color:#fbbf24'>Not assigned</span>"}</div><div class="detail"><b>Vehicle Status</b>${esc(customerVehicle.status || "Active")}</div>`;
+            vehicleDetails.innerHTML = `<div class="detail"><b>VIN</b>${esc(customerVehicle.vin || "—")}</div><div class="detail"><b>Make</b>${esc(customerVehicle.make || "—")}</div><div class="detail"><b>Model</b>${esc(customerVehicle.model || "—")}</div><div class="detail"><b>Year</b>${esc(customerVehicle.year || "—")}</div><div class="detail"><b>License Plate</b>${esc(customerVehicle.plate || "—")}</div><div class="detail"><b>Vehicle Nickname</b>${esc(customerVehicle.nickname || "—")}</div><div class="detail"><b>Activation</b><span style="color:#4ade80">Verified · Locked</span></div><div class="detail"><b>Activation Status</b><span style="color:#4ade80">Verified · Locked</span></div><div class="detail"><b>Vehicle Status</b>${esc(customerVehicle.status || "Active")}</div>`;
             customerShow("customer-vehicle-details");
         }
         function openVehicleEditor() {
