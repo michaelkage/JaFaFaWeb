@@ -392,6 +392,14 @@
       color: #94a3b8;
     }
 
+    .telemetry-v1-grid {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .telemetry-v1-grid .btn-action {
+      min-height: 42px;
+    }
+
     .form-control {
       background: #0f172a;
       border: 1px solid #334155;
@@ -603,188 +611,96 @@
     }
 
 
-    .admin-nav {
+    .activation-panel {
+      margin: 1.5rem 0;
+      padding: 1.25rem 1.4rem;
+      border: 1px solid rgba(56, 189, 248, .18);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .025)
+    }
+
+    .activation-head {
       display: flex;
-      gap: .35rem;
-      margin-left: auto;
-      margin-right: 1rem;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: flex-start;
       flex-wrap: wrap
     }
 
-    .admin-nav button {
-      background: transparent;
-      border: 1px solid transparent;
+    .activation-head h3 {
+      margin: 0 0 .35rem;
+      color: #f8fafc
+    }
+
+    .activation-head p {
+      margin: 0;
       color: #94a3b8;
-      padding: .45rem .7rem;
-      border-radius: 7px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: .78rem
+      font-size: .85rem
     }
 
-    .admin-nav button:hover {
-      color: #38bdf8;
-      border-color: #334155;
-      background: #0f172a
-    }
-
-    .management-card {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 12px;
-      padding: 1.25rem;
-      margin-bottom: 1rem
-    }
-
-    .management-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 1rem
-    }
-
-    .management-grid .full {
-      grid-column: 1/-1
-    }
-
-    .management-card label {
-      display: block;
-      color: #94a3b8;
-      font-size: .78rem;
-      font-weight: 700;
-      margin-bottom: .4rem
-    }
-
-    .management-card input,
-    .management-card select {
-      width: 100%;
-      padding: .75rem .85rem;
-      border-radius: 8px;
-      border: 1px solid #475569;
-      background: #0f172a;
-      color: #f8fafc;
-      outline: none
-    }
-
-    .management-card input:focus,
-    .management-card select:focus {
-      border-color: #38bdf8
-    }
-
-    .management-actions {
+    .activation-stats {
       display: flex;
-      justify-content: flex-end;
-      gap: .6rem;
-      margin-top: 1rem
+      gap: 10px;
+      flex-wrap: wrap
     }
 
-    .management-list {
+    .activation-stats span {
+      padding: .45rem .65rem;
+      border: 1px solid rgba(148, 163, 184, .12);
+      border-radius: 8px;
+      color: #94a3b8;
+      font-size: .72rem
+    }
+
+    .activation-stats b {
+      color: #f8fafc;
+      margin-right: .2rem
+    }
+
+    .activation-list {
+      margin-top: 1rem;
       display: grid;
-      gap: .7rem
+      gap: 7px
     }
 
-    .management-row {
+    .activation-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      padding: .9rem 1rem;
-      border: 1px solid #334155;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: .7rem .8rem;
+      border: 1px solid rgba(148, 163, 184, .08);
       border-radius: 9px;
-      background: #0f172a
+      background: rgba(0, 0, 0, .12)
     }
 
-    .management-row-title {
-      font-weight: 700
+    .activation-row code {
+      color: #67e8f9;
+      font-weight: 700;
+      letter-spacing: .08em
     }
 
-    .management-row-sub {
-      color: #94a3b8;
-      font-size: .78rem;
-      margin-top: .2rem
+    .activation-row small {
+      color: #64748b
     }
 
-    .management-row-actions {
-      display: flex;
-      gap: .4rem
+    .activation-status {
+      margin-left: auto;
+      font-size: .65rem;
+      font-weight: 800;
+      letter-spacing: .06em
     }
 
-    .btn-secondary {
-      background: #0f172a;
-      border: 1px solid #475569;
-      color: #cbd5e1;
-      padding: .55rem .8rem;
-      border-radius: 7px;
-      cursor: pointer;
-      font-weight: 600
+    .activation-status.available {
+      color: #4ade80
     }
 
-    .dashboard-stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1rem;
-      margin-bottom: 1.25rem
-    }
-
-    .stat-card {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 12px;
-      padding: 1.1rem
-    }
-
-    .stat-card span {
-      color: #94a3b8;
-      font-size: .8rem
-    }
-
-    .stat-card strong {
-      display: block;
-      font-size: 1.8rem;
-      margin-top: .25rem;
+    .activation-status.activated {
       color: #38bdf8
     }
 
-    .detail-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: .7rem 1.25rem;
-      color: #cbd5e1
-    }
-
-    .detail-grid div {
-      padding: .5rem 0;
-      border-bottom: 1px solid rgba(255, 255, 255, .05)
-    }
-
-    .detail-grid b {
-      color: #94a3b8;
-      display: block;
-      font-size: .72rem;
-      margin-bottom: .15rem
-    }
-
-    @media(max-width:760px) {
-      .top-bar {
-        flex-wrap: wrap;
-        gap: .7rem
-      }
-
-      .admin-nav {
-        order: 3;
-        width: 100%;
-        margin: 0
-      }
-
-      .management-grid,
-      .dashboard-stats,
-      .detail-grid {
-        grid-template-columns: 1fr
-      }
-
-      .management-row {
-        align-items: flex-start;
-        flex-direction: column
-      }
+    .activation-status.revoked {
+      color: #fb7185
     }
   </style>
 </head>
@@ -792,7 +708,7 @@
 <body>
   <div id="view-unauthenticated" class="auth-container">
     <div class="card">
-      <h1>Telemetry Hub Admin</h1>
+      <h1>Customer Portal</h1>
       <p>
         Sign in with your Google Account to access customer data and telemetry
         logs.
@@ -817,173 +733,8 @@
         </div>
         <button class="btn-logout" onclick="handleSignOut()">Sign Out</button>
       </div>
-
-      <nav class="admin-nav">
-        <button onclick="showScreen('screen-admin-dashboard')">Dashboard</button>
-        <button onclick="showScreen('screen-customers')">Customers</button>
-        <button onclick="showScreen('screen-add-customer')">+ Customer</button>
-        <button onclick="showScreen('screen-vehicles')">Vehicles</button>
-        <button onclick="openAddVehicleForCustomer()">+ Vehicle</button>
-      </nav>
     </header>
     <main class="main-content">
-
-      <section id="screen-admin-dashboard">
-        <div class="view-header">
-          <h2>Admin Dashboard</h2>
-          <p>Manage customers, vehicles, and telemetry.</p>
-        </div>
-        <div class="dashboard-stats">
-          <div class="stat-card"><span>Total Customers</span><strong id="adminCustomerCount">0</strong></div>
-          <div class="stat-card"><span>Total Vehicles</span><strong id="adminVehicleCount">0</strong></div>
-          <div class="stat-card"><span>Active Vehicles</span><strong id="adminActiveVehicleCount">0</strong></div>
-        </div>
-        <div class="management-card">
-          <h3>Quick Actions</h3>
-          <p style="color:#94a3b8;margin:.4rem 0 1rem">Create records or open the existing customer/vehicle workflow.
-          </p>
-          <div class="management-actions" style="justify-content:flex-start">
-            <button class="btn-action" onclick="showScreen('screen-add-customer')">+ Add Customer</button>
-            <button class="btn-secondary" onclick="showScreen('screen-add-vehicle')">+ Add Vehicle</button>
-            <button class="btn-secondary" onclick="showScreen('screen-customers')">Customer Lookup</button>
-          </div>
-        </div>
-      </section>
-
-      <section id="screen-add-customer" hidden>
-        <div class="breadcrumb"><button class="btn-back" onclick="showScreen('screen-admin-dashboard')">←
-            Dashboard</button></div>
-        <div class="view-header">
-          <h2>Add Customer</h2>
-          <p>Create a customer record.</p>
-        </div>
-        <form class="management-card" onsubmit="createCustomer(event)">
-          <div class="management-grid">
-            <div><label>Full Name *</label><input id="newCustomerName" required></div>
-            <div><label>Email *</label><input id="newCustomerEmail" type="email" required></div>
-            <div><label>Phone</label><input id="newCustomerPhone"></div>
-            <div><label>Company</label><input id="newCustomerCompany"></div>
-            <div><label>Tier</label><select id="newCustomerTier">
-                <option>Standard</option>
-                <option>Pro</option>
-                <option>Enterprise</option>
-              </select></div>
-            <div><label>Status</label><select id="newCustomerStatus">
-                <option>Active</option>
-                <option>Inactive</option>
-              </select></div>
-          </div>
-          <div class="management-actions"><button type="button" class="btn-secondary"
-              onclick="showScreen('screen-admin-dashboard')">Cancel</button><button class="btn-action">Create
-              Customer</button></div>
-        </form>
-      </section>
-
-      <section id="screen-customer-details" hidden>
-        <div class="breadcrumb"><button class="btn-back" onclick="showScreen('screen-customers')">← Customers</button>
-        </div>
-        <div class="view-header">
-          <h2 id="adminCustomerDetailsTitle">Customer</h2>
-          <p id="adminCustomerDetailsSubtitle"></p>
-        </div>
-        <div class="management-card">
-          <div id="adminCustomerDetails" class="detail-grid"></div>
-          <div class="management-actions" style="justify-content:flex-start"><button class="btn-action"
-              onclick="openEditCustomer()">Edit Customer</button><button class="btn-secondary"
-              onclick="openAddVehicleForCustomer()">+ Add Vehicle</button></div>
-        </div>
-        <div class="management-card">
-          <h3 style="margin-bottom:1rem">Registered Vehicles</h3>
-          <div id="adminCustomerVehicles" class="management-list"></div>
-        </div>
-      </section>
-
-      <section id="screen-edit-customer" hidden>
-        <div class="breadcrumb"><button class="btn-back" onclick="showScreen('screen-customer-details')">←
-            Customer</button></div>
-        <div class="view-header">
-          <h2>Edit Customer</h2>
-          <p>Update customer information.</p>
-        </div>
-        <form class="management-card" onsubmit="saveCustomerEdits(event)">
-          <div class="management-grid">
-            <div><label>Full Name *</label><input id="editCustomerName" required></div>
-            <div><label>Email *</label><input id="editCustomerEmail" type="email" required></div>
-            <div><label>Phone</label><input id="editCustomerPhone"></div>
-            <div><label>Company</label><input id="editCustomerCompany"></div>
-            <div><label>Tier</label><select id="editCustomerTier">
-                <option>Standard</option>
-                <option>Pro</option>
-                <option>Enterprise</option>
-              </select></div>
-            <div><label>Status</label><select id="editCustomerStatus">
-                <option>Active</option>
-                <option>Inactive</option>
-              </select></div>
-          </div>
-          <div class="management-actions"><button type="button" class="btn-secondary"
-              onclick="showScreen('screen-customer-details')">Cancel</button><button class="btn-action">Save
-              Changes</button></div>
-        </form>
-      </section>
-
-      <section id="screen-add-vehicle" hidden>
-        <div class="breadcrumb"><button class="btn-back" onclick="showScreen('screen-admin-dashboard')">←
-            Dashboard</button></div>
-        <div class="view-header">
-          <h2>Add Vehicle</h2>
-          <p>Register a vehicle and attach it to a customer.</p>
-        </div>
-        <form class="management-card" onsubmit="createVehicle(event)">
-          <div class="management-grid">
-            <div class="full"><label>Customer *</label><select id="newVehicleCustomer" required></select></div>
-            <div><label>Vehicle ID / Device ID *</label><input id="newVehicleId" required></div>
-            <div><label>VIN</label><input id="newVehicleVin"></div>
-            <div><label>Make *</label><input id="newVehicleMake" required></div>
-            <div><label>Model *</label><input id="newVehicleModel" required></div>
-            <div><label>Year *</label><input id="newVehicleYear" type="number" required></div>
-            <div><label>License Plate</label><input id="newVehiclePlate"></div>
-            <div><label>Mileage</label><input id="newVehicleMileage" placeholder="0 mi"></div>
-            <div><label>Status</label><select id="newVehicleStatus">
-                <option>Active</option>
-                <option>Inactive</option>
-                <option>Maintenance</option>
-              </select></div>
-          </div>
-          <div class="management-actions"><button type="button" class="btn-secondary"
-              onclick="showScreen('screen-admin-dashboard')">Cancel</button><button class="btn-action">Add
-              Vehicle</button></div>
-        </form>
-      </section>
-
-      <section id="screen-edit-vehicle" hidden>
-        <div class="breadcrumb"><button class="btn-back" onclick="showScreen('screen-customer-details')">←
-            Customer</button></div>
-        <div class="view-header">
-          <h2>Edit Vehicle</h2>
-          <p>Update vehicle information.</p>
-        </div>
-        <form class="management-card" onsubmit="saveVehicleEdits(event)">
-          <div class="management-grid">
-            <div><label>Vehicle ID / Device ID</label><input id="editVehicleId" disabled></div>
-            <div><label>VIN</label><input id="editVehicleVin"></div>
-            <div><label>Make *</label><input id="editVehicleMake" required></div>
-            <div><label>Model *</label><input id="editVehicleModel" required></div>
-            <div><label>Year *</label><input id="editVehicleYear" type="number" required></div>
-            <div><label>License Plate</label><input id="editVehiclePlate"></div>
-            <div><label>Mileage</label><input id="editVehicleMileage"></div>
-            <div><label>Status</label><select id="editVehicleStatus">
-                <option>Active</option>
-                <option>Inactive</option>
-                <option>Maintenance</option>
-              </select></div>
-          </div>
-          <div class="management-actions"><button type="button" class="btn-secondary"
-              onclick="showScreen('screen-customer-details')">Cancel</button><button class="btn-action">Save
-              Changes</button></div>
-        </form>
-      </section>
-
       <section id="screen-customers">
         <div class="view-header">
           <h2>Customer Lookup</h2>
@@ -1039,10 +790,9 @@
               <span id="summaryCustCarsCount"></span>
             </div>
           </div>
-          <div class="management-actions" style="justify-content:stretch">
-            <button class="btn-action" style="flex:1" onclick="confirmCustomerSelection()">View Vehicles →</button>
-            <button class="btn-secondary" style="flex:1" onclick="openCustomerDetails()">Manage Customer</button>
-          </div>
+          <button class="btn-action" style="width: 100%; text-align: center" onclick="confirmCustomerSelection()">
+            View Vehicles for this Customer →
+          </button>
         </div>
       </section>
       <section id="screen-vehicles" hidden>
@@ -1101,7 +851,7 @@
               <strong>Mileage:</strong> <span id="summaryCarMileage"></span>
             </div>
           </div>
-          <button class="btn-action" style="width: 100%; text-align: center" onclick="metryScreen()">
+          <button class="btn-action" style="width: 100%; text-align: center" onclick="showTelemetryScreen()">
             Launch Telemetry Dashboard →
           </button>
         </div>
@@ -1122,9 +872,6 @@
           <div style="display: flex; align-items: center; gap: 0.75rem;">
             <span id="telemetryPlate" class="car-plate"
               style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.875rem;">--</span>
-            <span id="telemetryMac" class="car-mac"
-              style="background: rgba(148, 163, 184, 0.1); color: #94a3b8; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 500; font-size: 0.875rem; font-family: monospace;">VID:
-              --</span>
             <span id="telemetryStatus" class="status-badge status-active">Active</span>
           </div>
         </div>
@@ -1226,63 +973,124 @@
         </div>
 
         <div class="filter-panel" style="margin-top: 1.5rem;">
-          <h4 style="margin-bottom: 1rem; color: #38bdf8">
-            Analyze Telemetry Data
-          </h4>
-          <div class="filter-form">
+          <h4 style="margin-bottom: 0.35rem; color: #38bdf8">Analyze Telemetry Data</h4>
+          <p style="margin-bottom: 1.25rem; color: #94a3b8; font-size: 0.85rem; line-height: 1.5;">
+            Combine independent telemetry categories to find the exact operating conditions you want to inspect.
+          </p>
+
+          <div class="filter-form telemetry-v1-grid">
             <div class="form-group">
-              <label for="minSpeed">Speed Filter</label>
-              <select id="minSpeed" class="form-control">
-                <option value="0">All Speeds (>= 0 Km/h)</option>
-                <option value="15">Idle / Crawling (>= 15 Km/h)</option>
-                <option value="40">City Driving (>= 40 Km/h)</option>
-                <option value="65">Highway Cruise (>= 65 Km/h)</option>
-                <option value="75">High Speed / Excessive (>= 75 Km/h)</option>
-                <option value="90">Extreme Speed (>= 90 Km/h)</option>
+              <label for="drivingCondition">Driving Condition</label>
+              <select id="drivingCondition" class="form-control">
+                <option value="all">All Driving Conditions</option>
+                <option value="off">Engine Off / Parked</option>
+                <option value="stationary">Engine Running / Stationary</option>
+                <option value="idling">Idling</option>
+                <option value="traffic">Low-Speed Traffic</option>
+                <option value="urban">Urban Driving</option>
+                <option value="cruise">Normal Cruising</option>
+                <option value="highway">Highway Cruising</option>
+                <option value="acceleration">Hard Acceleration</option>
               </select>
             </div>
+
             <div class="form-group">
-              <label for="metricType">Focus / Metric Filter</label>
-              <select id="metricType" class="form-control">
-                <option value="all">Show All Logs</option>
-                <option value="speed">Speed Alerts (>75 Km/h)</option>
-                <option value="temp">Thermal Warnings (>105°C)</option>
-                <option value="overheat">Critical Overheat (>110°C)</option>
-                <option value="battery">
-                  Low Battery Voltage (&lt;12.0V)
-                </option>
-                <option value="rpm">High RPM Warning (>5500 rpm)</option>
+              <label for="engineCondition">Engine Condition</label>
+              <select id="engineCondition" class="form-control">
+                <option value="all">Any Engine Condition</option>
+                <option value="cold">Cold Start / Cold Engine</option>
+                <option value="warming">Warming Up</option>
+                <option value="normal">Normal Operating Temperature</option>
+                <option value="high">High Temperature</option>
+                <option value="overheat">Overheating Risk</option>
               </select>
             </div>
+
             <div class="form-group">
-              <label for="engineStatus">Driving State</label>
-              <select id="engineStatus" class="form-control">
-                <option value="all">All States</option>
-                <option value="running">Engine Running / Driving</option>
-                <option value="idling">Idling Only</option>
-                <option value="off">Ignition Off / Parked</option>
-                <option value="TrafficIdle_HeatSoak">Traffic Idle HeatSoak</option>
-                <option value="NormalCruising">Normal Cruising</option>
-                <option value="HighLoad_Overtaking">High Load Overtaking</option>
-                <option value="OverheatingWarning">Overheating Warning</option>
-                <option value="StopAndGo_Traffic">Stop and Go Traffic</option>
-                <option value="RainySeason_Cruising">Rainy Season Cruising</option>
-                <option value="Nighttime_CityDrive">Nighttime City Drive</option>
-                <option value="Highway_SteadyCruise">Highway Steady Cruise</option>
-                <option value="LowFuel_LimpMode">LowFuel LimpMode</option>
-                <option value="AC_Load_Stress">AC Load Stress</option>
-                <option value="ColdStart_Morning">Cold Start Morning</option>
-                <option value="HillClimb_HeavyLoad">Hill Climb Heavy Load</option>
+              <label for="performanceLoad">Performance / Load</label>
+              <select id="performanceLoad" class="form-control">
+                <option value="all">All Performance Levels</option>
+                <option value="highRpm">High RPM (≥ 4500 rpm)</option>
+                <option value="highLoad">High Engine Load (≥ 70%)</option>
+                <option value="highThrottle">High Throttle (≥ 70%)</option>
+                <option value="highAirflow">High Airflow (≥ 60 g/s)</option>
+                <option value="lowLoad">Low Engine Load (≤ 25%)</option>
+                <option value="lowAirflow">Low Airflow (≤ 8 g/s)</option>
+                <option value="hardAcceleration">Hard Acceleration</option>
               </select>
             </div>
+
+            <div class="form-group">
+              <label for="fuelEconomy">Fuel &amp; Economy</label>
+              <select id="fuelEconomy" class="form-control">
+                <option value="all">All Fuel Conditions</option>
+                <option value="lowFuel">Low Fuel (&lt; 25%)</option>
+                <option value="veryLowFuel">Very Low Fuel (&lt; 10%)</option>
+                <option value="goodEconomy">Good Economy (≥ 20 mpg)</option>
+                <option value="poorEconomy">Poor Economy (&lt; 10 mpg)</option>
+                <option value="heavyConsumption">Heavy Fuel Consumption (&lt; 8 mpg)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="electricalSystem">Electrical System</label>
+              <select id="electricalSystem" class="form-control">
+                <option value="all">All Electrical Conditions</option>
+                <option value="engineOffLow">Engine-Off Low Voltage (&lt; 12.2 V)</option>
+                <option value="chargingNormal">Charging Normally (≥ 13.2 V)</option>
+                <option value="lowCharging">Low Charging Voltage (&lt; 13.2 V)</option>
+                <option value="highCharging">High Charging Voltage (&gt; 14.8 V)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="airIntake">Air / Intake</label>
+              <select id="airIntake" class="form-control">
+                <option value="all">All Air / Intake Conditions</option>
+                <option value="highIat">High Intake Temperature (≥ 45°C)</option>
+                <option value="lowIat">Low Intake Temperature (&lt; 15°C)</option>
+                <option value="highMaf">High Airflow (≥ 60 g/s)</option>
+                <option value="lowMaf">Low Airflow (≤ 8 g/s)</option>
+                <option value="highThrottle">High Throttle (≥ 70%)</option>
+                <option value="lowThrottle">Low Throttle (≤ 20%)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="coolingSystem">Cooling System</label>
+              <select id="coolingSystem" class="form-control">
+                <option value="all">All Cooling Conditions</option>
+                <option value="cold">Cold (&lt; 60°C)</option>
+                <option value="warming">Warming Up (60–85°C)</option>
+                <option value="normal">Normal Operating Range (85–105°C)</option>
+                <option value="high">High Temperature (&gt; 105°C)</option>
+                <option value="heatSoak">Heat Soak</option>
+                <option value="overheat">Potential Overheat (&gt; 115°C)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="environment">Environment</label>
+              <select id="environment" class="form-control">
+                <option value="all">All Environmental Conditions</option>
+                <option value="coldAmbient">Cold Ambient (&lt; 20°C)</option>
+                <option value="normalAmbient">Normal Ambient (20–32°C)</option>
+                <option value="hotAmbient">Hot Ambient (≥ 32°C)</option>
+                <option value="highAltitude">Higher Altitude / Low Pressure (&lt; 95 kPa)</option>
+                <option value="veryLowPressure">Very Low Barometric Pressure (&lt; 90 kPa)</option>
+              </select>
+            </div>
+
             <div class="form-group">
               <label for="startDate">Filter by Date</label>
               <input type="date" id="startDate" class="form-control" />
             </div>
+
             <div class="form-group">
               <label for="startTime">Filter by Time of Day</label>
               <input type="time" id="startTime" class="form-control" />
             </div>
+
             <div class="form-group">
               <label for="timeRange">Time Preset</label>
               <select id="timeRange" class="form-control">
@@ -1293,7 +1101,8 @@
                 <option value="30d">Past 30 Days</option>
               </select>
             </div>
-            <button class="btn-action" onclick="runTelemetryAnalysis()">
+
+            <button class="btn-action" type="button" onclick="runTelemetryAnalysis()">
               Analyze Data
             </button>
           </div>
@@ -1304,6 +1113,85 @@
       <script>
         const GOOGLE_CLIENT_ID = "618464687927-3qhsv0r9012cn0e50g963vk4n71pb54r.apps.googleusercontent.com";
         const API_KEY = "AIzaSyDnP5gQ-CWLj1J4xEd0T6xvkboRZI_zoAM";
+        /*
+         * ============================================================
+         * JAFAFA ACTIVATION CODES (PROTOTYPE)
+         * ============================================================
+         * Activation codes are the customer-facing ownership credential.
+         * Vehicle IDs and dongle MAC addresses remain internal telemetry
+         * identifiers and are deliberately NOT exposed in this portal UI.
+         *
+         * LONG-TERM GOAL: periodic re-verification. After activation, JaFaFa
+         * should periodically ask the customer to re-authenticate/re-verify
+         * ownership instead of trusting an activation forever.
+         * ============================================================
+         */
+        const ACTIVATION_KEY = "jafafa_activation_codes_v1";
+        const activationSeed = [
+          { code: "JF7K-92PM-X4QD", status: "available" },
+          { code: "JFAF-24QX-7MNP", status: "available" },
+          { code: "JFAF-8R2K-5WLD", status: "available" }
+        ];
+        function loadActivationCodes() {
+          try {
+            const rows = JSON.parse(localStorage.getItem(ACTIVATION_KEY) || "null");
+            if (Array.isArray(rows)) return rows;
+          } catch { }
+          localStorage.setItem(ACTIVATION_KEY, JSON.stringify(activationSeed));
+          return activationSeed.map(x => ({ ...x }));
+        }
+        function saveActivationCodes(rows) { localStorage.setItem(ACTIVATION_KEY, JSON.stringify(rows)); }
+        function normalizeActivationCode(value) {
+          return String(value || "").toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/(.{4})(?=.)/g, "$1-").slice(0, 14);
+        }
+        function activationSummary() {
+          const rows = loadActivationCodes();
+          const available = rows.filter(x => x.status === "available").length;
+          const activated = rows.filter(x => x.status === "activated").length;
+          const revoked = rows.filter(x => x.status === "revoked").length;
+          return { rows, available, activated, revoked };
+        }
+        function createActivationCode() {
+          const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+          let raw = "";
+          for (let i = 0; i < 12; i++) raw += chars[Math.floor(Math.random() * chars.length)];
+          return normalizeActivationCode(raw);
+        }
+        function generateActivationCode() {
+          const rows = loadActivationCodes();
+          let code = createActivationCode();
+          while (rows.some(x => normalizeActivationCode(x.code) === code)) code = createActivationCode();
+          rows.unshift({ code, status: "available", createdAt: new Date().toISOString() });
+          saveActivationCodes(rows);
+          renderActivationPanel();
+          return code;
+        }
+        function revokeActivationCode(code) {
+          const normalized = normalizeActivationCode(code);
+          const rows = loadActivationCodes();
+          const item = rows.find(x => normalizeActivationCode(x.code) === normalized);
+          if (!item || item.status !== "available") return false;
+          item.status = "revoked";
+          item.revokedAt = new Date().toISOString();
+          saveActivationCodes(rows);
+          renderActivationPanel();
+          return true;
+        }
+        function renderActivationPanel() {
+          const host = document.getElementById("activationCodePanel"); if (!host) return;
+          const a = activationSummary();
+          host.innerHTML = `<div class="activation-panel">
+          <div class="activation-head"><div><h3>Activation Codes</h3><p>Issue and monitor one-time product activation credentials. Vehicle IDs and dongle MAC addresses are not exposed here.</p></div><div><button type="button" onclick="generateActivationCode()" style="padding:.55rem .8rem;border:1px solid rgba(56,189,248,.3);border-radius:8px;background:rgba(56,189,248,.08);color:#67e8f9;cursor:pointer;font-weight:700;">Generate Code</button></div><div class="activation-stats"><span><b>${a.available}</b> Available</span><span><b>${a.activated}</b> Activated</span><span><b>${a.revoked}</b> Revoked</span></div></div>
+          <div class="activation-list">${a.rows.map(x => `<div class="activation-row"><code>${escapeHtml(x.code)}</code><span class="activation-status ${x.status}">${x.status.toUpperCase()}</span>${x.customerEmail ? `<small>${escapeHtml(x.customerEmail)}</small>` : ""}${x.createdAt ? `<small>Created ${escapeHtml(new Date(x.createdAt).toLocaleString())}</small>` : ""}${x.activatedAt ? `<small>Activated ${escapeHtml(new Date(x.activatedAt).toLocaleString())}</small>` : ""}${x.status === "available" ? `<button type="button" onclick="revokeActivationCode(${JSON.stringify(x.code)})" style="margin-left:auto;padding:.35rem .55rem;border:1px solid rgba(251,113,133,.3);border-radius:7px;background:transparent;color:#fb7185;cursor:pointer;">Revoke</button>` : ""}</div>`).join("")}</div>
+        </div>`;
+        }
+        function ensureActivationPanel() {
+          if (document.getElementById("activationCodePanel")) return;
+          const dashboard = document.querySelector("#screen-dashboard");
+          if (!dashboard) return;
+          const wrap = document.createElement("div"); wrap.id = "activationCodePanel"; dashboard.appendChild(wrap); renderActivationPanel();
+        }
+
         const MOCK_DATABASE = [
           {
             id: 1,
@@ -2448,8 +2336,8 @@
           },
         ];
         let activeCustomer = null;
+        document.addEventListener("DOMContentLoaded", () => setTimeout(ensureActivationPanel, 0));
         let activeCar = null;
-        loadMockDatabase();
 
         /*
           These values remember the current table state.
@@ -2462,9 +2350,9 @@
         /* Screen navigation: hides all dashboard screens and shows the requested one. */
         function showScreen(screenIdToShow) {
           const screens = [
-            "screen-admin-dashboard", "screen-customers", "screen-customer-details",
-            "screen-edit-customer", "screen-add-customer", "screen-vehicles",
-            "screen-add-vehicle", "screen-edit-vehicle", "screen-telemetry",
+            "screen-customers",
+            "screen-vehicles",
+            "screen-telemetry",
           ];
           screens.forEach((id) => {
             const el = document.getElementById(id);
@@ -2502,7 +2390,7 @@
           document.getElementById("view-authenticated").hidden = false;
           document.getElementById("customerSearchInput").value = "";
           document.getElementById("selectedCustomerSummary").hidden = true;
-          refreshAdminDashboard(); populateVehicleCustomerSelect(); showScreen("screen-admin-dashboard");
+          showScreen("screen-customers");
         }
         /* Google logout: hides the dashboard and returns to the login screen. */
         function handleSignOut() {
@@ -2510,22 +2398,6 @@
           document.getElementById("view-authenticated").hidden = true;
           document.getElementById("view-unauthenticated").hidden = false;
         }
-
-        function saveMockDatabase() { localStorage.setItem("telemetryHubDatabase", JSON.stringify(MOCK_DATABASE)) }
-        function loadMockDatabase() { try { const s = localStorage.getItem("telemetryHubDatabase"); if (s) { const p = JSON.parse(s); if (Array.isArray(p)) { MOCK_DATABASE.length = 0; p.forEach(c => MOCK_DATABASE.push(c)) } } } catch (e) { console.warn(e) } }
-        function refreshAdminDashboard() { const v = MOCK_DATABASE.flatMap(c => c.cars || []); document.getElementById("adminCustomerCount").textContent = MOCK_DATABASE.length; document.getElementById("adminVehicleCount").textContent = v.length; document.getElementById("adminActiveVehicleCount").textContent = v.filter(x => x.status === "Active").length }
-        function populateVehicleCustomerSelect() { const s = document.getElementById("newVehicleCustomer"); if (!s) return; s.innerHTML = MOCK_DATABASE.map(c => `<option value="${c.id}">${escapeHtml(c.name)}${c.company ? " — " + escapeHtml(c.company) : ""}</option>`).join(""); if (activeCustomer) s.value = String(activeCustomer.id) }
-        function createCustomer(e) { e.preventDefault(); const c = { id: Date.now(), name: newCustomerName.value.trim(), email: newCustomerEmail.value.trim(), phone: newCustomerPhone.value.trim(), company: newCustomerCompany.value.trim(), tier: newCustomerTier.value, status: newCustomerStatus.value, cars: [] }; MOCK_DATABASE.push(c); activeCustomer = c; saveMockDatabase(); refreshAdminDashboard(); renderAdminCustomerDetails(); e.target.reset(); showScreen("screen-customer-details") }
-        function openCustomerDetails() { if (!activeCustomer) return; renderAdminCustomerDetails(); showScreen("screen-customer-details") }
-        function renderAdminCustomerDetails() { if (!activeCustomer) return; adminCustomerDetailsTitle.textContent = activeCustomer.name; adminCustomerDetailsSubtitle.textContent = `${activeCustomer.company || "Individual customer"} • Customer ID ${activeCustomer.id}`; adminCustomerDetails.innerHTML = `<div><b>Email</b>${escapeHtml(activeCustomer.email || "—")}</div><div><b>Phone</b>${escapeHtml(activeCustomer.phone || "—")}</div><div><b>Company</b>${escapeHtml(activeCustomer.company || "—")}</div><div><b>Tier</b>${escapeHtml(activeCustomer.tier || "—")}</div><div><b>Status</b>${escapeHtml(activeCustomer.status || "Active")}</div><div><b>Vehicles</b>${activeCustomer.cars?.length || 0}</div>`; const cars = activeCustomer.cars || []; adminCustomerVehicles.innerHTML = cars.length ? cars.map(car => `<div class="management-row"><div><div class="management-row-title">${escapeHtml(`${car.year || ""} ${car.make || ""} ${car.model || ""}`.trim())}</div><div class="management-row-sub">${escapeHtml(car.plate || "No plate")} • ${escapeHtml(car.status || "Active")} • ID ${escapeHtml(car.id)}</div></div><div class="management-row-actions"><button class="btn-secondary" onclick="openEditVehicle('${String(car.id).replace(/'/g, "\\'")}')">Edit</button><button class="btn-action" onclick="openVehicleTelemetryFromAdmin('${String(car.id).replace(/'/g, "\\'")}')">Telemetry</button></div></div>`).join("") : "<div style='color:#94a3b8'>No vehicles registered.</div>" }
-        function openEditCustomer() { if (!activeCustomer) return; editCustomerName.value = activeCustomer.name || ""; editCustomerEmail.value = activeCustomer.email || ""; editCustomerPhone.value = activeCustomer.phone || ""; editCustomerCompany.value = activeCustomer.company || ""; editCustomerTier.value = activeCustomer.tier || "Standard"; editCustomerStatus.value = activeCustomer.status || "Active"; showScreen("screen-edit-customer") }
-        function saveCustomerEdits(e) { e.preventDefault(); if (!activeCustomer) return; activeCustomer.name = editCustomerName.value.trim(); activeCustomer.email = editCustomerEmail.value.trim(); activeCustomer.phone = editCustomerPhone.value.trim(); activeCustomer.company = editCustomerCompany.value.trim(); activeCustomer.tier = editCustomerTier.value; activeCustomer.status = editCustomerStatus.value; saveMockDatabase(); renderAdminCustomerDetails(); showScreen("screen-customer-details") }
-        function openAddVehicleForCustomer() { populateVehicleCustomerSelect(); showScreen("screen-add-vehicle") }
-        function createVehicle(e) { e.preventDefault(); const c = MOCK_DATABASE.find(x => x.id === Number(newVehicleCustomer.value)); if (!c) return; const v = { id: newVehicleId.value.trim(), vin: newVehicleVin.value.trim(), make: newVehicleMake.value.trim(), model: newVehicleModel.value.trim(), year: Number(newVehicleYear.value), plate: newVehiclePlate.value.trim(), mileage: newVehicleMileage.value.trim() || "0 mi", status: newVehicleStatus.value, telemetry: [] }; c.cars = c.cars || []; c.cars.push(v); activeCustomer = c; activeCar = v; saveMockDatabase(); refreshAdminDashboard(); renderAdminCustomerDetails(); e.target.reset(); showScreen("screen-customer-details") }
-        function openEditVehicle(id) { if (!activeCustomer) return; activeCar = activeCustomer.cars.find(c => String(c.id) === String(id)); if (!activeCar) return; editVehicleId.value = activeCar.id || ""; editVehicleVin.value = activeCar.vin || ""; editVehicleMake.value = activeCar.make || ""; editVehicleModel.value = activeCar.model || ""; editVehicleYear.value = activeCar.year || ""; editVehiclePlate.value = activeCar.plate || ""; editVehicleMileage.value = activeCar.mileage || ""; editVehicleStatus.value = activeCar.status || "Active"; showScreen("screen-edit-vehicle") }
-        function saveVehicleEdits(e) { e.preventDefault(); if (!activeCar) return; activeCar.vin = editVehicleVin.value.trim(); activeCar.make = editVehicleMake.value.trim(); activeCar.model = editVehicleModel.value.trim(); activeCar.year = Number(editVehicleYear.value); activeCar.plate = editVehiclePlate.value.trim(); activeCar.mileage = editVehicleMileage.value.trim(); activeCar.status = editVehicleStatus.value; saveMockDatabase(); renderAdminCustomerDetails(); showScreen("screen-customer-details") }
-        function openVehicleTelemetryFromAdmin(id) { if (!activeCustomer) return; activeCar = activeCustomer.cars.find(c => String(c.id) === String(id)); if (activeCar) showTelemetryScreen() }
-
         /* Customer search: finds customers matching what the user has typed. */
         function onCustomerSearchInput() {
           const query = document
@@ -2652,11 +2524,9 @@
           const carTitleEl = document.getElementById("telemetryCarTitle");
           const carOwnerEl = document.getElementById("telemetryCarOwner");
           const plateEl = document.getElementById("telemetryPlate");
-          const macEl = document.getElementById("telemetryMac");
           if (carTitleEl) carTitleEl.innerText = `${activeCar.make || ''} ${activeCar.model || ''}`.trim() || activeCar.name || "Vehicle Overview";
           if (carOwnerEl) carOwnerEl.innerText = activeCustomer?.name ? `Owner: ${activeCustomer.name}` : "--";
           if (plateEl) plateEl.innerText = activeCar.plate || "--";
-          if (macEl) macEl.innerText = activeCar.mac ? `VID: ${activeCar.mac}` : `VID: ${activeCar.id || '--'}`;
           const tableBody = document.getElementById("telemetryTableBody");
           /*
             Show a temporary loading message so the user knows the dashboard
@@ -2716,31 +2586,21 @@
           }
           if (typeof showScreen === "function") showScreen("screen-telemetry");
         }
-
-        /*
-         * ================================================================
-         * FILTER EVENT LISTENERS
-         * ================================================================
-         *
-         * addEventListener() tells the browser:
-         *
-         *   "When this control changes, run this function."
-         *
-         * Every filter control calls runTelemetryAnalysis(), so the table
-         * refreshes immediately after the user changes a filter.
-         *
-         * This avoids requiring a separate "refresh" button just to apply
-         * a changed filter.
-         *
-         * ================================================================
-         */
-
-        document.getElementById("minSpeed")?.addEventListener("input", runTelemetryAnalysis);
-        document.getElementById("metricType")?.addEventListener("change", runTelemetryAnalysis);
-        document.getElementById("engineStatus")?.addEventListener("change", runTelemetryAnalysis);
-        document.getElementById("startDate")?.addEventListener("change", runTelemetryAnalysis);
-        document.getElementById("startTime")?.addEventListener("change", runTelemetryAnalysis);
-        document.getElementById("timeRange")?.addEventListener("change", runTelemetryAnalysis);
+        [
+          "drivingCondition",
+          "engineCondition",
+          "performanceLoad",
+          "fuelEconomy",
+          "electricalSystem",
+          "airIntake",
+          "coolingSystem",
+          "environment",
+          "startDate",
+          "startTime",
+          "timeRange"
+        ].forEach((id) => {
+          document.getElementById(id)?.addEventListener("change", runTelemetryAnalysis);
+        });
 
         /*
           The table headers are now ready to respond to clicks.
@@ -2948,92 +2808,240 @@
           This function reads the filter controls, checks every loaded record,
           and sends the matching records to the table.
         */
+        function normalizeTelemetryDate(value) {
+          if (value == null) return null;
+          const raw = String(value).trim();
+          if (!raw) return null;
+
+          // The supplied telemetry can use "2026-07-2705:59:07" without
+          // the normal separator between date and time. Normalize it first.
+          const normalized = raw.replace(
+            /^(\d{4}-\d{2}-\d{2})(\d{2}:\d{2}:\d{2})$/,
+            "$1T$2"
+          );
+
+          const date = new Date(normalized);
+          return Number.isNaN(date.getTime()) ? null : date;
+        }
+
+        function telemetryRecordMatchesCategory(log, category, value) {
+          if (value === "all") return true;
+
+          const speed = Number(log.speed ?? 0);
+          const rpm = Number(log.rpm ?? 0);
+          const maf = Number(log.maf ?? 0);
+          const coolant = Number(log.ctemp ?? log.temp ?? 0);
+          const fuel = Number(log.fuel ?? 0);
+          const voltage = Number(log.voltage ?? 0);
+          const mpg = Number(log.mpg ?? 0);
+          const iat = Number(log.iat ?? 0);
+          const throttle = Number(log.throttle ?? 0);
+          const load = Number(log.load ?? 0);
+          const ambient = Number(log.atemp ?? 0);
+          const baro = Number(log.bpressure ?? 0);
+
+          switch (category) {
+            case "drivingCondition":
+              switch (value) {
+                case "off":
+                  return rpm <= 0;
+                case "stationary":
+                  return speed <= 2 && rpm > 0;
+                case "idling":
+                  return speed <= 2 && rpm >= 550 && rpm <= 1000;
+                case "traffic":
+                  return speed > 2 && speed <= 30 && rpm > 0 && rpm <= 2500;
+                case "urban":
+                  return speed > 15 && speed <= 65 && rpm >= 900 && rpm <= 3000;
+                case "cruise":
+                  return speed >= 45 && speed <= 95 && rpm >= 1100 && rpm <= 3000 && load <= 60;
+                case "highway":
+                  return speed >= 80 && rpm >= 1400 && rpm <= 3200 && load <= 60;
+                case "acceleration":
+                  return speed >= 10 && throttle >= 60 && load >= 60 && rpm >= 1500;
+                default:
+                  return true;
+              }
+
+            case "engineCondition":
+              switch (value) {
+                case "cold":
+                  return coolant < 60;
+                case "warming":
+                  return coolant >= 60 && coolant < 85;
+                case "normal":
+                  return coolant >= 85 && coolant <= 105;
+                case "high":
+                  return coolant > 105 && coolant <= 115;
+                case "overheat":
+                  return coolant > 115 || (coolant > 110 && load >= 60);
+                default:
+                  return true;
+              }
+
+            case "performanceLoad":
+              switch (value) {
+                case "highRpm":
+                  return rpm >= 4500;
+                case "highLoad":
+                  return load >= 70;
+                case "highThrottle":
+                  return throttle >= 70;
+                case "highAirflow":
+                  return maf >= 60;
+                case "lowLoad":
+                  return load <= 25;
+                case "lowAirflow":
+                  return maf <= 8;
+                case "hardAcceleration":
+                  return throttle >= 60 && load >= 60 && rpm >= 1500;
+                default:
+                  return true;
+              }
+
+            case "fuelEconomy":
+              switch (value) {
+                case "lowFuel":
+                  return fuel < 25;
+                case "veryLowFuel":
+                  return fuel < 10;
+                case "goodEconomy":
+                  return mpg >= 20;
+                case "poorEconomy":
+                  return mpg > 0 && mpg < 10;
+                case "heavyConsumption":
+                  return mpg > 0 && mpg < 8;
+                default:
+                  return true;
+              }
+
+            case "electricalSystem":
+              switch (value) {
+                case "engineOffLow":
+                  return rpm <= 0 && voltage > 0 && voltage < 12.2;
+                case "chargingNormal":
+                  return rpm > 500 && voltage >= 13.2 && voltage <= 14.8;
+                case "lowCharging":
+                  return rpm > 500 && voltage > 0 && voltage < 13.2;
+                case "highCharging":
+                  return rpm > 500 && voltage > 14.8;
+                default:
+                  return true;
+              }
+
+            case "airIntake":
+              switch (value) {
+                case "highIat":
+                  return iat >= 45;
+                case "lowIat":
+                  return iat < 15;
+                case "highMaf":
+                  return maf >= 60;
+                case "lowMaf":
+                  return maf <= 8;
+                case "highThrottle":
+                  return throttle >= 70;
+                case "lowThrottle":
+                  return throttle <= 20;
+                default:
+                  return true;
+              }
+
+            case "coolingSystem":
+              switch (value) {
+                case "cold":
+                  return coolant < 60;
+                case "warming":
+                  return coolant >= 60 && coolant < 85;
+                case "normal":
+                  return coolant >= 85 && coolant <= 105;
+                case "high":
+                  return coolant > 105 && coolant <= 115;
+                case "heatSoak":
+                  return speed <= 5 && rpm >= 550 && rpm <= 1000 && iat >= 45 && coolant >= 95;
+                case "overheat":
+                  return coolant > 115;
+                default:
+                  return true;
+              }
+
+            case "environment":
+              switch (value) {
+                case "coldAmbient":
+                  return ambient < 20;
+                case "normalAmbient":
+                  return ambient >= 20 && ambient < 32;
+                case "hotAmbient":
+                  return ambient >= 32;
+                case "highAltitude":
+                  return baro > 0 && baro < 95;
+                case "veryLowPressure":
+                  return baro > 0 && baro < 90;
+                default:
+                  return true;
+              }
+
+            default:
+              return true;
+          }
+        }
+
+        /*
+          VERSION 1 TELEMETRY FILTERING
+          Each category is independent. A record only needs to satisfy the
+          selected condition in every category whose selector is not "all".
+          Date/time filters remain independent of the vehicle-condition filters.
+        */
 
         /*
          * ================================================================
          * BEGINNER GUIDE: TELEMETRY FILTERING
          * ================================================================
          *
-         * This section contains the logic that decides which telemetry
-         * records should be shown in the dashboard.
+         * Version 1 uses independent telemetry categories instead of the
+         * old collection of hard-coded driving scenarios.
          *
-         * Think of a telemetry record as one snapshot of the vehicle:
+         * The eight main categories are:
          *
-         *   {
-         *     speed: 72,
-         *     rpm: 2100,
-         *     ctemp: 96,
-         *     fuel: 48,
-         *     voltage: 14.1,
-         *     ...
-         *   }
+         *   1. Driving Condition
+         *   2. Engine Condition
+         *   3. Performance / Load
+         *   4. Fuel & Economy
+         *   5. Electrical System
+         *   6. Air / Intake
+         *   7. Cooling System
+         *   8. Environment
          *
-         * The function below:
+         * Each category answers a different question about the vehicle.
+         * For example:
          *
-         *   1. Reads the values selected in the filter controls.
-         *   2. Reads every telemetry record belonging to the active vehicle.
-         *   3. Converts sensor values into numbers so comparisons are reliable.
-         *   4. Applies the selected filters.
-         *   5. Keeps only records that pass ALL selected conditions.
-         *   6. Sends the surviving records to the telemetry table.
+         *   Driving Condition -> What was the vehicle doing?
+         *   Engine Condition  -> What state was the engine in?
+         *   Performance       -> How hard was the engine working?
+         *   Fuel & Economy    -> What was fuel usage/level like?
+         *   Electrical        -> Was the electrical system behaving normally?
          *
-         * IMPORTANT:
-         * The filter values are not changing the vehicle data itself.
-         * They only decide which records are temporarily displayed.
+         * The filters are independent, so the user can combine them.
+         * A telemetry record must pass every selected filter before it is
+         * included in the displayed results.
          *
          * ================================================================
          */
 
         function runTelemetryAnalysis() {
-          /*
-           * VERSION 2 — EXISTING SCENARIO FILTER SYSTEM
-           *
-           * The original filter names are intentionally preserved exactly.
-           * Only the numerical conditions are calibrated around the telemetry
-           * fields actually supplied by the 2008 BMW X5 E70 N52 dataset.
-           *
-           * Important:
-           * - These are telemetry classification bands, not BMW DME fault thresholds.
-           * - Rain/night/hill/A/C/limp-mode are inferred from available signals because
-           *   the dataset does not contain direct rain, light, grade, compressor-load,
-           *   or fault-code fields.
-           */
           if (!activeCar || !Array.isArray(activeCar.telemetry)) return;
 
+          const filters = {
+            drivingCondition: document.getElementById("drivingCondition")?.value || "all",
+            engineCondition: document.getElementById("engineCondition")?.value || "all",
+            performanceLoad: document.getElementById("performanceLoad")?.value || "all",
+            fuelEconomy: document.getElementById("fuelEconomy")?.value || "all",
+            electricalSystem: document.getElementById("electricalSystem")?.value || "all",
+            airIntake: document.getElementById("airIntake")?.value || "all",
+            coolingSystem: document.getElementById("coolingSystem")?.value || "all",
+            environment: document.getElementById("environment")?.value || "all"
+          };
 
-          /*
-           * ---------------------------------------------------------------
-           * TELEMETRY FILTER INPUTS
-           * ---------------------------------------------------------------
-           *
-           * These variables represent the controls the user can change in
-           * the dashboard.
-           *
-           * minSpeed:
-           *   Minimum road speed allowed by the user.
-           *
-           * metricFilter:
-           *   The selected metric/alert category.
-           *
-           * engineFilter:
-           *   The selected driving/scenario condition in Version 2.
-           *
-           * startDate / startTime:
-           *   Optional exact date/time filters.
-           *
-           * timePreset:
-           *   A relative time window such as the last hour, 24 hours,
-           *   7 days, or 30 days.
-           *
-           * The ?. operator means "only try to access this element if it
-           * exists". The || fallback gives the variable a safe default.
-           *
-           * parseFloat() converts text from an input element into a number.
-           */
-
-          const minSpeed = parseFloat(document.getElementById("minSpeed")?.value || "0");
-          const metricFilter = document.getElementById("metricType")?.value || "all";
-          const engineFilter = document.getElementById("engineStatus")?.value || "all";
           const startDate = document.getElementById("startDate")?.value || "";
           const startTime = document.getElementById("startTime")?.value || "";
           const timePreset = document.getElementById("timeRange")?.value || "all";
@@ -3045,158 +3053,20 @@
             "30d": 24 * 30
           };
 
-          let presetCutoff = null;
-          if (hoursMap[timePreset]) {
-            presetCutoff = new Date(Date.now() - hoursMap[timePreset] * 60 * 60 * 1000);
-          }
+          const presetCutoff = hoursMap[timePreset]
+            ? new Date(Date.now() - hoursMap[timePreset] * 60 * 60 * 1000)
+            : null;
 
           const filteredLogs = activeCar.telemetry.filter((log) => {
-            const speed = Number(log.speed ?? 0);
-            const rpm = Number(log.rpm ?? 0);
-            const maf = Number(log.maf ?? 0);
-            const coolantTemp = Number(log.ctemp ?? log.temp ?? 0);
-            const fuel = Number(log.fuel ?? 0);
-            const voltage = Number(log.voltage ?? 0);
-            const evap = Number(log.evap ?? 0);
-            const timing = Number(log.timing ?? 0);
-            const mpg = Number(log.mpg ?? 0);
-            const iat = Number(log.iat ?? 0);
-            const throttle = Number(log.throttle ?? 0);
-            const load = Number(log.load ?? 0);
-            const ambientTemp = Number(log.atemp ?? 0);
-            const barometricPressure = Number(log.bpressure ?? 0);
-
-            /* Basic speed filter — retained exactly as a control. */
-            if (speed < minSpeed) return false;
-
-            /* Existing metric names retained; only thresholds are calibrated. */
-            switch (metricFilter) {
-              case "speed":
-                if (speed < 75) return false;
-                break;
-
-              case "temp":
-                if (coolantTemp < 105) return false;
-                break;
-
-              case "overheat":
-                if (coolantTemp <= 115) return false;
-                break;
-
-              case "battery":
-                /* Charging voltage is meaningful only with the engine running. */
-                if (!(rpm > 500 && voltage > 0 && voltage < 13.2)) return false;
-                break;
-
-              case "rpm":
-                if (rpm < 5000) return false;
-                break;
+            for (const [category, value] of Object.entries(filters)) {
+              if (!telemetryRecordMatchesCategory(log, category, value)) return false;
             }
 
-            /*
-             * Existing scenario names are deliberately untouched.
-             * The ranges below are broader than the old artificial profiles so a
-             * normal N52 event is not rejected because one unrelated sensor moved.
-             */
-            switch (engineFilter) {
-              case "running":
-                if (rpm <= 0) return false;
-                break;
+            const logDate = normalizeTelemetryDate(log.time);
+            const hasValidDate = !!logDate;
 
-              case "moving":
-                if (speed <= 0) return false;
-                break;
-
-              case "idle":
-              case "idling":
-                if (!(speed <= 3 && rpm > 0 && rpm <= 1200)) return false;
-                break;
-
-              case "off":
-                if (rpm > 0) return false;
-                break;
-
-              /* Stop and Go Traffic: low speed with a running engine. */
-              case "StopAndGo_Traffic":
-                if (!(speed <= 35 && rpm >= 550 && rpm <= 2800)) return false;
-                break;
-
-              /*
-               * Rainy Season Cruising: rain is not measured. Use a conservative
-               * warm/humid-season proxy plus moderate cruising, without claiming
-               * that the record proves rain occurred.
-               */
-              case "RainySeason_Cruising":
-                if (!(speed >= 30 && speed <= 90 && rpm >= 1000 && rpm <= 3200 &&
-                  ambientTemp >= 18 && ambientTemp <= 34 &&
-                  barometricPressure >= 98 && barometricPressure <= 103)) return false;
-                break;
-
-              /* Nighttime City Drive: time is handled by the explicit time filter;
-                 this scenario remains a city-driving profile when selected. */
-              case "Nighttime_CityDrive":
-                if (!(speed >= 10 && speed <= 70 && rpm >= 800 && rpm <= 3000 &&
-                  load >= 8 && load <= 65)) return false;
-                break;
-
-              /* Highway Steady Cruise: speed + settled RPM + moderate load. */
-              case "Highway_SteadyCruise":
-                if (!(speed >= 80 && rpm >= 1300 && rpm <= 3200 &&
-                  load >= 8 && load <= 50 && throttle <= 45)) return false;
-                break;
-
-              /* LowFuel_LimpMode: low fuel is measurable; true limp mode is not. */
-              case "LowFuel_LimpMode":
-                if (!(fuel <= 20 && rpm <= 3500 && load <= 70 && speed <= 80)) return false;
-                break;
-
-              /* A/C load is inferred from warm ambient + elevated IAT + engine load. */
-              case "AC_Load_Stress":
-                if (!(ambientTemp >= 27 && iat >= 35 && load >= 28 &&
-                  speed >= 5 && speed <= 80 && rpm >= 700)) return false;
-                break;
-
-              /* Cold-start profile: coolant is the strongest available indicator. */
-              case "ColdStart_Morning":
-                if (!(coolantTemp < 65 && rpm >= 650 && rpm <= 1800 && speed <= 25)) return false;
-                break;
-
-              /* Hill climb cannot be proven without grade/GPS; use sustained load. */
-              case "HillClimb_HeavyLoad":
-                if (!(speed >= 10 && speed <= 85 && load >= 55 &&
-                  throttle >= 30 && rpm >= 1700 && rpm <= 5000)) return false;
-                break;
-
-              /* Normal cruising: broad everyday E70 road-driving band. */
-              case "NormalCruising":
-                if (!(speed >= 40 && speed <= 100 && rpm >= 1000 && rpm <= 3200 &&
-                  load >= 8 && load <= 55 && throttle <= 45)) return false;
-                break;
-
-              /* Traffic idle heat soak: stationary/near-stationary + warm intake/coolant. */
-              case "TrafficIdle_HeatSoak":
-                if (!(speed <= 5 && rpm >= 550 && rpm <= 1100 &&
-                  iat >= 42 && coolantTemp >= 95)) return false;
-                break;
-
-              /* Overtaking: high demand while already moving. */
-              case "HighLoad_Overtaking":
-                if (!(speed >= 45 && throttle >= 50 && load >= 60 && rpm >= 2300)) return false;
-                break;
-
-              /* Strong thermal condition rather than treating normal N52 heat as a fault. */
-              case "OverheatingWarning":
-                if (!(coolantTemp > 115 || (coolantTemp > 110 && load >= 55))) return false;
-                break;
-            }
-
-            /* Date/time filtering remains unchanged. */
-            const rawTime = String(log.time ?? "");
-            const normalizedTime = rawTime.replace(/(\d{4}-\d{2}-\d{2})(\d{2}:\d{2}:\d{2})/, "$1T$2");
-            const logDate = new Date(normalizedTime);
-            const hasValidDate = !Number.isNaN(logDate.getTime());
-
-            if (startDate && hasValidDate) {
+            if (startDate) {
+              if (!hasValidDate) return false;
               const year = logDate.getFullYear();
               const month = String(logDate.getMonth() + 1).padStart(2, "0");
               const day = String(logDate.getDate()).padStart(2, "0");
@@ -3204,18 +3074,42 @@
             }
 
             if (startTime) {
-              if (hasValidDate) {
-                const localTime = logDate.toTimeString().slice(0, 5);
-                if (localTime !== startTime) return false;
-              } else if (!rawTime.includes(startTime)) {
-                return false;
-              }
+              if (!hasValidDate) return false;
+              const localTime = logDate.toTimeString().slice(0, 5);
+              if (localTime !== startTime) return false;
             }
 
             if (presetCutoff && hasValidDate && logDate < presetCutoff) return false;
 
             return true;
           });
+
+
+          /*
+           * ================================================================
+           * FILTER RESULT
+           * ================================================================
+           *
+           * filteredLogs is the final array produced by the filter process.
+           * It contains only records that passed:
+           *
+           *   - the minimum-speed requirement
+           *   - every selected Version 1 category
+           *   - the date/time restrictions
+           *   - the selected time preset
+           *
+           * The result is stored on window so other dashboard code can use
+           * the same currently displayed dataset.
+           *
+           * Finally, renderTelemetryTable() receives the filtered records
+           * and updates the visible telemetry table.
+           *
+           * Keeping filtering separate from rendering makes the code easier
+           * to understand: this function decides WHICH records to show,
+           * while the renderer decides HOW they are displayed.
+           *
+           * ================================================================
+           */
 
           window.currentTelemetryDisplayedLogs = filteredLogs;
           renderTelemetryTable(filteredLogs);
@@ -3227,32 +3121,17 @@
          * OPEN TELEMETRY SCREEN
          * ================================================================
          *
-         * This function prepares the telemetry page for the vehicle that
-         * the user selected.
+         * Prepares the telemetry dashboard for the currently selected car.
          *
-         * Main variables used here:
+         * activeCar:
+         *   The vehicle selected by the user.
          *
-         *   activeCar
-         *     The vehicle currently selected in the application.
+         * activeCustomer:
+         *   The customer associated with that vehicle.
          *
-         *   activeCustomer
-         *     The customer who owns the selected vehicle.
-         *
-         *   telemetryCarTitle
-         *     HTML element used to display the vehicle's year/make/model.
-         *
-         *   telemetryCarOwner
-         *     HTML element used to display the owner information.
-         *
-         *   telemetryPlate
-         *     HTML element used to display the vehicle registration/plate.
-         *
-         *   telemetryStatus
-         *     HTML element used to display the vehicle's current status.
-         *
-         * The function first makes sure a vehicle exists. It then updates
-         * the page with that vehicle's information, loads its telemetry,
-         * runs the filters, and finally displays the telemetry screen.
+         * The function fills the vehicle information at the top of the
+         * dashboard, loads the vehicle's telemetry, runs the active
+         * filters, and then switches to the telemetry screen.
          *
          * ================================================================
          */
@@ -3276,29 +3155,17 @@
          * HTML SAFETY HELPER
          * ================================================================
          *
-         * This function protects text before it is inserted into HTML.
-         *
-         * Example:
-         *   A telemetry value might contain "<" or "&".
-         *
-         * If that text were inserted directly into innerHTML, the browser
-         * could interpret it as HTML instead of displaying it as text.
-         *
-         * The function replaces special characters with their safe HTML
-         * equivalents:
-         *
-         *   &  -> &amp;
-         *   <  -> &lt;
-         *   >  -> &gt;
-         *   "  -> &quot;
-         *   '  -> &#39;
+         * Converts characters such as <, >, &, and quotation marks into
+         * safe HTML entities before text is inserted into the page.
          *
          * Parameter:
-         *   str
-         *     The value that needs to be made safe.
+         *   str - the text/value that needs to be escaped.
          *
          * Return value:
-         *   A string that can safely be inserted into HTML.
+         *   A safe string suitable for HTML insertion.
+         *
+         * This prevents a telemetry value or other text from accidentally
+         * being interpreted by the browser as HTML markup.
          *
          * ================================================================
          */
@@ -3322,23 +3189,21 @@
          * GOOGLE AUTHENTICATION INITIALIZATION
          * ================================================================
          *
-         * This function connects the page to Google's Identity Services
-         * when that library is available.
+         * Sets up the Google sign-in button when Google's authentication
+         * library is available.
          *
-         * Important values:
+         * GOOGLE_CLIENT_ID:
+         *   Identifies this web application to Google's authentication
+         *   service.
          *
-         *   GOOGLE_CLIENT_ID
-         *     Identifies this web application to Google's authentication
-         *     service.
+         * handleCredentialResponse:
+         *   Callback that receives the authentication result.
          *
-         *   handleCredentialResponse
-         *     Callback function that receives the login result.
+         * buttonDiv:
+         *   HTML element where the Google sign-in control is displayed.
          *
-         *   buttonDiv
-         *     HTML element where the Google sign-in button is rendered.
-         *
-         * The optional chaining checks (?.) prevent an error if Google's
-         * authentication library has not loaded yet.
+         * The ?. checks make the function safe if Google's library has not
+         * finished loading yet.
          *
          * ================================================================
          */
