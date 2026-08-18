@@ -510,6 +510,41 @@
                 flex-direction: column
             }
         }
+
+        .vehicle-specs {
+            grid-column: 1 / -1;
+
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+
+            margin-top: -.35rem;
+            margin-bottom: .2rem;
+        }
+
+        .vehicle-spec {
+            display: inline-flex;
+            align-items: center;
+
+            padding: .42rem .7rem;
+
+            border-radius: 999px;
+
+            background: rgba(56, 189, 248, .07);
+            border: 1px solid rgba(56, 189, 248, .16);
+
+            color: #94a3b8;
+            font-size: .7rem;
+            font-weight: 700;
+
+            transition: all .2s ease;
+        }
+
+        .vehicle-spec:hover {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, .13);
+            border-color: rgba(56, 189, 248, .35);
+        }
     </style>
 </head>
 
@@ -599,16 +634,18 @@
                                 </div>
                                 <div id="vinStatusMessage" class="verification"></div>
                             </div>
-
                             <div class="form-group">
                                 <label for="regMake">Make</label>
                                 <input id="regMake" required placeholder="Auto-populated" readonly>
                             </div>
+
                             <div class="form-group">
                                 <label for="regCarModel">Model & Trim</label>
-                                <input type="text" id="regCarModel" placeholder="Vehicle Model" readonly />
-                                <div id="modelBadges" class="badge-container" hidden></div>
+                                <input type="text" id="regCarModel" placeholder="Vehicle Model" readonly>
                             </div>
+
+                            <!-- Vehicle specifications span the entire row -->
+                            <div id="modelBadges" class="vehicle-specs full" hidden></div>
                             <div class="form-group">
                                 <label for="regYear">Year</label>
                                 <input id="regYear" type="number" required placeholder="Auto-populated" readonly>
@@ -619,7 +656,7 @@
                             </div>
                             <div class="form-group full">
                                 <label for="regNickname">Vehicle Nickname</label>
-                                <input id="regNickname" placeholder="e.g. My Kia Sportage">
+                                <input id="regNickname" placeholder="e.g. My BMW X5">
                             </div>
 
                             <div class="form-group full">
@@ -739,7 +776,7 @@
 
         // Default mock dataset used when no data exists in localStorage yet
         const DEFAULT_DATABASE = [
-            { id: 1, name: "Deji Ayeni", email: "anywashng@gmail.com.ng", company: "JaFaFa", phone: "", tier: "Enterprise", status: "Active", picture: "", cars: [{ id: "vehicle-001", make: "BMW", model: "X5", year: 2024, plate: "LAG-500-DJ", vin: "WBA00000000000001", nickname: "My X5", status: "Active" }] },
+            { id: 1, name: "Deji Ayeni", email: "anywashng@gmail.com.ng", company: "JaFaFa", phone: "", tier: "Enterprise", status: "Active", picture: "", cars: [{ id: "vehicle-001", make: "BMW", model: "X5", year: 2024, plate: "KJA-500-DJ", vin: "WBA00000000000001", nickname: "My X5", status: "Active" }] },
             { id: 2, name: "Morenike Ayeni", email: "morenike.ayeni@gmail.com", company: "Layer3 Limited", phone: "", tier: "Enterprise", status: "Active", picture: "", cars: [{ id: "vehicle-002", make: "Lexus", model: "LX 600", year: 2024, plate: "VI-600-MO", vin: "JTJ00000000000002", nickname: "LX 600", status: "Active" }] },
             { id: 3, name: "Michael Ayeni", email: "michaelkage9@gmail.com", company: "HyperSpace Technologies", phone: "", tier: "Enterprise", status: "Active", picture: "", cars: [{ id: "vehicle-003", make: "Land Rover", model: "Defender 110 V8", year: 2023, plate: "LAG-110-MA", vin: "SAL00000000000003", nickname: "Defender", status: "Active" }] },
             { id: 4, name: "Gabriel Blitzer", email: "ayobamicadel@gmail.com", company: "Blitz Aero", phone: "", tier: "Pro", status: "Active", picture: "", cars: [{ id: "vehicle-004", make: "BMW", model: "M4 Competition", year: 2023, plate: "GBL-004-M", vin: "WBS00000000000004", nickname: "M4", status: "Active" }] },
@@ -1019,6 +1056,13 @@
          * Resets form fields and opens the vehicle registration screen.
          */
         function openVehicleRegistration() {
+            isVinVerified = false;
+            isActivationVerified = false;
+
+            document.getElementById("regActivationCode").disabled = true;
+            document.getElementById("btnVerifyActivation").disabled = true;
+            document.getElementById("btnRegisterVehicle").disabled = true;
+
             // 1. Safely reset form input elements if present
             const form = document.getElementById("registerVehicleForm");
             if (form) form.reset();
@@ -1058,80 +1102,104 @@
          * Searches the auto.dev API using the 17-character VIN
          */
         async function fetchVinDetails() {
-                const vinInput = document.getElementById("regVin");
-                const statusMsg = document.getElementById("vinStatusMessage");
-                const regMake = document.getElementById("regMake");
-                const regModel = document.getElementById("regModel");
-                const regYear = document.getElementById("regYear");
-                const actCodeInput = document.getElementById("regActivationCode");
-                const actBtn = document.getElementById("btnVerifyActivation");
+            const vinInput = document.getElementById("regVin");
+            const statusMsg = document.getElementById("vinStatusMessage");
+            const regMake = document.getElementById("regMake");
+            const regModel = document.getElementById("regCarModel");
+            const regYear = document.getElementById("regYear");
+            const actCodeInput = document.getElementById("regActivationCode");
+            const actBtn = document.getElementById("btnVerifyActivation");
 
-                const vin = vinInput.value.trim().toUpperCase();
+            const vin = vinInput.value.trim().toUpperCase();
 
-                if (vin.length !== 17) {
-                    statusMsg.textContent = "Please enter a valid 17-character VIN.";
-                    statusMsg.className = "verification error";
-                    return;
+            if (vin.length !== 17) {
+                statusMsg.textContent = "Please enter a valid 17-character VIN.";
+                statusMsg.className = "verification error";
+                return;
+            }
+
+            statusMsg.textContent = "Fetching vehicle details...";
+            statusMsg.className = "verification pending";
+
+            try {
+                const apiKey = "sk_ad_EhEpipfu5dA3QtUVGCOe_Ef3";
+                const targetUrl = `https://api.auto.dev/vin/${vin}?apiKey=${apiKey}`;
+
+                // Use CORS proxy if making client-side requests directly
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+
+                const response = await fetch(proxyUrl);
+                if (!response.ok) {
+                    throw new Error(`API returned HTTP ${response.status}`);
                 }
 
-                statusMsg.textContent = "Fetching vehicle details...";
-                statusMsg.className = "verification pending";
+                const data = await response.json();
 
-                try {
-                    const apiKey = "sk_ad_EhEpipfu5dA3QtUVGCOe_Ef3";
-                    const targetUrl = `https://api.auto.dev/vin/${vin}?apiKey=${apiKey}`;
+                if (data && (data.make || data.model || data.vehicle)) {
+                    isVinVerified = true;
+                    // Extract Make & Year
+                    regMake.value = data.make || data.vehicle?.make || "";
+                    regYear.value = data.year || data.vehicle?.year || "";
 
-                    // Use CORS proxy if making client-side requests directly
-                    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+                    // Extract Model and additional specifications
+                    const baseModel = data.model || data.vehicle?.model || "";
+                    const trim = data.trim || "";
+                    const style = data.style || "";
+                    const body = data.body || "";
+                    const engine = data.engine || "";
+                    const drive = data.drive || "";
+                    const transmission = data.transmission || "";
 
-                    const response = await fetch(proxyUrl);
-                    if (!response.ok) {
-                        throw new Error(`API returned HTTP ${response.status}`);
-                    }
+                    // Build details array filter out empty strings
+                    // Main model shown inside the clean readonly input
+                    regModel.value = [baseModel, trim]
+                        .filter(Boolean)
+                        .join(" ");
 
-                    const data = await response.json();
+                    // Additional vehicle specifications displayed as badges
+                    const specs = [
+                        style,
+                        body,
+                        engine,
+                        drive,
+                        transmission
+                    ].filter(Boolean);
 
-                    if (data && (data.make || data.model || data.vehicle)) {
-                        // Extract Make & Year
-                        regMake.value = data.make || data.vehicle?.make || "";
-                        regYear.value = data.year || data.vehicle?.year || "";
+                    const modelBadges = document.getElementById("modelBadges");
 
-                        // Extract Model and additional specifications
-                        const baseModel = data.model || data.vehicle?.model || "";
-                        const trim = data.trim || "";
-                        const style = data.style || "";
-                        const body = data.body || "";
-                        const engine = data.engine || "";
-                        const drive = data.drive || "";
-                        const transmission = data.transmission || "";
+                    if (specs.length) {
 
-                        // Build details array filter out empty strings
-                        const specDetails = [trim, style, body, engine, drive, transmission]
-                            .filter(Boolean)
-                            .join(" | ");
+                        modelBadges.innerHTML = specs.map(spec => `
+        <span class="vehicle-spec">
+            ${esc(spec)}
+        </span>
+    `).join("");
 
-                        // Combine Model with details (e.g. "911 (GT3 RS Coupe | Coupe 2D | 4.0, Flat 6 Cylinder Engine | Rear Wheel Drive | Automatic)")
-                        regModel.value = specDetails
-                            ? `${baseModel} (${specDetails})`
-                            : baseModel;
-
-                        statusMsg.textContent = "Vehicle details loaded successfully. Please enter your activation code.";
-                        statusMsg.className = "verification success";
-
-                        // Unlock activation code input fields
-                        if (actCodeInput) actCodeInput.disabled = false;
-                        if (actBtn) actBtn.disabled = false;
+                        modelBadges.hidden = false;
 
                     } else {
-                        statusMsg.textContent = "Vehicle details could not be found for this VIN.";
-                        statusMsg.className = "verification error";
+
+                        modelBadges.innerHTML = "";
+                        modelBadges.hidden = true;
                     }
-                } catch (error) {
-                    console.error("VIN Fetch Error:", error);
-                    statusMsg.textContent = "Error retrieving VIN details. Please check connection and try again.";
+
+                    statusMsg.textContent = "Vehicle details loaded successfully. Please enter your activation code.";
+                    statusMsg.className = "verification success";
+
+                    // Unlock activation code input fields
+                    if (actCodeInput) actCodeInput.disabled = false;
+                    if (actBtn) actBtn.disabled = false;
+
+                } else {
+                    statusMsg.textContent = "Vehicle details could not be found for this VIN.";
                     statusMsg.className = "verification error";
                 }
+            } catch (error) {
+                console.error("VIN Fetch Error:", error);
+                statusMsg.textContent = "Error retrieving VIN details. Please check connection and try again.";
+                statusMsg.className = "verification error";
             }
+        }
 
         /**
          * Verifies activation code after VIN has been populated
@@ -1166,8 +1234,10 @@
                 codeMsg.className = "verification bad";
                 codeMsg.style.display = "block";
                 codeMsg.textContent = "Invalid activation code.";
+
                 isActivationVerified = false;
-                document.getElementById("btnRegisterVehicle").disabled = false;
+
+                document.getElementById("btnRegisterVehicle").disabled = true;
             }
         }
 
@@ -1189,7 +1259,7 @@
 
             const vin = document.getElementById("regVin").value.trim().toUpperCase();
             const make = document.getElementById("regMake").value.trim();
-            const model = document.getElementById("regModel").value.trim();
+            const model = document.getElementById("regCarModel").value.trim();
             const year = document.getElementById("regYear").value.trim();
             const plate = document.getElementById("regPlate").value.trim();
             const nickname = document.getElementById("regNickname").value.trim();
@@ -1204,6 +1274,7 @@
                 plate,
                 nickname: nickname || `${make} ${model}`,
                 activationCode,
+                activationStatus: "Verified",
                 status: "Active",
                 isActivated: true
             };
