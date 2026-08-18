@@ -776,7 +776,7 @@
         <div class="row g-3">
           <div class="stat col-12 col-md-4"><b id="statVehicles">0</b><span>My vehicles</span></div>
           <div class="stat col-12 col-md-4"><b id="statPending">0</b><span>Pending registration</span></div>
-          <div class="stat col-12 col-md-4"><b id="statDevices">0</b><span>Verified dongles</span></div>
+          <div class="stat col-12 col-md-4"><b id="statDevices">0</b><span>Activated vehicles</span></div>
         </div>
         <div class="section">
           <div class="sectionhead d-flex justify-content-between align-items-center gap-3">
@@ -797,7 +797,7 @@
           <div>
             <div class="eyebrow">Your garage</div>
             <h1>My vehicles.</h1>
-            <p>Register a vehicle with its JaFaFa dongle, then edit only the customer-facing information you control.
+            <p>Register a vehicle with the one-time JaFaFa activation code supplied with your physical dongle, then edit only the customer-facing information you control.
             </p>
           </div><button class="btn" data-view="register">+ Register vehicle</button>
         </div>
@@ -808,12 +808,12 @@
           <div>
             <div class="eyebrow">Vehicle registration</div>
             <h1>Register a vehicle.</h1>
-            <p>Enter the vehicle information and the MAC address printed on the JaFaFa dongle you received.</p>
+            <p>Enter the vehicle information and the one-time activation code supplied with the JaFaFa dongle you received.</p>
           </div>
         </div>
         <div class="card panel">
-          <div class="notice">The dongle MAC is verified before registration.
-            Once assigned, the MAC becomes locked and cannot be changed from the customer portal.</div>
+          <div class="notice">The one-time activation code is verified before registration.
+            Once consumed, the code cannot be used again. Device identity remains protected from the customer portal.</div>
           <form id="registerForm">
             <div class="row g-3">
               <div class="field col-12 col-md-6"><label>Make</label><input id="vMake" class="form-control" required
@@ -830,10 +830,10 @@
                   class="form-control" placeholder="Dad's X5"></div>
               <div class="field col-12 col-md-6"><label>Vehicle image URL</label><input id="vImage" class="form-control"
                   type="url" placeholder="https://..."></div>
-              <div class="field col-12 col-md-6"><label>Dongle MAC address</label><input id="vMac" class="form-control"
-                  required placeholder="00:10:CC:4F:36:03" autocomplete="off"></div>
+              <div class="field col-12 col-md-6"><label>Activation code</label><input id="vActivationCode" class="form-control"
+                  required placeholder="JFF-ABCD-EFGH-JKLM" autocomplete="off"></div>
             </div>
-            <div id="macResult" class="notice hidden" style="margin-top:14px"></div>
+            <div id="activationResult" class="notice hidden" style="margin-top:14px"></div>
             <div class="d-flex flex-wrap justify-content-end gap-2 mt-3"><button type="button" class="btn secondary"
                 data-view="vehicles">Cancel</button><button class="btn" id="registerSubmit">Verify & register
                 vehicle</button></div>
@@ -892,11 +892,8 @@
               class="form-control"></div>
           <div class="field col-12 col-md-6"><label>Vehicle image URL</label><input id="editImage" class="form-control"
               type="url"></div>
-          <div class="field locked col-12 col-md-6"><label>Dongle MAC</label><input id="editMac" class="form-control"
-              disabled></div>
+          <div class="field locked col-12 col-md-6"><label>Activation</label><input value="Verified · Locked" class="form-control" disabled></div>
           <div class="field locked col-12 col-md-6"><label>Device status</label><input id="editStatus"
-              class="form-control" disabled></div>
-          <div class="field locked col-12 col-md-6"><label>Internal vehicle ID</label><input id="editInternalId"
               class="form-control" disabled></div>
         </div>
         <div class="d-flex flex-wrap justify-content-end gap-2 mt-3"><button type="button" class="btn secondary"
@@ -927,8 +924,8 @@
       function setupNav() { document.querySelectorAll('[data-view]').forEach(b => { if (!b.dataset.bound) { b.dataset.bound = '1'; b.addEventListener('click', () => navigate(b.dataset.view)) } }) }
       function showApp() { const c = customerById(account?.id) || customerByEmail(account?.email); if (!c) { logout(); return } account = { ...c }; $('authView').classList.add('hidden'); $('app').classList.remove('hidden'); renderAll() }
       function renderIdentity() { const n = account?.name || 'Customer'; $('navName').textContent = n; $('heroName').textContent = n ? ', ' + esc(n.split(/\s+/)[0]) : ''; const av = $('avatar'); if (account?.picture) { av.innerHTML = `<img src="${esc(account.picture)}" alt="">` } else av.textContent = (n[0] || 'C').toUpperCase() }
-      function renderDashboard() { renderIdentity(); const vs = owned(customerById(account.id)), pending = claims().filter(r => String(r.customerId) === String(account.id) && String(r.status).toUpperCase() === 'PENDING'); $('statVehicles').textContent = vs.length; $('statPending').textContent = pending.length; $('statDevices').textContent = vs.filter(v => validMac(v.dongleMac || v.mac || v.deviceId || v.obdId)).length; $('dashboardVehicles').innerHTML = vs.length ? vs.map(vehicleCard).join('') : `<div class="empty col-12"><strong>No vehicles yet</strong>Register your first vehicle and verify its JaFaFa dongle.<br><button class="btn" data-view="register">+ Register vehicle</button></div>`; $('dashboardActivity').innerHTML = pending.length ? pending.map(r => `<div class="notice warn"><strong>Registration pending</strong><br>${esc(r.make)} ${esc(r.model)} · dongle ${esc(r.deviceId || r.dongleMac || '—')} is awaiting approval.</div>`).join('') : `<div class="notice ok">Your account is ready. Vehicle registration and dongle management are available from <strong>My Vehicles</strong>.</div>`; setupNav() }
-      function vehicleCard(v) { const name = esc(v.nickname || `${v.make || ''} ${v.model || ''}`.trim() || 'Vehicle'), mac = normalizeMac(v.dongleMac || v.mac || v.deviceId || v.obdId || ''); return `<article class="card vehicle col-12 col-md-6"><div class="vehiclehead d-flex justify-content-between align-items-start"><div><h3>${name}</h3><div class="reg">${esc(v.make)} ${esc(v.model)} · ${esc(v.year || 'Year N/A')} · ${esc(v.plate || v.registration || 'No plate')}</div></div><div class="status"><i class="dot"></i>REGISTERED</div></div><div class="vehicle-meta row g-2"><div class="metric col-12 col-md-6"><small>VIN</small><b>${esc(v.vin || '—')}</b></div><div class="metric col-12 col-md-6"><small>Dongle MAC</small><b>${esc(mac || '—')}</b></div><div class="metric col-12 col-md-6"><small>Device assignment</small><b>Locked</b></div><div class="metric col-12 col-md-6"><small>Telemetry</small><b>Admin only</b></div></div><div class="vehiclefoot d-flex justify-content-end gap-2"><button class="btn secondary" onclick="openEdit('${esc(v.id)}')">Manage vehicle →</button></div></article>` }
+      function renderDashboard() { renderIdentity(); const vs = owned(customerById(account.id)), pending = claims().filter(r => String(r.customerId) === String(account.id) && String(r.status).toUpperCase() === 'PENDING'); $('statVehicles').textContent = vs.length; $('statPending').textContent = pending.length; $('statDevices').textContent = vs.filter(v => String(v.activationStatus || '').toLowerCase() === 'verified').length; $('dashboardVehicles').innerHTML = vs.length ? vs.map(vehicleCard).join('') : `<div class="empty col-12"><strong>No vehicles yet</strong>Register your first vehicle and verify its JaFaFa dongle.<br><button class="btn" data-view="register">+ Register vehicle</button></div>`; $('dashboardActivity').innerHTML = pending.length ? pending.map(r => `<div class="notice warn"><strong>Registration pending</strong><br>${esc(r.make)} ${esc(r.model)} · dongle ${esc(r.deviceId || r.dongleMac || '—')} is awaiting approval.</div>`).join('') : `<div class="notice ok">Your account is ready. Vehicle registration and dongle management are available from <strong>My Vehicles</strong>.</div>`; setupNav() }
+      function vehicleCard(v) { const name = esc(v.nickname || `${v.make || ''} ${v.model || ''}`.trim() || 'Vehicle'), mac = normalizeMac(v.dongleMac || v.mac || v.deviceId || v.obdId || ''); return `<article class="card vehicle col-12 col-md-6"><div class="vehiclehead d-flex justify-content-between align-items-start"><div><h3>${name}</h3><div class="reg">${esc(v.make)} ${esc(v.model)} · ${esc(v.year || 'Year N/A')} · ${esc(v.plate || v.registration || 'No plate')}</div></div><div class="status"><i class="dot"></i>REGISTERED</div></div><div class="vehicle-meta row g-2"><div class="metric col-12 col-md-6"><small>VIN</small><b>${esc(v.vin || '—')}</b></div><div class="metric col-12 col-md-6"><small>Activation</small><b>Verified · Locked</b></div><div class="metric col-12 col-md-6"><small>Device assignment</small><b>Locked</b></div><div class="metric col-12 col-md-6"><small>Telemetry</small><b>Admin only</b></div></div><div class="vehiclefoot d-flex justify-content-end gap-2"><button class="btn secondary" onclick="openEdit('${esc(v.id)}')">Manage vehicle →</button></div></article>` }
       function renderVehicles() { const c = customerById(account.id), vs = owned(c); $('vehiclesList').innerHTML = vs.length ? vs.map(vehicleCard).join('') : `<div class="empty col-12"><strong>Your garage is empty</strong>Register a vehicle using its JaFaFa dongle MAC.<br><button class="btn" data-view="register">+ Register vehicle</button></div>`; setupNav() }
       function renderAccount() { const c = customerById(account.id); if (!c) return; $('profileName').value = c.name || ''; $('profileEmail').value = c.email || ''; $('profilePhone').value = c.phone || ''; $('profileCompany').value = c.company || ''; $('profilePicture').value = c.picture || ''; $('profileId').value = c.id || '' }
       function renderAll() { renderDashboard(); renderVehicles(); renderAccount() }
@@ -937,14 +934,208 @@
       $('vehicleEditForm').addEventListener('submit', e => { e.preventDefault(); const d = db(), c = d.find(x => String(x.id) === String(account.id)), v = c?.cars?.find(x => String(x.id) === String($('editId').value)); if (!c || !v) return; v.plate = $('editPlate').value.trim(); v.registration = v.plate; v.nickname = $('editNickname').value.trim(); v.image = $('editImage').value.trim(); v.updatedAt = new Date().toISOString(); c.updatedAt = new Date().toISOString(); saveDb(d); account = { ...c }; closeEdit(); renderAll(); toast('Vehicle details updated.') });
       $('closeModal').onclick = closeEdit;
       $('profileForm').addEventListener('submit', e => { e.preventDefault(); const d = db(), c = d.find(x => String(x.id) === String(account.id)); if (!c) return; c.name = $('profileName').value.trim(); c.phone = $('profilePhone').value.trim(); c.company = $('profileCompany').value.trim(); c.picture = $('profilePicture').value.trim(); c.updatedAt = new Date().toISOString(); saveDb(d); account = { ...c }; write(SESSION_KEY, { id: c.id, email: c.email, name: c.name, picture: c.picture || '' }); renderAll(); toast('Profile saved.') });
-      $('registerForm').addEventListener('submit', e => { e.preventDefault(); const btn = $('registerSubmit'), result = $('macResult'); btn.disabled = true; btn.textContent = 'Verifying dongle…'; result.className = 'notice'; result.textContent = 'Checking the MAC against registered JaFaFa devices.'; result.classList.remove('hidden'); const check = findDongle($('vMac').value); if (!check.ok) { result.className = 'notice error'; result.textContent = check.reason; btn.disabled = false; btn.textContent = 'Verify & register vehicle'; return } const d = db(), c = d.find(x => String(x.id) === String(account.id)); if (!c) { toast('Customer account not found.'); btn.disabled = false; return } const mac = check.mac, id = uid('JFV'), plate = $('vPlate').value.trim(); const v = { id, recordId: id, customerId: String(c.id), make: $('vMake').value.trim(), model: $('vModel').value.trim(), year: Number($('vYear').value), vin: $('vVin').value.trim().toUpperCase(), plate, registration: plate, nickname: $('vNickname').value.trim(), image: $('vImage').value.trim(), dongleMac: mac, deviceId: mac, obdId: mac, status: 'Active', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }; c.cars = Array.isArray(c.cars) ? c.cars : []; c.vehicleIds = Array.isArray(c.vehicleIds) ? c.vehicleIds.map(String) : []; c.cars.push(v); c.vehicleIds.push(id); c.updatedAt = new Date().toISOString(); saveDb(d); account = { ...c }; result.className = 'notice ok'; result.textContent = `Dongle ${mac} verified and locked to this vehicle.`; e.target.reset(); btn.disabled = false; btn.textContent = 'Verify & register vehicle'; toast('Vehicle registered successfully.'); setTimeout(() => navigate('vehicles'), 500) });
-      $('vMac').addEventListener('input', () => { const raw = $('vMac').value, el = $('macResult'); if (!raw) { el.className = 'notice hidden'; return } const r = findDongle(raw); el.className = r.ok ? 'notice ok' : 'notice warn'; el.textContent = r.ok ? `✓ ${r.mac} is registered and available.` : r.reason; el.classList.remove('hidden') });
+      $('registerForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const btn=$('registerSubmit'), result=$('activationResult');
+        btn.disabled=true; btn.textContent='Verifying activation…';
+        result.className='notice'; result.textContent='Checking the one-time activation code.'; result.classList.remove('hidden');
+        const check=window.JaFaFaActivation?.verify($('vActivationCode').value);
+        if(!check?.ok){ result.className='notice error'; result.textContent=check?.reason||'Activation code verification failed.'; btn.disabled=false; btn.textContent='Verify & register vehicle'; return; }
+        const d=db(), c=d.find(x=>String(x.id)===String(account.id));
+        if(!c){ toast('Customer account not found.'); btn.disabled=false; btn.textContent='Verify & register vehicle'; return; }
+        const id=uid('JFV'), plate=$('vPlate').value.trim();
+        const v={id,recordId:id,customerId:String(c.id),make:$('vMake').value.trim(),model:$('vModel').value.trim(),year:Number($('vYear').value),vin:$('vVin').value.trim().toUpperCase(),plate,registration:plate,nickname:$('vNickname').value.trim(),image:$('vImage').value.trim(),status:'Active',activationStatus:'Verified',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+        c.cars=Array.isArray(c.cars)?c.cars:[]; c.vehicleIds=Array.isArray(c.vehicleIds)?c.vehicleIds.map(String):[]; c.cars.push(v); c.vehicleIds.push(id);
+        const consumed=window.JaFaFaActivation.consume($('vActivationCode').value,c.id,id);
+        if(!consumed.ok){c.cars=c.cars.filter(x=>x!==v);c.vehicleIds=c.vehicleIds.filter(x=>String(x)!==String(id));result.className='notice error';result.textContent=consumed.reason||'Activation failed.';btn.disabled=false;btn.textContent='Verify & register vehicle';return;}
+        c.updatedAt=new Date().toISOString();saveDb(d);account={...c};result.className='notice ok';result.textContent='Activation verified and consumed. This vehicle is now registered.';e.target.reset();btn.disabled=false;btn.textContent='Verify & register vehicle';toast('Vehicle registered successfully.');setTimeout(()=>navigate('vehicles'),500);
+      });
+      
       $('logout').onclick = logout; function logout() { localStorage.removeItem(SESSION_KEY); account = null; $('app').classList.add('hidden'); $('authView').classList.remove('hidden') }
       function restore() { const s = session(); if (!s) { initGoogle(); return } const c = customerById(s.id) || customerByEmail(s.email); if (!c) { localStorage.removeItem(SESSION_KEY); initGoogle(); return } account = { ...c }; showApp(); initGoogle() }
       window.openEdit = openEdit; setupNav(); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', restore); else restore(); window.addEventListener('storage', e => { if ([DB_KEY, CLAIM_KEY, DONGLE_KEY].includes(e.key) && account) { const c = customerById(account.id); if (c) { account = { ...c }; renderAll() } } });
     })();
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* Customer activation UI hardening: keep device identity private. */
+(()=>{
+  'use strict';
+  if(!location.pathname.toLowerCase().includes('customer')) return;
+  function patch(){
+    document.querySelectorAll('#dashboardVehicles .metric,#vehiclesList .metric').forEach(m=>{
+      const label=m.querySelector('small');
+      if(label&&/dongle\s*mac/i.test(label.textContent||'')){
+        label.textContent='Activation';
+        const value=m.querySelector('b');
+        if(value)value.textContent='Verified · Locked';
+      }
+    });
+    const editLabel=[...document.querySelectorAll('#vehicleModal label')].find(x=>/dongle\s*mac/i.test(x.textContent||''));
+    if(editLabel){editLabel.textContent='Activation status';const input=document.getElementById('editMac');if(input){input.value='Verified · Locked';input.disabled=true;input.type='text'}}
+    document.querySelectorAll('#vehiclesList .empty,#dashboardVehicles .empty').forEach(x=>{x.innerHTML=x.innerHTML.replace(/using its JaFaFa dongle MAC/gi,'using your JaFaFa activation code').replace(/verify its JaFaFa dongle/gi,'verify your JaFaFa activation code')});
+    const note=document.querySelector('#register .notice');if(note&&!note.dataset.activationPrivacy){note.dataset.activationPrivacy='1';note.textContent='Use the one-time activation code supplied with your physical JaFaFa dongle. The device identity is verified internally and remains locked after registration.'}
+  }
+  const observer=new MutationObserver(patch);
+  function start(){patch();observer.observe(document.body,{childList:true,subtree:true});setInterval(patch,1200)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+
+</script>
+<script>
+/* JaFaFa one-time activation code layer. Prototype/localStorage only. */
+(() => {
+  'use strict';
+  const KEY = 'jafafaActivationCodes';
+  const normalize = v => String(v || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
+  const load = () => { try { const v = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; } };
+  const save = v => localStorage.setItem(KEY, JSON.stringify(v));
+  const random = n => { const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<n;i++) s += chars[Math.floor(Math.random()*chars.length)]; return s; };
+  window.JaFaFaActivation = {
+    list: load,
+    save,
+    generate() {
+      const codes = load(); let code;
+      do { code = `JFF-${random(4)}-${random(4)}-${random(4)}`; } while(codes.some(x => x.code === code));
+      const record = { code, status:'AVAILABLE', createdAt:new Date().toISOString(), activatedAt:null, customerId:null, vehicleId:null };
+      codes.push(record); save(codes); return record;
+    },
+    verify(raw) {
+      const code = normalize(raw); if(!/^JFF-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)) return {ok:false, reason:'Invalid activation code format.'};
+      const codes = load(); const item = codes.find(x => x.code === code);
+      if(!item) return {ok:false, reason:'Activation code not found.'};
+      if(item.status === 'ACTIVATED') return {ok:false, reason:'This activation code has already been used.'};
+      if(item.status === 'DISABLED') return {ok:false, reason:'This activation code has been disabled.'};
+      return {ok:true, code, item};
+    },
+    consume(raw, customerId, vehicleId) {
+      const result = this.verify(raw); if(!result.ok) return result;
+      const codes = load(); const item = codes.find(x => x.code === result.code);
+      item.status='ACTIVATED'; item.activatedAt=new Date().toISOString(); item.customerId=String(customerId||''); item.vehicleId=String(vehicleId||''); save(codes); return {ok:true,item};
+    },
+    disable(raw) {
+      const code=normalize(raw); const codes=load(); const item=codes.find(x=>x.code===code); if(!item) return false; if(item.status==='ACTIVATED') return false; item.status='DISABLED'; save(codes); return true;
+    }
+  };
+})();
+
+</script>
+<!-- JAFAFA ACTIVATION CODE LAYER -->
+<script>
+/* JaFaFa activation-code layer — prototype/local data only. */
+(()=>{
+  'use strict';
+  const ACTIVATION_KEY='jafafa_activation_codes_v1';
+  const DONGLE_KEY='jafafa_dongle_registry_v1';
+  const DB_KEY='jafafa_fleet_suite_v3';
+  const uid=p=>`${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,9)}`;
+  const read=(k,f)=>{try{const v=JSON.parse(localStorage.getItem(k)||'null');return v??f}catch{return f}};
+  const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const normMac=v=>String(v??'').trim().toUpperCase().replace(/[-.\s]/g,':').replace(/:{2,}/g,':');
+  const validMac=v=>/^([0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(normMac(v));
+  const normCode=v=>String(v??'').trim().toUpperCase().replace(/[\s_]+/g,'-');
+  const now=()=>new Date().toISOString();
+
+  function codes(){const x=read(ACTIVATION_KEY,[]);return Array.isArray(x)?x:[]}
+  function saveCodes(x){write(ACTIVATION_KEY,x)}
+  function dongles(){const x=read(DONGLE_KEY,[]);return Array.isArray(x)?x:[]}
+  function saveDongles(x){write(DONGLE_KEY,x)}
+  function db(){const x=read(DB_KEY,[]);return Array.isArray(x)?x:[]}
+  function assigned(mac){const m=normMac(mac);return db().some(c=>(c.cars||[]).some(v=>normMac(v.dongleMac||v.deviceId||v.obdId||v.mac||'')===m))}
+  function randomCode(){
+    const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const bytes=new Uint8Array(12); if(window.crypto?.getRandomValues) crypto.getRandomValues(bytes); else for(let i=0;i<bytes.length;i++)bytes[i]=Math.floor(Math.random()*256);
+    let s=''; for(const b of bytes)s+=alphabet[b%alphabet.length];
+    return `JF-ACT-${s.slice(0,4)}-${s.slice(4,8)}-${s.slice(8,12)}`;
+  }
+  function seed(){
+    const list=codes(); if(list.length)return;
+    saveCodes([{id:uid('ACT'),code:'JF-ACT-DEMO-2026-TEST',mac:'00:10:CC:4F:36:03',status:'AVAILABLE',createdAt:now(),source:'demo'}]);
+  }
+  function getActivation(code){const n=normCode(code);return codes().find(x=>normCode(x.code)===n)||null}
+  function activate(code,customer,vehicle){
+    const n=normCode(code), list=codes(), item=list.find(x=>normCode(x.code)===n);
+    if(!item)return{ok:false,reason:'Activation code not found.'};
+    if(item.status==='DISABLED')return{ok:false,reason:'This activation code has been disabled.'};
+    if(item.status!=='AVAILABLE')return{ok:false,reason:'This activation code has already been used.'};
+    const mac=normMac(item.mac); if(!validMac(mac))return{ok:false,reason:'This activation code is not linked to a valid JaFaFa device.'};
+    if(assigned(mac))return{ok:false,reason:'The dongle linked to this activation code is already assigned.'};
+    item.status='ACTIVATED'; item.activatedAt=now(); item.activatedByCustomerId=String(customer?.id||''); item.vehicleId=String(vehicle?.id||'');
+    saveCodes(list);
+    return{ok:true,mac,item};
+  }
+  function ensureAdminUI(){
+    const tabs=document.querySelector('.jf-suite-tabs'); if(!tabs||tabs.querySelector('[data-suite="activation-codes"]'))return false;
+    const b=document.createElement('button'); b.type='button'; b.dataset.suite='activation-codes'; b.textContent='Activation Codes';
+    b.onclick=()=>renderAdmin(); tabs.appendChild(b); return true;
+  }
+  function style(){
+    if(document.getElementById('jf-activation-style'))return;
+    const s=document.createElement('style');s.id='jf-activation-style';s.textContent=`
+      .jf-activation-grid{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(420px,1.2fr);gap:14px}
+      .jf-activation-card{border:1px solid var(--line,#26344a);border-radius:16px;background:rgba(7,14,26,.72);padding:18px}
+      .jf-activation-card h3{margin:0 0 6px}.jf-activation-muted{color:var(--muted,#94a3b8);font-size:.72rem;line-height:1.55}
+      .jf-activation-form{display:grid;gap:9px;margin-top:14px}.jf-activation-form label{font-size:.65rem;color:var(--muted,#94a3b8);text-transform:uppercase;letter-spacing:.08em}
+      .jf-activation-form input{width:100%;border:1px solid var(--line,#26344a);border-radius:10px;background:#050c18;color:var(--text,#fff);padding:10px 11px}
+      .jf-activation-form button,.jf-activation-action{border:1px solid var(--line-bright,#38bdf8);border-radius:10px;background:rgba(56,189,248,.1);color:var(--text,#fff);padding:10px 12px;font-weight:800;cursor:pointer}
+      .jf-activation-list{display:grid;gap:8px;margin-top:12px}.jf-activation-row{display:grid;grid-template-columns:1.4fr .8fr 1fr auto;gap:10px;align-items:center;border:1px solid var(--line,#26344a);border-radius:11px;padding:11px}
+      .jf-activation-row code{font-size:.72rem;color:#dff8ff}.jf-activation-status{font-size:.62rem;font-weight:900;text-transform:uppercase}.jf-activation-status.available{color:#4ade80}.jf-activation-status.activated{color:#38bdf8}.jf-activation-status.disabled{color:#fb7185}
+      @media(max-width:900px){.jf-activation-grid{grid-template-columns:1fr}.jf-activation-row{grid-template-columns:1fr 1fr}.jf-activation-row button{grid-column:1/-1}}
+    `;document.head.appendChild(s);
+  }
+  function renderAdmin(){
+    ensureAdminUI(); style(); const host=document.getElementById('jfFleetHost'); if(!host)return;
+    const list=codes().slice().reverse();
+    host.innerHTML=`<div class="jf-activation-grid">
+      <div class="jf-activation-card"><div class="eyebrow">Device provisioning</div><h3>Issue activation code</h3><div class="jf-activation-muted">Enter the dongle MAC from the physical device inventory. The customer will receive only the one-time activation code.</div>
+      <form id="jfActivationForm" class="jf-activation-form"><label for="jfActivationMac">Dongle MAC</label><input id="jfActivationMac" placeholder="00:10:CC:4F:36:03" autocomplete="off" required><button>Generate one-time code</button></form><div id="jfActivationResult" class="jf-activation-muted" style="margin-top:12px"></div></div>
+      <div class="jf-activation-card"><div class="eyebrow">Activation inventory</div><h3>Codes</h3><div class="jf-activation-muted">AVAILABLE codes can be used once. ACTIVATED codes are permanently consumed. DISABLED codes cannot be used.</div><div class="jf-activation-list">${list.length?list.map(renderRow).join(''):'<div class="jf-activation-muted">No activation codes yet.</div>'}</div></div>
+    </div>`;
+    document.querySelectorAll('[data-suite]').forEach(x=>x.classList.toggle('active',x.dataset.suite==='activation-codes'));
+    document.getElementById('jfActivationForm').onsubmit=e=>{e.preventDefault();const mac=normMac(document.getElementById('jfActivationMac').value);const out=document.getElementById('jfActivationResult');if(!validMac(mac)){out.textContent='Enter a valid MAC address.';return}if(assigned(mac)){out.textContent='This dongle is already assigned to a vehicle.';return}const list=codes();if(list.some(x=>normMac(x.mac)===mac&&x.status==='AVAILABLE')){out.textContent='An unused activation code already exists for this dongle.';return}const ds=dongles();if(!ds.some(x=>normMac(x.mac||x.deviceId||x.obdId||'')===mac)){ds.push({id:uid('DNG'),mac,disabled:false,status:'ACTIVE',createdAt:now(),source:'activation-provisioning'});saveDongles(ds)}const item={id:uid('ACT'),code:randomCode(),mac,status:'AVAILABLE',createdAt:now(),source:'admin'};list.push(item);saveCodes(list);out.innerHTML=`<strong>Code created:</strong> <code>${esc(item.code)}</code><br>Store this code with the physical dongle. It can be used once.`;renderAdmin()};
+    document.querySelectorAll('[data-activation-disable]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.activationDisable;const list=codes();const item=list.find(x=>x.id===id);if(!item||item.status!=='AVAILABLE')return;item.status='DISABLED';item.disabledAt=now();saveCodes(list);renderAdmin()});
+  }
+  function renderRow(x){return `<div class="jf-activation-row"><div><code>${esc(x.code)}</code><div class="jf-activation-muted">${esc(x.mac)} · ${new Date(x.createdAt).toLocaleDateString()}</div></div><span class="jf-activation-status ${String(x.status||'').toLowerCase()}">${esc(x.status)}</span><span class="jf-activation-muted">${x.activatedAt?'Used '+new Date(x.activatedAt).toLocaleString():'One time only'}</span>${x.status==='AVAILABLE'?`<button class="jf-activation-action" data-activation-disable="${esc(x.id)}">Disable</button>`:'<span></span>'}</div>`}
+
+  function patchCustomer(){
+    const form=document.getElementById('registerForm'); if(!form||form.dataset.activationPatched)return;
+    form.dataset.activationPatched='1';
+    const clone=form.cloneNode(true); form.replaceWith(clone);
+    const f=clone, mac=f.querySelector('#vMac'), macField=mac?.closest('.field'), result=f.querySelector('#macResult');
+    if(!mac||!macField||!result)return;
+    macField.hidden=true; mac.required=false; mac.disabled=true;
+    const field=document.createElement('div');field.className='field';field.innerHTML='<label for="vActivation">Activation code</label><input id="vActivation" required placeholder="JF-ACT-XXXX-XXXX-XXXX" autocomplete="one-time-code" spellcheck="false"><div class="jf-activation-help">Enter the one-time code supplied with your JaFaFa dongle. The code is consumed after successful registration.</div>';macField.parentElement.insertBefore(field,macField);
+    result.id='activationResult'; result.textContent='';
+    const heading=document.querySelector('#register .hero p'); if(heading)heading.textContent='Enter the vehicle information and the one-time activation code supplied with your JaFaFa dongle.';
+    const notice=document.querySelector('#register .card .notice'); if(notice)notice.textContent='The activation code proves that this physical JaFaFa dongle was provisioned for activation. It can be used once. The dongle MAC remains hidden and locked after registration.';
+    const button=f.querySelector('#registerSubmit');
+    f.addEventListener('submit',e=>{
+      e.preventDefault(); if(button)button.disabled=true; if(button)button.textContent='Verifying activation…'; result.className='notice'; result.textContent='Checking the one-time activation code.'; result.classList.remove('hidden');
+      const code=normCode(f.querySelector('#vActivation').value), item=getActivation(code);
+      if(!item){return fail('Activation code not found. Check the code and try again.')}
+      if(item.status!=='AVAILABLE'){return fail(item.status==='DISABLED'?'This activation code has been disabled.':'This activation code has already been used.')}
+      const macValue=normMac(item.mac); if(!validMac(macValue))return fail('This activation code is not linked to a valid device. Contact JaFaFa support.');
+      if(assigned(macValue))return fail('The dongle linked to this activation code is already assigned.');
+      const d=read(DB_KEY,[]);const session=read('jafafa_customer_session_v3',null);const c=d.find(x=>String(x.id)===String(session?.id)||String(x.email||'').toLowerCase()===String(session?.email||'').toLowerCase());
+      if(!c)return fail('Customer account not found. Please sign in with Google again.');
+      const id=uid('JFV'),plate=f.querySelector('#vPlate').value.trim();const v={id,recordId:id,customerId:String(c.id),make:f.querySelector('#vMake').value.trim(),model:f.querySelector('#vModel').value.trim(),year:Number(f.querySelector('#vYear').value),vin:f.querySelector('#vVin').value.trim().toUpperCase(),plate,registration:plate,nickname:f.querySelector('#vNickname').value.trim(),image:f.querySelector('#vImage').value.trim(),dongleMac:macValue,deviceId:macValue,obdId:macValue,status:'Active',activationCodeId:item.id,createdAt:now(),updatedAt:now()};
+      c.cars=Array.isArray(c.cars)?c.cars:[];c.vehicleIds=Array.isArray(c.vehicleIds)?c.vehicleIds.map(String):[];c.cars.push(v);c.vehicleIds.push(id);c.updatedAt=now();d[d.findIndex(x=>String(x.id)===String(c.id))]=c;write(DB_KEY,d);
+      item.status='ACTIVATED';item.activatedAt=now();item.activatedByCustomerId=String(c.id);item.vehicleId=id;saveCodes(codes());
+      result.className='notice ok';result.textContent='Activation verified. Your dongle is now permanently locked to this vehicle.';f.reset();if(button){button.disabled=false;button.textContent='Verify & register vehicle'};window.dispatchEvent(new StorageEvent('storage',{key:DB_KEY}));if(typeof window.toast==='function')window.toast('Vehicle registered successfully.');else{const t=document.getElementById('toast');if(t){t.textContent='Vehicle registered successfully.';t.classList.add('show')}}setTimeout(()=>{document.querySelector('[data-view="vehicles"]')?.click()},600);
+      function fail(msg){result.className='notice error';result.textContent=msg;result.classList.remove('hidden');if(button){button.disabled=false;button.textContent='Verify & register vehicle'}}
+    });
+    const codeInput=f.querySelector('#vActivation'); codeInput.addEventListener('input',()=>{const x=getActivation(codeInput.value);result.className=x?.status==='AVAILABLE'?'notice ok':'notice warn';result.textContent=x? (x.status==='AVAILABLE'?'✓ Activation code is valid and unused.':'This activation code is no longer available.') :'Activation code will be checked when entered completely.';result.classList.remove('hidden')});
+    const help=document.createElement('style');help.textContent='.jf-activation-help{color:var(--muted,#8ea0b8);font-size:.62rem;line-height:1.45;margin-top:5px}';document.head.appendChild(help);
+  }
+  function boot(){seed(); if(location.pathname.toLowerCase().includes('customer'))patchCustomer(); else ensureAdminUI(); style();}
+  window.JaFaFaActivation={codes,getActivation,activate,normalizeCode:normCode,renderAdmin};
+  const obs=new MutationObserver(()=>{if(location.pathname.toLowerCase().includes('customer'))patchCustomer();else if(document.querySelector('.jf-suite-tabs'))ensureAdminUI()});
+  function start(){boot();obs.observe(document.body,{childList:true,subtree:true});setInterval(()=>{if(location.pathname.toLowerCase().includes('customer'))patchCustomer();else{if(ensureAdminUI()&&document.querySelector('[data-suite="activation-codes"].active'))renderAdmin()}},700)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+
+</script>
 </body>
 
 </html>
