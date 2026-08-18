@@ -583,10 +583,13 @@
             <section id="customer-register-vehicle" hidden>
                 <div class="header">
                     <h2>Register a Vehicle</h2>
-                    <p>Enter your vehicle information and verify the one-time activation code supplied with your physical JaFaFa dongle.
+                    <p>Enter your vehicle information and verify the one-time activation code supplied with your
+                        physical JaFaFa dongle.
                     </p>
                 </div>
-                <div class="section-note"><strong>Activation verification</strong><br>Your one-time activation code proves that the physical JaFaFa dongle was issued for customer activation. A used or disabled code cannot be registered again.</div>
+                <div class="section-note"><strong>Activation verification</strong><br>Your one-time activation code
+                    proves that the physical JaFaFa dongle was issued for customer activation. A used or disabled code
+                    cannot be registered again.</div>
                 <div class="card">
                     <form id="registerVehicleForm" onsubmit="registerVehicle(event)">
                         <div class="form-grid">
@@ -603,7 +606,16 @@
                             <div class="form-group"><label for="regNickname">Vehicle Nickname</label><input
                                     id="regNickname" placeholder="My X5"><span class="field-help">Optional name shown in
                                     your portal.</span></div>
-                            <div class="form-group full"><label for="regActivationCode">Activation Code</label><div class="verify-row"><input id="regActivationCode" required placeholder="JFF-ABCD-EFGH-JKLM" autocomplete="off"><button type="button" class="secondary" onclick="verifyRegistrationActivation()">Verify Code</button></div><div id="activationVerification" class="verification"></div><span class="field-help">Use the one-time code supplied with your physical JaFaFa dongle. The code is consumed after successful registration.</span></div></div>
+                            <div class="form-group full"><label for="regActivationCode">Activation Code</label>
+                                <div class="verify-row"><input id="regActivationCode" required
+                                        placeholder="JFF-ABCD-EFGH-JKLM" autocomplete="off"><button type="button"
+                                        class="secondary" onclick="verifyRegistrationActivation()">Verify Code</button>
+                                </div>
+                                <div id="activationVerification" class="verification"></div><span class="field-help">Use
+                                    the one-time code supplied with your physical JaFaFa dongle. The code is consumed
+                                    after successful registration.</span>
+                            </div>
+                        </div>
                         <div class="actions" style="margin-top:1rem"><button class="primary" type="submit">Register
                                 Vehicle</button><button class="secondary" type="button"
                                 onclick="customerShow('customer-vehicles')">Cancel</button></div>
@@ -627,7 +639,9 @@
                                     readonly><span class="locked">Locked — protected vehicle information.</span></div>
                             <div class="form-group"><label for="editVin">VIN</label><input id="editVin" readonly><span
                                     class="locked">Locked — protected vehicle information.</span></div>
-                            <div class="form-group"><label>Activation</label><input value="Verified · Locked" readonly><span class="locked">Locked after activation. Device identity is protected.</span></div>
+                            <div class="form-group"><label>Activation</label><input value="Verified · Locked"
+                                    readonly><span class="locked">Locked after activation. Device identity is
+                                    protected.</span></div>
                             <div class="form-group"><label for="editPlate">Registration / Plate</label><input
                                     id="editPlate" required></div>
                             <div class="form-group full"><label for="editNickname">Vehicle Nickname</label><input
@@ -704,7 +718,7 @@
             { id: 5, name: "Elizabeth Ayeni", email: "elizabeth.ayeni@alphahealth.org", company: "Alpha Medical Centers", phone: "", tier: "Pro", status: "Active", picture: "", cars: [{ id: "vehicle-005", make: "Mercedes-Benz", model: "GLE 450", year: 2024, plate: "KRD-450-EL", vin: "W1N00000000000005", nickname: "GLE", status: "Active" }] }
         ];
         let MOCK_DATABASE = loadJson(STORAGE_KEY, null) || structuredClone(DEFAULT_DATABASE);
-                let customerUser = null, customerVehicle = null, pendingGoogleUser = null, verifiedRegistrationCode = null;
+        let customerUser = null, customerVehicle = null, pendingGoogleUser = null, verifiedRegistrationCode = null;
 
         function loadJson(key, fallback) { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch (e) { return fallback; } }
         function saveDatabase() { localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_DATABASE)); }
@@ -740,7 +754,23 @@
         function avatarUrl(name) { return "https://ui-avatars.com/api/?name=" + encodeURIComponent(name || "Customer") + "&background=0f172a&color=38bdf8"; }
         function showCustomerLoginMessage(message) { const el = document.getElementById("loginMessage"); if (el) { el.textContent = message; el.style.color = "#f87171"; } }
         function customerLogout() { customerUser = null; customerVehicle = null; pendingGoogleUser = null; appView.hidden = true; loginView.hidden = false; if (window.google?.accounts?.id) google.accounts.id.disableAutoSelect(); showCustomerLoginMessage(""); }
-        function customerShow(id) { ["customer-dashboard", "customer-vehicles", "customer-vehicle-details", "customer-register-vehicle", "customer-edit-vehicle", "customer-account", "customer-onboarding"].forEach(x => { const e = document.getElementById(x); if (e) e.hidden = x !== id; }); scrollTo({ top: 0, behavior: "smooth" }); }
+
+        function customerShow(id) {
+            // Hide all main section views
+            document.querySelectorAll("main > section").forEach(sec => sec.hidden = true);
+
+            // Unhide the requested section
+            const target = document.getElementById(id);
+            if (target) {
+                target.hidden = false;
+            }
+
+            // Optional UI re-render on section switch
+            if (id === 'customer-vehicles' || id === 'customer-dashboard') {
+                if (typeof renderCustomer === 'function') renderCustomer();
+                if (typeof renderCustomerDashboard === 'function') renderCustomerDashboard();
+            }
+        }
 
         function renderCustomer() {
             if (!customerUser) return;
@@ -757,27 +787,127 @@
         }
 
         function openVehicleRegistration() {
-            document.getElementById("registerVehicleForm").reset(); verifiedRegistrationCode = null; activationVerification.className = "verification"; activationVerification.textContent = ""; customerShow("customer-register-vehicle");
+            // 1. Safely reset form if present
+            const form = document.getElementById("registerVehicleForm");
+            if (form) form.reset();
+
+            // 2. Reset code state
+            verifiedRegistrationCode = null;
+
+            // 3. Safely reset verification message element
+            const verificationBox = document.getElementById("activationVerification");
+            if (verificationBox) {
+                verificationBox.className = "verification";
+                verificationBox.textContent = "";
+            }
+
+            // 4. Trigger UI transition
+            customerShow("customer-register-vehicle");
         }
+
+        // 1. Mock Activation Code Database
+        const MOCK_ACTIVATION_CODES = {
+            "JFF-ABCD-EFGH-JKLM": { status: "Active" },
+            "JFF-1234-5678-9012": { status: "Active" },
+            "JFF-USED-CODE-0000": { status: "Used" }
+        };
+
+        // 2. Updated Verification Function
         function verifyRegistrationActivation() {
-            const input = document.getElementById("regActivationCode"); const code = String(input.value || "").trim().toUpperCase(); input.value = code;
-            const box = document.getElementById("activationVerification"); verifiedRegistrationCode = null;
-            const result = window.JaFaFaActivation.verify(code);
-            if (!result.ok) { box.className = "verification bad"; box.textContent = result.reason; return false; }
-            verifiedRegistrationCode = result.code; box.className = "verification ok"; box.textContent = "Activation code verified ✓ It is available for one-time registration."; return true;
+            const input = document.getElementById("regActivationCode");
+            if (!input) return false;
+
+            const code = String(input.value || "").trim().toUpperCase();
+            input.value = code;
+
+            const box = document.getElementById("activationVerification");
+            verifiedRegistrationCode = null;
+
+            if (!code) {
+                box.className = "verification bad";
+                box.textContent = "Please enter an activation code.";
+                return false;
+            }
+
+            // Check against global API if present, otherwise fallback to local mock DB
+            let result;
+            if (window.JaFaFaActivation && typeof window.JaFaFaActivation.verify === "function") {
+                result = window.JaFaFaActivation.verify(code);
+            } else {
+                // Local mock lookup
+                const foundCode = MOCK_ACTIVATION_CODES[code];
+                if (!foundCode) {
+                    result = { ok: false, reason: "Invalid activation code. Please check and try again." };
+                } else if (foundCode.status === "Used") {
+                    result = { ok: false, reason: "This activation code has already been used." };
+                } else {
+                    result = { ok: true, code: code };
+                }
+            }
+
+            // Handle Response Output
+            if (!result.ok) {
+                box.className = "verification bad";
+                box.textContent = result.reason;
+                return false;
+            }
+
+            verifiedRegistrationCode = result.code;
+            box.className = "verification ok";
+            box.textContent = "Activation code verified ✓ It is available for one-time registration.";
+            return true;
         }
+
         function registerVehicle(e) {
-            e.preventDefault();
-            if (!customerUser) return;
-            if (!verifyRegistrationActivation() || !verifiedRegistrationCode) { alert("Please verify a valid, unused JaFaFa activation code before registering the vehicle."); return; }
-            const vin = regVin.value.trim().toUpperCase();
-            if (customerUser.cars?.some(c => String(c.vin || "").toUpperCase() === vin)) { alert("A vehicle with this VIN is already registered to your account."); return; }
-            const vehicle = { id: makeId("vehicle-"), make: regMake.value.trim(), model: regModel.value.trim(), year: Number(regYear.value), plate: regPlate.value.trim().toUpperCase(), vin, nickname: regNickname.value.trim(), status: "Active", activationStatus: "Verified" };
-            customerUser.cars = customerUser.cars || []; customerUser.cars.push(vehicle);
-            const consumed = window.JaFaFaActivation.consume(verifiedRegistrationCode, customerUser.id, vehicle.id);
-            if (!consumed.ok) { customerUser.cars = customerUser.cars.filter(c => c !== vehicle); alert(consumed.reason || "Activation failed."); return; }
-            saveDatabase(); customerVehicle = vehicle; verifiedRegistrationCode = null; renderCustomer(); customerOpenVehicle(vehicle.id);
+            if (e) e.preventDefault();
+
+            // Require activation code verification before registration
+            if (!verifiedRegistrationCode) {
+                const box = document.getElementById("activationVerification");
+                if (box) {
+                    box.className = "verification bad";
+                    box.textContent = "Please verify your activation code before registering.";
+                }
+                document.getElementById("regActivationCode")?.focus();
+                return;
+            }
+
+            const carMake = document.getElementById("regMake")?.value.trim() || "";
+            const carModel = document.getElementById("regModel")?.value.trim() || "";
+            const carYear = document.getElementById("regYear")?.value.trim() || "";
+            const carPlate = document.getElementById("regPlate")?.value.trim() || "";
+            const carVin = document.getElementById("regVin")?.value.trim() || "";
+            const carNickname = document.getElementById("regNickname")?.value.trim() || "";
+
+            const newVehicle = {
+                id: "vehicle-" + Date.now().toString(36),
+                make: carMake,
+                model: carModel,
+                year: carYear,
+                plate: carPlate,
+                vin: carVin,
+                nickname: carNickname || `${carMake} ${carModel}`.trim() || "My Vehicle",
+                status: "Active",
+                activationStatus: "Verified",
+                activationCode: verifiedRegistrationCode
+            };
+
+            if (typeof customerUser !== "undefined" && customerUser) {
+                if (!customerUser.cars) customerUser.cars = [];
+                customerUser.cars.push(newVehicle);
+                if (typeof saveDatabase === "function") saveDatabase();
+            }
+
+            // Mark activation code as used
+            if (MOCK_ACTIVATION_CODES[verifiedRegistrationCode]) {
+                MOCK_ACTIVATION_CODES[verifiedRegistrationCode] = { status: "Used" };
+            }
+            verifiedRegistrationCode = null;
+
+            if (typeof renderCustomer === "function") renderCustomer();
+            customerShow("customer-vehicles");
         }
+
         function customerOpenVehicle(id) {
             customerVehicle = (customerUser?.cars || []).find(c => String(c.id) === String(id)); if (!customerVehicle) return;
             vehicleDetailsTitle.textContent = `${customerVehicle.year || ""} ${customerVehicle.make || ""} ${customerVehicle.model || ""}`.trim();
