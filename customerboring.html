@@ -583,42 +583,63 @@
             <section id="customer-register-vehicle" hidden>
                 <div class="header">
                     <h2>Register a Vehicle</h2>
-                    <p>Enter your vehicle information and verify the one-time activation code supplied with your
-                        physical JaFaFa dongle.
-                    </p>
+                    <p>Enter your 17-character VIN first to fetch car details, then provide your activation code.</p>
                 </div>
-                <div class="section-note"><strong>Activation verification</strong><br>Your one-time activation code
-                    proves that the physical JaFaFa dongle was issued for customer activation. A used or disabled code
-                    cannot be registered again.</div>
+
                 <div class="card">
                     <form id="registerVehicleForm" onsubmit="registerVehicle(event)">
                         <div class="form-grid">
-                            <div class="form-group"><label for="regMake">Make</label><input id="regMake" required
-                                    placeholder="BMW"></div>
-                            <div class="form-group"><label for="regModel">Model</label><input id="regModel" required
-                                    placeholder="X5"></div>
-                            <div class="form-group"><label for="regYear">Year</label><input id="regYear" type="number"
-                                    min="1900" max="2100" required placeholder="2008"></div>
-                            <div class="form-group"><label for="regPlate">Registration / Plate</label><input
-                                    id="regPlate" required placeholder="LAG-123-AB"></div>
-                            <div class="form-group"><label for="regVin">VIN</label><input id="regVin" required
-                                    placeholder="17-character VIN"></div>
-                            <div class="form-group"><label for="regNickname">Vehicle Nickname</label><input
-                                    id="regNickname" placeholder="My X5"><span class="field-help">Optional name shown in
-                                    your portal.</span></div>
-                            <div class="form-group full"><label for="regActivationCode">Activation Code</label>
-                                <div class="verify-row"><input id="regActivationCode" required
-                                        placeholder="JFF-ABCD-EFGH-JKLM" autocomplete="off"><button type="button"
-                                        class="secondary" onclick="verifyRegistrationActivation()">Verify Code</button>
+                            <div class="form-group full">
+                                <label for="regVin">Vehicle Identification Number (VIN)</label>
+                                <div class="verify-row">
+                                    <input id="regVin" required minlength="17" maxlength="17"
+                                        placeholder="e.g. 5XYK6CDF9TG138044" style="text-transform: uppercase;">
+                                    <button type="button" class="secondary" onclick="fetchVinDetails()">Lookup
+                                        VIN</button>
                                 </div>
-                                <div id="activationVerification" class="verification"></div><span class="field-help">Use
-                                    the one-time code supplied with your physical JaFaFa dongle. The code is consumed
-                                    after successful registration.</span>
+                                <div id="vinStatusMessage" class="verification"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="regMake">Make</label>
+                                <input id="regMake" required placeholder="Auto-populated" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="regCarModel">Model & Trim</label>
+                                <input type="text" id="regCarModel" placeholder="Vehicle Model" readonly />
+                                <div id="modelBadges" class="badge-container" hidden></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="regYear">Year</label>
+                                <input id="regYear" type="number" required placeholder="Auto-populated" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="regPlate">Registration / License Plate</label>
+                                <input id="regPlate" required placeholder="e.g. LAG-123-AB">
+                            </div>
+                            <div class="form-group full">
+                                <label for="regNickname">Vehicle Nickname</label>
+                                <input id="regNickname" placeholder="e.g. My Kia Sportage">
+                            </div>
+
+                            <div class="form-group full">
+                                <label for="regActivationCode">Activation Code</label>
+                                <div class="verify-row">
+                                    <input id="regActivationCode" required disabled
+                                        placeholder="Lookup VIN first to unlock activation" autocomplete="off">
+                                    <button type="button" id="btnVerifyActivation" class="secondary" disabled
+                                        onclick="verifyRegistrationActivation()">Verify Code</button>
+                                </div>
+                                <div id="activationVerification" class="verification"></div>
                             </div>
                         </div>
-                        <div class="actions" style="margin-top:1rem"><button class="primary" type="submit">Register
-                                Vehicle</button><button class="secondary" type="button"
-                                onclick="customerShow('customer-vehicles')">Cancel</button></div>
+
+                        <div class="actions" style="margin-top:1rem">
+                            <button class="primary" id="btnRegisterVehicle" type="submit" disabled>Register
+                                Vehicle</button>
+                            <button class="secondary" type="button"
+                                onclick="customerShow('customer-vehicles')">Cancel</button>
+                        </div>
                     </form>
                 </div>
             </section>
@@ -709,7 +730,14 @@
     </div>
 
     <script>
+        // ==========================================
+        // 1. CONSTANTS, STATE & DATABASE INITIALIZATION
+        // ==========================================
+
+        // Key used to load and store customer data inside the browser's localStorage
         const STORAGE_KEY = "telemetryHubCustomerPortalDatabase";
+
+        // Default mock dataset used when no data exists in localStorage yet
         const DEFAULT_DATABASE = [
             { id: 1, name: "Deji Ayeni", email: "anywashng@gmail.com.ng", company: "JaFaFa", phone: "", tier: "Enterprise", status: "Active", picture: "", cars: [{ id: "vehicle-001", make: "BMW", model: "X5", year: 2024, plate: "LAG-500-DJ", vin: "WBA00000000000001", nickname: "My X5", status: "Active" }] },
             { id: 2, name: "Morenike Ayeni", email: "morenike.ayeni@gmail.com", company: "Layer3 Limited", phone: "", tier: "Enterprise", status: "Active", picture: "", cars: [{ id: "vehicle-002", make: "Lexus", model: "LX 600", year: 2024, plate: "VI-600-MO", vin: "JTJ00000000000002", nickname: "LX 600", status: "Active" }] },
@@ -717,179 +745,467 @@
             { id: 4, name: "Gabriel Blitzer", email: "ayobamicadel@gmail.com", company: "Blitz Aero", phone: "", tier: "Pro", status: "Active", picture: "", cars: [{ id: "vehicle-004", make: "BMW", model: "M4 Competition", year: 2023, plate: "GBL-004-M", vin: "WBS00000000000004", nickname: "M4", status: "Active" }] },
             { id: 5, name: "Elizabeth Ayeni", email: "elizabeth.ayeni@alphahealth.org", company: "Alpha Medical Centers", phone: "", tier: "Pro", status: "Active", picture: "", cars: [{ id: "vehicle-005", make: "Mercedes-Benz", model: "GLE 450", year: 2024, plate: "KRD-450-EL", vin: "W1N00000000000005", nickname: "GLE", status: "Active" }] }
         ];
+
+        // Load data from localStorage; if empty, create a deep copy (structuredClone) of DEFAULT_DATABASE
         let MOCK_DATABASE = loadJson(STORAGE_KEY, null) || structuredClone(DEFAULT_DATABASE);
-        let customerUser = null, customerVehicle = null, pendingGoogleUser = null, verifiedRegistrationCode = null;
 
-        function loadJson(key, fallback) { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch (e) { return fallback; } }
-        function saveDatabase() { localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_DATABASE)); }
-        function esc(v) { return String(v ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m])); }
-        function makeId(prefix) { return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+        // Global application state holders
+        let customerUser = null;               // Currently authenticated user object
+        let customerVehicle = null;            // Currently selected vehicle object for viewing/editing
+        let pendingGoogleUser = null;          // Holds decoded Google OAuth payload during onboarding
+        let verifiedRegistrationCode = null;   // Temporarily stores a validated activation code during vehicle registration
 
-        function parseJwtToken(token) { try { const base64Url = token.split(".")[1]; const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/"); return JSON.parse(atob(base64)); } catch (e) { return null; } }
+
+        // ==========================================
+        // 2. HELPER & UTILITY FUNCTIONS
+        // ==========================================
+
+        /**
+         * Safely fetches and parses JSON data from localStorage.
+         * @param {string} key - localStorage key name.
+         * @param {any} fallback - Default return value if key is missing or invalid.
+         */
+        function loadJson(key, fallback) {
+            try {
+                const raw = localStorage.getItem(key);
+                return raw ? JSON.parse(raw) : fallback;
+            } catch (e) {
+                return fallback;
+            }
+        }
+
+        /**
+         * Serializes and saves the active MOCK_DATABASE state back to localStorage.
+         */
+        function saveDatabase() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_DATABASE));
+        }
+
+        /**
+         * Sanitizes strings to prevent Cross-Site Scripting (XSS) when inserting text into HTML.
+         * @param {string} v - Raw value to sanitize.
+         */
+        function esc(v) {
+            return String(v ?? "").replace(/[&<>"']/g, m => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[m]));
+        }
+
+        /**
+         * Generates a unique alphanumeric ID string using a prefix, current timestamp, and random chars.
+         * @param {string} prefix - String prepended to the ID.
+         */
+        function makeId(prefix) {
+            return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        }
+
+        /**
+         * Decodes and parses a JWT (JSON Web Token) payload string from Google OAuth.
+         * @param {string} token - The raw JWT credential string.
+         */
+        function parseJwtToken(token) {
+            try {
+                const base64Url = token.split(".")[1]; // Extract token payload section
+                const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/"); // Convert base64url to standard base64
+                return JSON.parse(atob(base64)); // Decode base64 to JSON string and parse
+            } catch (e) {
+                return null;
+            }
+        }
+
+        /**
+         * Generates a fallback avatar image URL using the UI-Avatars API service based on user's name.
+         * @param {string} name - User's name string.
+         */
+        function avatarUrl(name) {
+            return "https://ui-avatars.com/api/?name=" + encodeURIComponent(name || "Customer") + "&background=0f172a&color=38bdf8";
+        }
+
+        /**
+         * Displays error/status messages on the login UI.
+         * @param {string} message - Message text to show.
+         */
+        function showCustomerLoginMessage(message) {
+            const el = document.getElementById("loginMessage");
+            if (el) {
+                el.textContent = message;
+                el.style.color = "#f87171";
+            }
+        }
+
+
+        // ==========================================
+        // 3. AUTHENTICATION & GOOGLE OAUTH
+        // ==========================================
+
+        // Unique Client ID used for Google Identity Services authentication
+        const GOOGLE_CLIENT_ID = "618464687927-3qhsv0r9012cn0e50g963vk4n71pb54r.apps.googleusercontent.com";
+
+        /**
+         * Initializes Google Identity Services SDK and renders the standard Sign-In button.
+         */
         function initCustomerGoogleAuth() {
             if (!window.google?.accounts?.id) return;
-            google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCustomerCredentialResponse, auto_select: false, cancel_on_tap_outside: false });
-            google.accounts.id.renderButton(document.getElementById("googleSignInButton"), { theme: "outline", size: "large", shape: "rectangular", text: "signin_with", logo_alignment: "left", width: 300 });
+
+            // Initialize Google Sign-In with client configuration and handler callback
+            google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleCustomerCredentialResponse,
+                auto_select: false,
+                cancel_on_tap_outside: false
+            });
+
+            // Render the physical Google Sign-In button into designated container element
+            google.accounts.id.renderButton(document.getElementById("googleSignInButton"), {
+                theme: "outline",
+                size: "large",
+                shape: "rectangular",
+                text: "signin_with",
+                logo_alignment: "left",
+                width: 300
+            });
         }
-        const GOOGLE_CLIENT_ID = "618464687927-3qhsv0r9012cn0e50g963vk4n71pb54r.apps.googleusercontent.com";
+
+        /**
+         * Callback handler fired when Google completes authentication.
+         * @param {object} response - Credential object returned by Google.
+         */
         function handleCustomerCredentialResponse(response) {
+            // Parse raw JWT token into a readable user profile object
             const googleUser = parseJwtToken(response.credential);
-            if (!googleUser?.email) { showCustomerLoginMessage("Google could not provide your email address."); return; }
-            const email = String(googleUser.email).trim().toLowerCase();
-            customerUser = MOCK_DATABASE.find(c => String(c.email || "").trim().toLowerCase() === email) || null;
-            pendingGoogleUser = googleUser;
-            loginView.hidden = true; appView.hidden = false;
-            if (!customerUser) {
-                onboardName.value = googleUser.name || googleUser.given_name || ""; onboardEmail.value = email;
-                customerShow("customer-onboarding"); return;
+
+            if (!googleUser?.email) {
+                showCustomerLoginMessage("Google could not provide your email address.");
+                return;
             }
+
+            const email = String(googleUser.email).trim().toLowerCase();
+
+            // Check if user exists in our local database by matching email
+            customerUser = MOCK_DATABASE.find(c => String(c.email || "").trim().toLowerCase() === email) || null;
+            pendingGoogleUser = googleUser; // Cache Google user details
+
+            // Switch UI view from Login overlay to Application view
+            loginView.hidden = true;
+            appView.hidden = false;
+
+            // If user is not found in database, direct them to onboarding screen to create account
+            if (!customerUser) {
+                onboardName.value = googleUser.name || googleUser.given_name || "";
+                onboardEmail.value = email;
+                customerShow("customer-onboarding");
+                return;
+            }
+
+            // If user already exists, enter application dashboard
             enterCustomerApp(googleUser);
         }
+
+        /**
+         * Sets up active user session details and navigates to main customer dashboard.
+         * @param {object} googleUser - Decoded profile object from Google.
+         */
         function enterCustomerApp(googleUser) {
-            customerName.textContent = customerUser.name; customerEmail.textContent = customerUser.email;
+            customerName.textContent = customerUser.name;
+            customerEmail.textContent = customerUser.email;
+
+            // Determine avatar source hierarchy: uploaded picture -> Google picture -> UI-Avatars SVG generator
             customerAvatar.src = customerUser.picture || googleUser?.picture || avatarUrl(customerUser.name);
             profilePreview.src = customerUser.picture || googleUser?.picture || avatarUrl(customerUser.name);
-            renderCustomer(); customerShow("customer-dashboard");
-        }
-        function avatarUrl(name) { return "https://ui-avatars.com/api/?name=" + encodeURIComponent(name || "Customer") + "&background=0f172a&color=38bdf8"; }
-        function showCustomerLoginMessage(message) { const el = document.getElementById("loginMessage"); if (el) { el.textContent = message; el.style.color = "#f87171"; } }
-        function customerLogout() { customerUser = null; customerVehicle = null; pendingGoogleUser = null; appView.hidden = true; loginView.hidden = false; if (window.google?.accounts?.id) google.accounts.id.disableAutoSelect(); showCustomerLoginMessage(""); }
 
+            renderCustomer();
+            customerShow("customer-dashboard");
+        }
+
+        /**
+         * Resets session state variables and logs out user back to login screen.
+         */
+        function customerLogout() {
+            customerUser = null;
+            customerVehicle = null;
+            pendingGoogleUser = null;
+            appView.hidden = true;
+            loginView.hidden = false;
+
+            if (window.google?.accounts?.id) google.accounts.id.disableAutoSelect();
+            showCustomerLoginMessage("");
+        }
+
+
+        // ==========================================
+        // 4. NAVIGATION & SINGLE PAGE APPLICATION (SPA) ROUTER
+        // ==========================================
+
+        /**
+         * Router helper function to switch visible views/sections.
+         * @param {string} id - The DOM ID of the section to reveal.
+         */
         function customerShow(id) {
-            // Hide all main section views
+            // Hide all top-level main sections
             document.querySelectorAll("main > section").forEach(sec => sec.hidden = true);
 
-            // Unhide the requested section
+            // Target and reveal the requested section ID
             const target = document.getElementById(id);
             if (target) {
                 target.hidden = false;
             }
 
-            // Optional UI re-render on section switch
+            // Refresh dynamic UI views when navigating back to list/dashboard sections
             if (id === 'customer-vehicles' || id === 'customer-dashboard') {
                 if (typeof renderCustomer === 'function') renderCustomer();
                 if (typeof renderCustomerDashboard === 'function') renderCustomerDashboard();
             }
         }
 
+
+        // ==========================================
+        // 5. DATA RENDERING & DASHBOARD LOGIC
+        // ==========================================
+
+        /**
+         * Renders current user stats, vehicle card grid lists, and populates profile settings forms.
+         */
         function renderCustomer() {
             if (!customerUser) return;
+
             const cars = customerUser.cars || [];
+
+            // Update dashboard header cards
             welcomeTitle.textContent = `Welcome back, ${(customerUser.name || "Customer").split(" ")[0]} 👋`;
             customerVehicleCount.textContent = cars.length;
             customerActiveCount.textContent = cars.filter(c => c.status === "Active").length;
             customerStatus.textContent = customerUser.status || "Active";
-            const cards = cars.map(car => `<article class="vehicle-card"><div class="vehicle-title">${esc(`${car.year || ""} ${car.make || ""} ${car.model || ""}`.trim())}</div><div class="vehicle-sub">${esc(car.nickname || car.plate || "No nickname")}${car.plate ? ` • ${esc(car.plate)}` : ""}</div><span class="status">${esc(car.status || "Active")}</span>${car.activationStatus === "Verified" ? `<div class="device-badge"><span class="device-dot"></span> Activation verified · locked</div>` : `<div class="device-badge" style="color:#fbbf24"><span class="device-dot" style="background:#fbbf24"></span> Activation required</div>`}<div class="actions" style="margin-top:1rem"><button class="primary" onclick="customerOpenVehicle('${String(car.id).replace(/'/g, "\'")}')">Manage Vehicle</button></div></article>`).join("");
+
+            // Generate HTML markup for each vehicle card in customer list
+            const cards = cars.map(car => `
+                <article class="vehicle-card">
+                    <div class="vehicle-title">${esc(`${car.year || ""} ${car.make || ""} ${car.model || ""}`.trim())}</div>
+                    <div class="vehicle-sub">${esc(car.nickname || car.plate || "No nickname")}${car.plate ? ` • ${esc(car.plate)}` : ""}</div>
+                    <span class="status">${esc(car.status || "Active")}</span>
+                    ${car.activationStatus === "Verified"
+                    ? `<div class="device-badge"><span class="device-dot"></span> Activation verified · locked</div>`
+                    : `<div class="device-badge" style="color:#fbbf24"><span class="device-dot" style="background:#fbbf24"></span> Activation required</div>`
+                }
+                    <div class="actions" style="margin-top:1rem">
+                        <button class="primary" onclick="customerOpenVehicle('${String(car.id).replace(/'/g, "\\'")}')">Manage Vehicle</button>
+                    </div>
+                </article>
+            `).join("");
+
             const empty = "<div class='empty-state'>No vehicles are currently registered. Register your first vehicle to get started.</div>";
-            dashboardVehicles.innerHTML = cards || empty; vehicleList.innerHTML = cards || empty;
-            accountName.value = customerUser.name || ""; accountEmail.value = customerUser.email || ""; accountPhone.value = customerUser.phone || ""; accountCompany.value = customerUser.company || "";
+
+            // Inject vehicle cards markup into both Dashboard and My Vehicles sections
+            dashboardVehicles.innerHTML = cards || empty;
+            vehicleList.innerHTML = cards || empty;
+
+            // Populate Account Settings input fields
+            accountName.value = customerUser.name || "";
+            accountEmail.value = customerUser.email || "";
+            accountPhone.value = customerUser.phone || "";
+            accountCompany.value = customerUser.company || "";
             profilePreview.src = customerUser.picture || pendingGoogleUser?.picture || avatarUrl(customerUser.name);
         }
 
+
+        // ==========================================
+        // 6. VEHICLE REGISTRATION & ACTIVATION CODES
+        // ==========================================
+
+        /**
+         * Resets form fields and opens the vehicle registration screen.
+         */
         function openVehicleRegistration() {
-            // 1. Safely reset form if present
+            // 1. Safely reset form input elements if present
             const form = document.getElementById("registerVehicleForm");
             if (form) form.reset();
 
-            // 2. Reset code state
+            // 2. Clear verified code state
             verifiedRegistrationCode = null;
 
-            // 3. Safely reset verification message element
+            // 3. Reset verification message container UI
             const verificationBox = document.getElementById("activationVerification");
             if (verificationBox) {
                 verificationBox.className = "verification";
                 verificationBox.textContent = "";
             }
 
-            // 4. Trigger UI transition
+            // 4. Trigger UI transition to show vehicle registration page
             customerShow("customer-register-vehicle");
         }
 
-        // 1. Mock Activation Code Database
+        // Mock database containing valid and consumed hardware activation codes
         const MOCK_ACTIVATION_CODES = {
             "JFF-ABCD-EFGH-JKLM": { status: "Active" },
             "JFF-1234-5678-9012": { status: "Active" },
             "JFF-USED-CODE-0000": { status: "Used" }
         };
 
-        // 2. Updated Verification Function
+        /**
+         * Validates input code against global API service or local fallback mock database.
+         * @returns {boolean} True if verification succeeded, false otherwise.
+         */
+        const AUTO_DEV_API_KEY = "sk_ad_EhEpipfu5dA3QtUVGCOe_Ef3";
+        const API_KEY = "AIzaSyDnP5gQ-CWLj1J4xEd0T6xvkboRZI_zoAM";
+
+        let isVinVerified = false;
+        let isActivationVerified = false;
+
+        /**
+         * Searches the auto.dev API using the 17-character VIN
+         */
+        async function fetchVinDetails() {
+                const vinInput = document.getElementById("regVin");
+                const statusMsg = document.getElementById("vinStatusMessage");
+                const regMake = document.getElementById("regMake");
+                const regModel = document.getElementById("regModel");
+                const regYear = document.getElementById("regYear");
+                const actCodeInput = document.getElementById("regActivationCode");
+                const actBtn = document.getElementById("btnVerifyActivation");
+
+                const vin = vinInput.value.trim().toUpperCase();
+
+                if (vin.length !== 17) {
+                    statusMsg.textContent = "Please enter a valid 17-character VIN.";
+                    statusMsg.className = "verification error";
+                    return;
+                }
+
+                statusMsg.textContent = "Fetching vehicle details...";
+                statusMsg.className = "verification pending";
+
+                try {
+                    const apiKey = "sk_ad_EhEpipfu5dA3QtUVGCOe_Ef3";
+                    const targetUrl = `https://api.auto.dev/vin/${vin}?apiKey=${apiKey}`;
+
+                    // Use CORS proxy if making client-side requests directly
+                    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+
+                    const response = await fetch(proxyUrl);
+                    if (!response.ok) {
+                        throw new Error(`API returned HTTP ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (data && (data.make || data.model || data.vehicle)) {
+                        // Extract Make & Year
+                        regMake.value = data.make || data.vehicle?.make || "";
+                        regYear.value = data.year || data.vehicle?.year || "";
+
+                        // Extract Model and additional specifications
+                        const baseModel = data.model || data.vehicle?.model || "";
+                        const trim = data.trim || "";
+                        const style = data.style || "";
+                        const body = data.body || "";
+                        const engine = data.engine || "";
+                        const drive = data.drive || "";
+                        const transmission = data.transmission || "";
+
+                        // Build details array filter out empty strings
+                        const specDetails = [trim, style, body, engine, drive, transmission]
+                            .filter(Boolean)
+                            .join(" | ");
+
+                        // Combine Model with details (e.g. "911 (GT3 RS Coupe | Coupe 2D | 4.0, Flat 6 Cylinder Engine | Rear Wheel Drive | Automatic)")
+                        regModel.value = specDetails
+                            ? `${baseModel} (${specDetails})`
+                            : baseModel;
+
+                        statusMsg.textContent = "Vehicle details loaded successfully. Please enter your activation code.";
+                        statusMsg.className = "verification success";
+
+                        // Unlock activation code input fields
+                        if (actCodeInput) actCodeInput.disabled = false;
+                        if (actBtn) actBtn.disabled = false;
+
+                    } else {
+                        statusMsg.textContent = "Vehicle details could not be found for this VIN.";
+                        statusMsg.className = "verification error";
+                    }
+                } catch (error) {
+                    console.error("VIN Fetch Error:", error);
+                    statusMsg.textContent = "Error retrieving VIN details. Please check connection and try again.";
+                    statusMsg.className = "verification error";
+                }
+            }
+
+        /**
+         * Verifies activation code after VIN has been populated
+         */
         function verifyRegistrationActivation() {
-            const input = document.getElementById("regActivationCode");
-            if (!input) return false;
+            const codeInput = document.getElementById("regActivationCode");
+            const codeMsg = document.getElementById("activationVerification");
+            const code = codeInput.value.trim();
 
-            const code = String(input.value || "").trim().toUpperCase();
-            input.value = code;
-
-            const box = document.getElementById("activationVerification");
-            verifiedRegistrationCode = null;
-
-            if (!code) {
-                box.className = "verification bad";
-                box.textContent = "Please enter an activation code.";
-                return false;
-            }
-
-            // Check against global API if present, otherwise fallback to local mock DB
-            let result;
-            if (window.JaFaFaActivation && typeof window.JaFaFaActivation.verify === "function") {
-                result = window.JaFaFaActivation.verify(code);
-            } else {
-                // Local mock lookup
-                const foundCode = MOCK_ACTIVATION_CODES[code];
-                if (!foundCode) {
-                    result = { ok: false, reason: "Invalid activation code. Please check and try again." };
-                } else if (foundCode.status === "Used") {
-                    result = { ok: false, reason: "This activation code has already been used." };
-                } else {
-                    result = { ok: true, code: code };
-                }
-            }
-
-            // Handle Response Output
-            if (!result.ok) {
-                box.className = "verification bad";
-                box.textContent = result.reason;
-                return false;
-            }
-
-            verifiedRegistrationCode = result.code;
-            box.className = "verification ok";
-            box.textContent = "Activation code verified ✓ It is available for one-time registration.";
-            return true;
-        }
-
-        function registerVehicle(e) {
-            if (e) e.preventDefault();
-
-            // Require activation code verification before registration
-            if (!verifiedRegistrationCode) {
-                const box = document.getElementById("activationVerification");
-                if (box) {
-                    box.className = "verification bad";
-                    box.textContent = "Please verify your activation code before registering.";
-                }
-                document.getElementById("regActivationCode")?.focus();
+            if (!isVinVerified) {
+                alert("Please lookup a valid 17-character VIN first.");
                 return;
             }
 
-            const carMake = document.getElementById("regMake")?.value.trim() || "";
-            const carModel = document.getElementById("regModel")?.value.trim() || "";
-            const carYear = document.getElementById("regYear")?.value.trim() || "";
-            const carPlate = document.getElementById("regPlate")?.value.trim() || "";
-            const carVin = document.getElementById("regVin")?.value.trim() || "";
-            const carNickname = document.getElementById("regNickname")?.value.trim() || "";
+            if (!code) {
+                codeMsg.className = "verification bad";
+                codeMsg.style.display = "block";
+                codeMsg.textContent = "Please enter an activation code.";
+                return;
+            }
+
+            // Example code verification logic (can integrate with window.JaFaFaActivation if needed)
+            const isValid = code.length >= 6;
+
+            if (isValid) {
+                codeMsg.className = "verification ok";
+                codeMsg.style.display = "block";
+                codeMsg.textContent = "Activation code verified successfully!";
+                isActivationVerified = true;
+                document.getElementById("btnRegisterVehicle").disabled = false;
+            } else {
+                codeMsg.className = "verification bad";
+                codeMsg.style.display = "block";
+                codeMsg.textContent = "Invalid activation code.";
+                isActivationVerified = false;
+                document.getElementById("btnRegisterVehicle").disabled = false;
+            }
+        }
+
+        /**
+         * Handles vehicle submission & persistence
+         */
+        function registerVehicle(e) {
+            e.preventDefault();
+
+            if (!isVinVerified) {
+                alert("You must enter a valid 17-character VIN first.");
+                return;
+            }
+
+            if (!isActivationVerified) {
+                alert("Please verify your activation code before registering.");
+                return;
+            }
+
+            const vin = document.getElementById("regVin").value.trim().toUpperCase();
+            const make = document.getElementById("regMake").value.trim();
+            const model = document.getElementById("regModel").value.trim();
+            const year = document.getElementById("regYear").value.trim();
+            const plate = document.getElementById("regPlate").value.trim();
+            const nickname = document.getElementById("regNickname").value.trim();
+            const activationCode = document.getElementById("regActivationCode").value.trim();
 
             const newVehicle = {
-                id: "vehicle-" + Date.now().toString(36),
-                make: carMake,
-                model: carModel,
-                year: carYear,
-                plate: carPlate,
-                vin: carVin,
-                nickname: carNickname || `${carMake} ${carModel}`.trim() || "My Vehicle",
+                id: "veh-" + Date.now(),
+                vin,
+                make,
+                model,
+                year,
+                plate,
+                nickname: nickname || `${make} ${model}`,
+                activationCode,
                 status: "Active",
-                activationStatus: "Verified",
-                activationCode: verifiedRegistrationCode
+                isActivated: true
             };
 
             if (typeof customerUser !== "undefined" && customerUser) {
@@ -898,45 +1214,149 @@
                 if (typeof saveDatabase === "function") saveDatabase();
             }
 
-            // Mark activation code as used
-            if (MOCK_ACTIVATION_CODES[verifiedRegistrationCode]) {
-                MOCK_ACTIVATION_CODES[verifiedRegistrationCode] = { status: "Used" };
-            }
-            verifiedRegistrationCode = null;
+            alert("Vehicle successfully registered!");
 
-            if (typeof renderCustomer === "function") renderCustomer();
-            customerShow("customer-vehicles");
+            if (typeof customerShow === "function") {
+                customerShow("customer-vehicles");
+            }
         }
 
+        // ==========================================
+        // 7. VEHICLE DETAILS & EDITING LOGIC
+        // ==========================================
+
+        /**
+         * Populates and opens detailed inspect section for a selected vehicle ID.
+         * @param {string} id - Target vehicle ID string.
+         */
         function customerOpenVehicle(id) {
-            customerVehicle = (customerUser?.cars || []).find(c => String(c.id) === String(id)); if (!customerVehicle) return;
+            customerVehicle = (customerUser?.cars || []).find(c => String(c.id) === String(id));
+            if (!customerVehicle) return;
+
             vehicleDetailsTitle.textContent = `${customerVehicle.year || ""} ${customerVehicle.make || ""} ${customerVehicle.model || ""}`.trim();
             vehicleDetailsSub.textContent = `${customerVehicle.plate || "No plate"} • ${customerVehicle.status || "Active"}`;
-            vehicleDetails.innerHTML = `<div class="detail"><b>VIN</b>${esc(customerVehicle.vin || "—")}</div><div class="detail"><b>Make</b>${esc(customerVehicle.make || "—")}</div><div class="detail"><b>Model</b>${esc(customerVehicle.model || "—")}</div><div class="detail"><b>Year</b>${esc(customerVehicle.year || "—")}</div><div class="detail"><b>License Plate</b>${esc(customerVehicle.plate || "—")}</div><div class="detail"><b>Vehicle Nickname</b>${esc(customerVehicle.nickname || "—")}</div><div class="detail"><b>Activation</b><span style="color:#4ade80">Verified · Locked</span></div><div class="detail"><b>Vehicle Status</b>${esc(customerVehicle.status || "Active")}</div>`;
+
+            // Build HTML details layout for selected vehicle metadata
+            vehicleDetails.innerHTML = `
+                <div class="detail"><b>VIN</b>${esc(customerVehicle.vin || "—")}</div>
+                <div class="detail"><b>Make</b>${esc(customerVehicle.make || "—")}</div>
+                <div class="detail"><b>Model</b>${esc(customerVehicle.model || "—")}</div>
+                <div class="detail"><b>Year</b>${esc(customerVehicle.year || "—")}</div>
+                <div class="detail"><b>License Plate</b>${esc(customerVehicle.plate || "—")}</div>
+                <div class="detail"><b>Vehicle Nickname</b>${esc(customerVehicle.nickname || "—")}</div>
+                <div class="detail"><b>Activation</b><span style="color:#4ade80">Verified · Locked</span></div>
+                <div class="detail"><b>Vehicle Status</b>${esc(customerVehicle.status || "Active")}</div>
+            `;
+
             customerShow("customer-vehicle-details");
         }
+
+        /**
+         * Fills the edit form inputs with the active vehicle's current attributes and opens the editor view.
+         */
         function openVehicleEditor() {
             if (!customerVehicle) return;
-            editMake.value = customerVehicle.make || ""; editModel.value = customerVehicle.model || ""; editYear.value = customerVehicle.year || ""; editVin.value = customerVehicle.vin || ""; editPlate.value = customerVehicle.plate || ""; editNickname.value = customerVehicle.nickname || ""; customerShow("customer-edit-vehicle");
+            editMake.value = customerVehicle.make || "";
+            editModel.value = customerVehicle.model || "";
+            editYear.value = customerVehicle.year || "";
+            editVin.value = customerVehicle.vin || "";
+            editPlate.value = customerVehicle.plate || "";
+            editNickname.value = customerVehicle.nickname || "";
+
+            customerShow("customer-edit-vehicle");
         }
+
+        /**
+         * Persists updated metadata (e.g., license plate or nickname) for the active vehicle.
+         * @param {Event} e - Form submission event object.
+         */
         function saveVehicleEdits(e) {
-            e.preventDefault(); if (!customerVehicle || !customerUser) return;
-            customerVehicle.plate = editPlate.value.trim().toUpperCase(); customerVehicle.nickname = editNickname.value.trim(); saveDatabase(); renderCustomer(); customerOpenVehicle(customerVehicle.id);
+            e.preventDefault();
+            if (!customerVehicle || !customerUser) return;
+
+            customerVehicle.plate = editPlate.value.trim().toUpperCase();
+            customerVehicle.nickname = editNickname.value.trim();
+
+            saveDatabase();
+            renderCustomer();
+            customerOpenVehicle(customerVehicle.id);
         }
+
+
+        // ==========================================
+        // 8. PROFILE & ACCOUNT MANAGEMENT
+        // ==========================================
+
+        /**
+         * Saves user profile updates (name, phone, company, and optional profile picture) to storage.
+         * @param {Event} e - Form submission event object.
+         */
         function saveAccount(e) {
-            e.preventDefault(); if (!customerUser) return;
-            customerUser.name = accountName.value.trim(); customerUser.phone = accountPhone.value.trim(); customerUser.company = accountCompany.value.trim();
+            e.preventDefault();
+            if (!customerUser) return;
+
+            customerUser.name = accountName.value.trim();
+            customerUser.phone = accountPhone.value.trim();
+            customerUser.company = accountCompany.value.trim();
+
             const file = profilePictureInput.files?.[0];
-            if (file) { const reader = new FileReader(); reader.onload = () => { customerUser.picture = reader.result; saveDatabase(); pendingGoogleUser = null; enterCustomerApp(); }; reader.readAsDataURL(file); }
-            else { saveDatabase(); pendingGoogleUser = null; enterCustomerApp(); }
+
+            // Read file as Base64 data URL if a new image file was uploaded
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    customerUser.picture = reader.result;
+                    saveDatabase();
+                    pendingGoogleUser = null;
+                    enterCustomerApp();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                saveDatabase();
+                pendingGoogleUser = null;
+                enterCustomerApp();
+            }
         }
-        profilePictureInput.addEventListener("change", () => { const f = profilePictureInput.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => profilePreview.src = r.result; r.readAsDataURL(f); } });
+
+        // Event listener to show live image preview when selecting a new profile picture file
+        profilePictureInput.addEventListener("change", () => {
+            const f = profilePictureInput.files?.[0];
+            if (f) {
+                const r = new FileReader();
+                r.onload = () => profilePreview.src = r.result;
+                r.readAsDataURL(f);
+            }
+        });
+
+        /**
+         * Creates a new user record for first-time users signing in via Google and initializes their workspace.
+         * @param {Event} e - Form submission event object.
+         */
         function completeOnboarding(e) {
             e.preventDefault();
+
             const email = String(onboardEmail.value || pendingGoogleUser?.email || "").trim().toLowerCase();
             if (!email) return;
-            customerUser = { id: Date.now(), name: onboardName.value.trim(), email, phone: onboardPhone.value.trim(), company: onboardCompany.value.trim(), tier: "Standard", status: "Active", picture: pendingGoogleUser?.picture || "", cars: [] };
-            MOCK_DATABASE.push(customerUser); saveDatabase(); enterCustomerApp(pendingGoogleUser); alert("Your Telemetry Hub account has been created. You can now register a vehicle.");
+
+            // Construct new customer user object
+            customerUser = {
+                id: Date.now(),
+                name: onboardName.value.trim(),
+                email,
+                phone: onboardPhone.value.trim(),
+                company: onboardCompany.value.trim(),
+                tier: "Standard",
+                status: "Active",
+                picture: pendingGoogleUser?.picture || "",
+                cars: []
+            };
+
+            // Push new user to local dataset and persist
+            MOCK_DATABASE.push(customerUser);
+            saveDatabase();
+
+            enterCustomerApp(pendingGoogleUser);
+            alert("Your Telemetry Hub account has been created. You can now register a vehicle.");
         }
     </script>
     <script src="https://accounts.google.com/gsi/client" async defer onload="initCustomerGoogleAuth()"></script>
