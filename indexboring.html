@@ -611,101 +611,124 @@
     }
 
 
-    .activation-panel {
-      margin: 1.5rem 0;
-      padding: 1.25rem 1.4rem;
-      border: 1px solid rgba(56, 189, 248, .18);
-      border-radius: 14px;
-      background: rgba(255, 255, 255, .025)
+    /* AI ANALYSIS PROGRESS OVERLAY */
+    .analysis-progress-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      background: rgba(2, 6, 23, 0.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
 
-    .activation-head {
+    .analysis-progress-card {
+      width: min(520px, 100%);
+      background: #1e293b;
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.55);
+    }
+
+    .analysis-progress-title {
+      color: #f8fafc;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: .5rem;
+    }
+
+    .analysis-progress-message {
+      color: #94a3b8;
+      line-height: 1.5;
+      margin-bottom: 1.25rem;
+    }
+
+    .analysis-progress-track {
+      height: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #0f172a;
+      border: 1px solid #334155;
+    }
+
+    .analysis-progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #0284c7, #38bdf8);
+      transition: width .25s ease;
+    }
+
+    .analysis-progress-meta {
       display: flex;
       justify-content: space-between;
       gap: 1rem;
-      align-items: flex-start;
-      flex-wrap: wrap
-    }
-
-    .activation-head h3 {
-      margin: 0 0 .35rem;
-      color: #f8fafc
-    }
-
-    .activation-head p {
-      margin: 0;
+      margin-top: .7rem;
       color: #94a3b8;
-      font-size: .85rem
+      font-size: .8rem;
     }
 
-    .activation-stats {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap
-    }
-
-    .activation-stats span {
-      padding: .45rem .65rem;
-      border: 1px solid rgba(148, 163, 184, .12);
-      border-radius: 8px;
-      color: #94a3b8;
-      font-size: .72rem
-    }
-
-    .activation-stats b {
-      color: #f8fafc;
-      margin-right: .2rem
-    }
-
-    .activation-list {
-      margin-top: 1rem;
+    .analysis-results-grid {
       display: grid;
-      gap: 7px
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin: 1.25rem 0;
     }
 
-    .activation-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      padding: .7rem .8rem;
-      border: 1px solid rgba(148, 163, 184, .08);
-      border-radius: 9px;
-      background: rgba(0, 0, 0, .12)
+    .analysis-result-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 1rem;
     }
 
-    .activation-row code {
-      color: #67e8f9;
+    .analysis-result-label {
+      color: #94a3b8;
+      font-size: .75rem;
+      text-transform: uppercase;
       font-weight: 700;
-      letter-spacing: .08em
+      letter-spacing: .05em;
     }
 
-    .activation-row small {
-      color: #64748b
+    .analysis-result-value {
+      color: #38bdf8;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-top: .3rem;
     }
 
-    .activation-status {
-      margin-left: auto;
-      font-size: .65rem;
-      font-weight: 800;
-      letter-spacing: .06em
-    }
-
-    .activation-status.available {
-      color: #4ade80
-    }
-
-    .activation-status.activated {
-      color: #38bdf8
-    }
-
-    .activation-status.revoked {
-      color: #fb7185
+    .analysis-table-title {
+      margin: 1.5rem 0 .75rem;
+      color: #f8fafc;
+      font-size: 1rem;
+      font-weight: 700;
     }
   </style>
+
+  <!-- Load TensorFlow.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <!--script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.16.0"></script-->
 </head>
 
 <body>
+
+  <div id="analysisProgressOverlay" class="analysis-progress-overlay" hidden aria-live="polite" aria-busy="true">
+    <div class="analysis-progress-card">
+      <div class="analysis-progress-title">Analyzing Telemetry</div>
+      <div id="analysisProgressMessage" class="analysis-progress-message">Preparing analysis...</div>
+      <div class="analysis-progress-track">
+        <div id="analysisProgressFill" class="analysis-progress-fill"></div>
+      </div>
+      <div class="analysis-progress-meta"><span id="analysisProgressStage">Starting</span><strong
+          id="analysisProgressPercent">0%</strong></div>
+    </div>
+  </div>
+
+  <!-- VIEW 1: UNAUTHENTICATED -->
   <div id="view-unauthenticated" class="auth-container">
     <div class="card">
       <h1>Customer Portal</h1>
@@ -716,7 +739,10 @@
       <div id="buttonDiv"></div>
     </div>
   </div>
+
+  <!-- VIEW 2: AUTHENTICATED MAIN -->
   <div id="view-authenticated" hidden>
+
     <header class="top-bar">
       <div class="app-brand">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -725,6 +751,7 @@
         </svg>
         <span>Telemetry Hub</span>
       </div>
+
       <div class="user-pill">
         <img id="user-picture" class="user-avatar" src="" alt="User Avatar" />
         <div class="user-info">
@@ -734,7 +761,10 @@
         <button class="btn-logout" onclick="handleSignOut()">Sign Out</button>
       </div>
     </header>
+
     <main class="main-content">
+
+      <!-- SCREEN 1: CUSTOMERS -->
       <section id="screen-customers">
         <div class="view-header">
           <h2>Customer Lookup</h2>
@@ -742,6 +772,7 @@
             Search for a customer to view their registered fleet vehicles.
           </p>
         </div>
+
         <div class="dropdown-wrapper">
           <div class="search-box">
             <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -753,6 +784,7 @@
           </div>
           <div id="customerDropdownResults" class="dropdown-results" hidden></div>
         </div>
+
         <div id="selectedCustomerSummary" class="selected-summary-card" hidden>
           <div style="
                 display: flex;
@@ -795,6 +827,8 @@
           </button>
         </div>
       </section>
+
+      <!-- SCREEN 2: VEHICLES -->
       <section id="screen-vehicles" hidden>
         <div class="breadcrumb">
           <button class="btn-back" onclick="showScreen('screen-customers')">
@@ -803,10 +837,12 @@
           <span>/</span>
           <span id="breadcrumbCustomer" style="color: #38bdf8; font-weight: 600"></span>
         </div>
+
         <div class="view-header">
           <h2>Vehicle Registry</h2>
           <p>Search for a vehicle within this customer's account.</p>
         </div>
+
         <div class="dropdown-wrapper">
           <div class="search-box">
             <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -818,6 +854,7 @@
           </div>
           <div id="vehicleDropdownResults" class="dropdown-results" hidden></div>
         </div>
+
         <div id="selectedVehicleSummary" class="selected-summary-card" hidden>
           <div style="
                 display: flex;
@@ -856,12 +893,14 @@
           </button>
         </div>
       </section>
+
       <section id="screen-telemetry" hidden>
         <div class="breadcrumb">
           <button class="btn-back" onclick="showScreen('screen-vehicles')">
             ← Back to Vehicle Selection
           </button>
         </div>
+
         <div class="vehicle-overview-card"
           style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; margin-bottom: 1.5rem;">
           <div class="vehicle-spec">
@@ -872,14 +911,18 @@
           <div style="display: flex; align-items: center; gap: 0.75rem;">
             <span id="telemetryPlate" class="car-plate"
               style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.875rem;">--</span>
+            <span id="telemetryVID" class="car-vid"
+              style="background: rgba(148, 163, 184, 0.1); color: #94a3b8; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 500; font-size: 0.875rem; font-family: monospace;">VID:
+              --</span>
             <span id="telemetryStatus" class="status-badge status-active">Active</span>
           </div>
         </div>
+
         <!--
-    TELEMETRY LOG AREA
-    The heading and log counter stay outside the scrollable table.
-    This means you can always see how many records are displayed.
-  -->
+            TELEMETRY LOG AREA
+            The heading and log counter stay outside the scrollable table.
+            This means you can always see how many records are displayed.
+            -->
         <div class="telemetry-table-header">
           <!-- The left side identifies what this table contains. -->
           <div class="telemetry-table-title">Telemetry Logs</div>
@@ -891,9 +934,10 @@
         </div>
 
         <!--
-    Only this container scrolls.
-    The table header stays visible while the log rows move underneath it.
-  -->
+            Only this container scrolls.
+            The table header stays visible while the log rows move underneath it.
+            -->
+
         <div class="table-container">
           <table id="telemetryTable" class="telemetry-table">
             <thead>
@@ -968,116 +1012,57 @@
             <!-- JavaScript places the currently visible records here. -->
             <tbody id="telemetryTableBody"></tbody>
           </table>
-
-          <div id="output"></div>
         </div>
 
         <div class="filter-panel" style="margin-top: 1.5rem;">
-          <h4 style="margin-bottom: 0.35rem; color: #38bdf8">Analyze Telemetry Data</h4>
-          <p style="margin-bottom: 1.25rem; color: #94a3b8; font-size: 0.85rem; line-height: 1.5;">
-            Combine independent telemetry categories to find the exact operating conditions you want to inspect.
-          </p>
+          <h4 style="margin-bottom: 1rem; color: #38bdf8">Analyze Telemetry Data</h4>
 
-          <div class="filter-form telemetry-v1-grid">
+          <div class="filter-form">
             <div class="form-group">
-              <label for="drivingCondition">Driving Condition</label>
-              <select id="drivingCondition" class="form-control">
-                <option value="all">All Driving Conditions</option>
-                <option value="off">Engine Off / Parked</option>
-                <option value="stationary">Engine Running / Stationary</option>
-                <option value="idling">Idling</option>
-                <option value="traffic">Low-Speed Traffic</option>
-                <option value="urban">Urban Driving</option>
-                <option value="cruise">Normal Cruising</option>
-                <option value="highway">Highway Cruising</option>
-                <option value="acceleration">Hard Acceleration</option>
+              <label for="minSpeed">Speed Filter</label>
+              <select id="minSpeed" class="form-control">
+                <option value="0">All Speeds (>= 0 Km/h)</option>
+                <option value="15">Idle / Crawling (>= 15 Km/h)</option>
+                <option value="40">City Driving (>= 40 Km/h)</option>
+                <option value="65">Highway Cruise (>= 65 Km/h)</option>
+                <option value="75">High Speed / Excessive (>= 75 Km/h)</option>
+                <option value="90">Extreme Speed (>= 90 Km/h)</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label for="engineCondition">Engine Condition</label>
-              <select id="engineCondition" class="form-control">
-                <option value="all">Any Engine Condition</option>
-                <option value="cold">Cold Start / Cold Engine</option>
-                <option value="warming">Warming Up</option>
-                <option value="normal">Normal Operating Temperature</option>
-                <option value="high">High Temperature</option>
-                <option value="overheat">Overheating Risk</option>
+              <label for="metricType">Focus / Metric Filter</label>
+              <select id="metricType" class="form-control">
+                <option value="all">Show All Logs</option>
+                <option value="speed">Speed Alerts (>75 Km/h)</option>
+                <option value="temp">Thermal Warnings (>105°C)</option>
+                <option value="overheat">Critical Overheat (>110°C)</option>
+                <option value="battery">
+                  Low Battery Voltage (&lt;12.0V)
+                </option>
+                <option value="rpm">High RPM Warning (>5500 rpm)</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label for="performanceLoad">Performance / Load</label>
-              <select id="performanceLoad" class="form-control">
-                <option value="all">All Performance Levels</option>
-                <option value="highRpm">High RPM (≥ 4500 rpm)</option>
-                <option value="highLoad">High Engine Load (≥ 70%)</option>
-                <option value="highThrottle">High Throttle (≥ 70%)</option>
-                <option value="highAirflow">High Airflow (≥ 60 g/s)</option>
-                <option value="lowLoad">Low Engine Load (≤ 25%)</option>
-                <option value="lowAirflow">Low Airflow (≤ 8 g/s)</option>
-                <option value="hardAcceleration">Hard Acceleration</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="fuelEconomy">Fuel &amp; Economy</label>
-              <select id="fuelEconomy" class="form-control">
-                <option value="all">All Fuel Conditions</option>
-                <option value="lowFuel">Low Fuel (&lt; 25%)</option>
-                <option value="veryLowFuel">Very Low Fuel (&lt; 10%)</option>
-                <option value="goodEconomy">Good Economy (≥ 20 mpg)</option>
-                <option value="poorEconomy">Poor Economy (&lt; 10 mpg)</option>
-                <option value="heavyConsumption">Heavy Fuel Consumption (&lt; 8 mpg)</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="electricalSystem">Electrical System</label>
-              <select id="electricalSystem" class="form-control">
-                <option value="all">All Electrical Conditions</option>
-                <option value="engineOffLow">Engine-Off Low Voltage (&lt; 12.2 V)</option>
-                <option value="chargingNormal">Charging Normally (≥ 13.2 V)</option>
-                <option value="lowCharging">Low Charging Voltage (&lt; 13.2 V)</option>
-                <option value="highCharging">High Charging Voltage (&gt; 14.8 V)</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="airIntake">Air / Intake</label>
-              <select id="airIntake" class="form-control">
-                <option value="all">All Air / Intake Conditions</option>
-                <option value="highIat">High Intake Temperature (≥ 45°C)</option>
-                <option value="lowIat">Low Intake Temperature (&lt; 15°C)</option>
-                <option value="highMaf">High Airflow (≥ 60 g/s)</option>
-                <option value="lowMaf">Low Airflow (≤ 8 g/s)</option>
-                <option value="highThrottle">High Throttle (≥ 70%)</option>
-                <option value="lowThrottle">Low Throttle (≤ 20%)</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="coolingSystem">Cooling System</label>
-              <select id="coolingSystem" class="form-control">
-                <option value="all">All Cooling Conditions</option>
-                <option value="cold">Cold (&lt; 60°C)</option>
-                <option value="warming">Warming Up (60–85°C)</option>
-                <option value="normal">Normal Operating Range (85–105°C)</option>
-                <option value="high">High Temperature (&gt; 105°C)</option>
-                <option value="heatSoak">Heat Soak</option>
-                <option value="overheat">Potential Overheat (&gt; 115°C)</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="environment">Environment</label>
-              <select id="environment" class="form-control">
-                <option value="all">All Environmental Conditions</option>
-                <option value="coldAmbient">Cold Ambient (&lt; 20°C)</option>
-                <option value="normalAmbient">Normal Ambient (20–32°C)</option>
-                <option value="hotAmbient">Hot Ambient (≥ 32°C)</option>
-                <option value="highAltitude">Higher Altitude / Low Pressure (&lt; 95 kPa)</option>
-                <option value="veryLowPressure">Very Low Barometric Pressure (&lt; 90 kPa)</option>
+              <label for="engineStatus">Driving State</label>
+              <select id="engineStatus" class="form-control">
+                <option value="all">All States</option>
+                <option value="running">Engine Running / Driving</option>
+                <option value="idling">Idling Only</option>
+                <option value="off">Ignition Off / Parked</option>
+                <option value="TrafficIdle_HeatSoak">Traffic Idle HeatSoak</option>
+                <option value="NormalCruising">Normal Cruising</option>
+                <option value="HighLoad_Overtaking">High Load Overtaking</option>
+                <option value="OverheatingWarning">Overheating Warning</option>
+                <option value="StopAndGo_Traffic">Stop and Go Traffic</option>
+                <option value="RainySeason_Cruising">Rainy Season Cruising</option>
+                <option value="Nighttime_CityDrive">Nighttime City Drive</option>
+                <option value="Highway_SteadyCruise">Highway Steady Cruise</option>
+                <option value="LowFuel_LimpMode">LowFuel LimpMode</option>
+                <option value="AC_Load_Stress">AC Load Stress</option>
+                <option value="ColdStart_Morning">Cold Start Morning</option>
+                <option value="HillClimb_HeavyLoad">Hill Climb Heavy Load</option>
               </select>
             </div>
 
@@ -1102,1272 +1087,120 @@
               </select>
             </div>
 
-            <button class="btn-action" type="button" onclick="runTelemetryAnalysis()">
-              Analyze Data
-            </button>
+            <button class="btn-action" onclick="runAIAnalysis()">Analyze with AI</button>
           </div>
         </div>
       </section>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-      <script src="https://accounts.google.com/gsi/client" async defer onload="initGoogleAuth()"></script>
+
+
+      <!-- SCREEN 4: AI ANALYSIS RESULTS -->
+      <section id="screen-analysis-results" hidden>
+        <div class="breadcrumb">
+          <button class="btn-back" onclick="showScreen('screen-telemetry')">← Back to Telemetry</button>
+        </div>
+        <div class="view-header">
+          <h2>AI Telemetry Analysis</h2>
+          <p id="analysisResultsSubtitle">Model training and telemetry classification results.</p>
+        </div>
+        <div class="analysis-results-grid">
+          <div class="analysis-result-card">
+            <div class="analysis-result-label">Records Classified</div>
+            <div id="analysisRecordCount" class="analysis-result-value">0</div>
+          </div>
+          <div class="analysis-result-card">
+            <div class="analysis-result-label">Final Training Accuracy</div>
+            <div id="analysisAccuracy" class="analysis-result-value">--</div>
+          </div>
+          <div class="analysis-result-card">
+            <div class="analysis-result-label">Final Training Loss</div>
+            <div id="analysisLoss" class="analysis-result-value">--</div>
+          </div>
+          <div class="analysis-result-card">
+            <div class="analysis-result-label">Training Epochs</div>
+            <div id="analysisEpochs" class="analysis-result-value">30</div>
+          </div>
+        </div>
+        <div class="analysis-table-title">Classification Results</div>
+        <div class="table-container">
+          <table class="telemetry-table" style="min-width:760px">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Predicted Classification</th>
+                <th>Confidence</th>
+                <th>Speed</th>
+                <th>RPM</th>
+                <th>Coolant Temp</th>
+                <th>Voltage</th>
+              </tr>
+            </thead>
+            <tbody id="analysisResultsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+
+      <!--script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script-->
+
+      <script src="https://accounts.google.com/gsi/client" async defer onload="initGoogleAuth()">
+      </script>
+
       <script>
         const GOOGLE_CLIENT_ID = "618464687927-3qhsv0r9012cn0e50g963vk4n71pb54r.apps.googleusercontent.com";
-        const API_KEY = "AIzaSyDnP5gQ-CWLj1J4xEd0T6xvkboRZI_zoAM";
-        /*
-         * ============================================================
-         * JAFAFA ACTIVATION CODES (PROTOTYPE)
-         * ============================================================
-         * Activation codes are the customer-facing ownership credential.
-         * Vehicle IDs and dongle MAC addresses remain internal telemetry
-         * identifiers and are deliberately NOT exposed in this portal UI.
-         *
-         * LONG-TERM GOAL: periodic re-verification. After activation, JaFaFa
-         * should periodically ask the customer to re-authenticate/re-verify
-         * ownership instead of trusting an activation forever.
-         * ============================================================
-         */
-        const ACTIVATION_KEY = "jafafa_activation_codes_v1";
-        const activationSeed = [
-          { code: "JF7K-92PM-X4QD", status: "available" },
-          { code: "JFAF-24QX-7MNP", status: "available" },
-          { code: "JFAF-8R2K-5WLD", status: "available" }
-        ];
-        function loadActivationCodes() {
-          try {
-            const rows = JSON.parse(localStorage.getItem(ACTIVATION_KEY) || "null");
-            if (Array.isArray(rows)) return rows;
-          } catch { }
-          localStorage.setItem(ACTIVATION_KEY, JSON.stringify(activationSeed));
-          return activationSeed.map(x => ({ ...x }));
-        }
-        function saveActivationCodes(rows) { localStorage.setItem(ACTIVATION_KEY, JSON.stringify(rows)); }
-        function normalizeActivationCode(value) {
-          return String(value || "").toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/(.{4})(?=.)/g, "$1-").slice(0, 14);
-        }
-        function activationSummary() {
-          const rows = loadActivationCodes();
-          const available = rows.filter(x => x.status === "available").length;
-          const activated = rows.filter(x => x.status === "activated").length;
-          const revoked = rows.filter(x => x.status === "revoked").length;
-          return { rows, available, activated, revoked };
-        }
-        function createActivationCode() {
-          const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-          let raw = "";
-          for (let i = 0; i < 12; i++) raw += chars[Math.floor(Math.random() * chars.length)];
-          return normalizeActivationCode(raw);
-        }
-        function generateActivationCode() {
-          const rows = loadActivationCodes();
-          let code = createActivationCode();
-          while (rows.some(x => normalizeActivationCode(x.code) === code)) code = createActivationCode();
-          rows.unshift({ code, status: "available", createdAt: new Date().toISOString() });
-          saveActivationCodes(rows);
-          renderActivationPanel();
-          return code;
-        }
-        function revokeActivationCode(code) {
-          const normalized = normalizeActivationCode(code);
-          const rows = loadActivationCodes();
-          const item = rows.find(x => normalizeActivationCode(x.code) === normalized);
-          if (!item || item.status !== "available") return false;
-          item.status = "revoked";
-          item.revokedAt = new Date().toISOString();
-          saveActivationCodes(rows);
-          renderActivationPanel();
-          return true;
-        }
-        function renderActivationPanel() {
-          const host = document.getElementById("activationCodePanel"); if (!host) return;
-          const a = activationSummary();
-          host.innerHTML = `<div class="activation-panel">
-          <div class="activation-head"><div><h3>Activation Codes</h3><p>Issue and monitor one-time product activation credentials. Vehicle IDs and dongle MAC addresses are not exposed here.</p></div><div><button type="button" onclick="generateActivationCode()" style="padding:.55rem .8rem;border:1px solid rgba(56,189,248,.3);border-radius:8px;background:rgba(56,189,248,.08);color:#67e8f9;cursor:pointer;font-weight:700;">Generate Code</button></div><div class="activation-stats"><span><b>${a.available}</b> Available</span><span><b>${a.activated}</b> Activated</span><span><b>${a.revoked}</b> Revoked</span></div></div>
-          <div class="activation-list">${a.rows.map(x => `<div class="activation-row"><code>${escapeHtml(x.code)}</code><span class="activation-status ${x.status}">${x.status.toUpperCase()}</span>${x.customerEmail ? `<small>${escapeHtml(x.customerEmail)}</small>` : ""}${x.createdAt ? `<small>Created ${escapeHtml(new Date(x.createdAt).toLocaleString())}</small>` : ""}${x.activatedAt ? `<small>Activated ${escapeHtml(new Date(x.activatedAt).toLocaleString())}</small>` : ""}${x.status === "available" ? `<button type="button" onclick="revokeActivationCode(${JSON.stringify(x.code)})" style="margin-left:auto;padding:.35rem .55rem;border:1px solid rgba(251,113,133,.3);border-radius:7px;background:transparent;color:#fb7185;cursor:pointer;">Revoke</button>` : ""}</div>`).join("")}</div>
-        </div>`;
-        }
-        function ensureActivationPanel() {
-          if (document.getElementById("activationCodePanel")) return;
-          const dashboard = document.querySelector("#screen-dashboard");
-          if (!dashboard) return;
-          const wrap = document.createElement("div"); wrap.id = "activationCodePanel"; dashboard.appendChild(wrap); renderActivationPanel();
-        }
+        /*const GOOGLE_CLIENT_ID ="399377688772-ftmi8iff8nimi34ldqslkvbohq5b1p6a.apps.googleusercontent.com";*/
 
-        const MOCK_DATABASE = [
-          {
-            id: 1,
-            name: "Deji Ayeni",
-            email: "anywashng@gmail.com.ng",
-            company: "JaFaFa",
-            tier: "Enterprise",
-            cars: [
-              {
-                id: "00:10:CC:4F:36:03",
-                make: "BMW",
-                model: "X5",
-                year: 2024,
-                plate: "LAG-500-DJ",
-                status: "Active",
-                mileage: "4,200 mi",
-                telemetry: [
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:07",
-                    speed: 0,
-                    rpm: 675,
-                    maf: 4.14,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.24,
-                    evap: 58.43,
-                    timing: -2,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 14.12,
-                    load: 25.49,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:07",
-                    speed: 0,
-                    rpm: 675,
-                    maf: 4.14,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.24,
-                    evap: 58.43,
-                    timing: -2,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 14.12,
-                    load: 25.49,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:07",
-                    speed: 0,
-                    rpm: 675,
-                    maf: 4.14,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 58.43,
-                    timing: -2,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 14.12,
-                    load: 25.49,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:08",
-                    speed: 0,
-                    rpm: 671,
-                    maf: 4,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 56.08,
-                    timing: 1,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 25.1,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:08",
-                    speed: 0,
-                    rpm: 671,
-                    maf: 4,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 56.08,
-                    timing: 1,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 25.1,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:09",
-                    speed: 0,
-                    rpm: 671,
-                    maf: 4,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 56.08,
-                    timing: 1,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 25.1,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:10",
-                    speed: 0,
-                    rpm: 671,
-                    maf: 4,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 56.08,
-                    timing: 1,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 25.1,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:11",
-                    speed: 0,
-                    rpm: 671,
-                    maf: 4,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 56.08,
-                    timing: 1,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 25.1,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:13",
-                    speed: 0,
-                    rpm: 671,
-                    maf: 4,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 56.08,
-                    timing: 1,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 25.1,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:14",
-                    speed: 0,
-                    rpm: 673,
-                    maf: 3.97,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 55.69,
-                    timing: 1,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 24.31,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:15",
-                    speed: 0,
-                    rpm: 673,
-                    maf: 3.97,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 55.69,
-                    timing: 1,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 24.31,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:16",
-                    speed: 0,
-                    rpm: 673,
-                    maf: 3.97,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 55.69,
-                    timing: 1,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 24.31,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:17",
-                    speed: 0,
-                    rpm: 673,
-                    maf: 3.97,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 55.69,
-                    timing: 1,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 24.31,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:18",
-                    speed: 0,
-                    rpm: 673,
-                    maf: 3.97,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 55.69,
-                    timing: 1,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 24.31,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:19",
-                    speed: 0,
-                    rpm: 673,
-                    maf: 3.97,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 55.69,
-                    timing: 1,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 24.31,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:20",
-                    speed: 0,
-                    rpm: 675,
-                    maf: 3.97,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 56.08,
-                    timing: 0,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 24.71,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:21",
-                    speed: 0,
-                    rpm: 675,
-                    maf: 3.97,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 56.08,
-                    timing: 0,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 24.71,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:22",
-                    speed: 0,
-                    rpm: 675,
-                    maf: 3.97,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 56.08,
-                    timing: 0,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 24.71,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:23",
-                    speed: 0,
-                    rpm: 675,
-                    maf: 3.97,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 56.08,
-                    timing: 0,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 24.71,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:24",
-                    speed: 0,
-                    rpm: 675,
-                    maf: 3.97,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.32,
-                    evap: 56.08,
-                    timing: 0,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 24.71,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:25",
-                    speed: 0,
-                    rpm: 675,
-                    maf: 3.97,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.03,
-                    evap: 56.08,
-                    timing: 0,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 24.71,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:26",
-                    speed: 0,
-                    rpm: 663,
-                    maf: 5.66,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.03,
-                    evap: 52.55,
-                    timing: -2,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 13.73,
-                    load: 33.33,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:27",
-                    speed: 0,
-                    rpm: 663,
-                    maf: 5.66,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.03,
-                    evap: 52.55,
-                    timing: -2,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 14.51,
-                    load: 33.33,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:28",
-                    speed: 0,
-                    rpm: 663,
-                    maf: 5.66,
-                    ctemp: 78,
-                    fuel: 41.57,
-                    voltage: 14.03,
-                    evap: 52.55,
-                    timing: -2,
-                    etemp: 78,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 14.51,
-                    load: 33.33,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:29",
-                    speed: 0,
-                    rpm: 663,
-                    maf: 5.66,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.03,
-                    evap: 52.55,
-                    timing: -2,
-                    etemp: 79,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 14.51,
-                    load: 33.33,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:30",
-                    speed: 0,
-                    rpm: 663,
-                    maf: 5.66,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.03,
-                    evap: 52.55,
-                    timing: -2,
-                    etemp: 79,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 14.51,
-                    load: 33.33,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:31",
-                    speed: 0,
-                    rpm: 663,
-                    maf: 5.66,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.19,
-                    evap: 52.55,
-                    timing: -2,
-                    etemp: 79,
-                    mpg: 0,
-                    iat: 30,
-                    throttle: 14.51,
-                    load: 33.33,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:33",
-                    speed: 1,
-                    rpm: 679,
-                    maf: 5.28,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.19,
-                    evap: 69.02,
-                    timing: -6,
-                    etemp: 79,
-                    mpg: 0.13,
-                    iat: 30,
-                    throttle: 14.51,
-                    load: 37.25,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:34",
-                    speed: 1,
-                    rpm: 679,
-                    maf: 5.28,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.19,
-                    evap: 69.02,
-                    timing: -6,
-                    etemp: 79,
-                    mpg: 0.13,
-                    iat: 30,
-                    throttle: 15.29,
-                    load: 37.25,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:35",
-                    speed: 1,
-                    rpm: 679,
-                    maf: 5.28,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.19,
-                    evap: 69.02,
-                    timing: -6,
-                    etemp: 79,
-                    mpg: 0.13,
-                    iat: 30,
-                    throttle: 15.29,
-                    load: 37.25,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:36",
-                    speed: 1,
-                    rpm: 679,
-                    maf: 5.28,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.19,
-                    evap: 69.02,
-                    timing: -6,
-                    etemp: 79,
-                    mpg: 0.13,
-                    iat: 30,
-                    throttle: 15.29,
-                    load: 37.25,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:37",
-                    speed: 1,
-                    rpm: 679,
-                    maf: 5.28,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.19,
-                    evap: 69.02,
-                    timing: -6,
-                    etemp: 79,
-                    mpg: 0.13,
-                    iat: 30,
-                    throttle: 15.29,
-                    load: 37.25,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:38",
-                    speed: 1,
-                    rpm: 679,
-                    maf: 5.28,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.16,
-                    evap: 69.02,
-                    timing: -6,
-                    etemp: 79,
-                    mpg: 0.13,
-                    iat: 30,
-                    throttle: 15.29,
-                    load: 37.25,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:39",
-                    speed: 0,
-                    rpm: 670,
-                    maf: 5.49,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.16,
-                    evap: 67.84,
-                    timing: -8,
-                    etemp: 79,
-                    mpg: 0.12,
-                    iat: 30,
-                    throttle: 15.29,
-                    load: 31.76,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:40",
-                    speed: 0,
-                    rpm: 670,
-                    maf: 5.49,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.16,
-                    evap: 67.84,
-                    timing: -8,
-                    etemp: 79,
-                    mpg: 0.12,
-                    iat: 30,
-                    throttle: 15.29,
-                    load: 31.76,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:41",
-                    speed: 0,
-                    rpm: 670,
-                    maf: 5.49,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.16,
-                    evap: 67.84,
-                    timing: -8,
-                    etemp: 79,
-                    mpg: 0.12,
-                    iat: 30,
-                    throttle: 15.29,
-                    load: 31.76,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:42",
-                    speed: 0,
-                    rpm: 670,
-                    maf: 5.49,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.16,
-                    evap: 67.84,
-                    timing: -8,
-                    etemp: 79,
-                    mpg: 0.12,
-                    iat: 30,
-                    throttle: 15.29,
-                    load: 31.76,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:43",
-                    speed: 0,
-                    rpm: 670,
-                    maf: 5.49,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.16,
-                    evap: 67.84,
-                    timing: -8,
-                    etemp: 79,
-                    mpg: 0.12,
-                    iat: 30,
-                    throttle: 15.29,
-                    load: 31.76,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:44",
-                    speed: 0,
-                    rpm: 670,
-                    maf: 5.49,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.25,
-                    evap: 67.84,
-                    timing: -8,
-                    etemp: 79,
-                    mpg: 0.12,
-                    iat: 30,
-                    throttle: 15.29,
-                    load: 31.76,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:46",
-                    speed: 2,
-                    rpm: 643,
-                    maf: 4.91,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.25,
-                    evap: 63.92,
-                    timing: -5,
-                    etemp: 79,
-                    mpg: 0.35,
-                    iat: 30,
-                    throttle: 15.29,
-                    load: 33.33,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:47",
-                    speed: 2,
-                    rpm: 643,
-                    maf: 4.91,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.25,
-                    evap: 63.92,
-                    timing: -5,
-                    etemp: 79,
-                    mpg: 0.35,
-                    iat: 30,
-                    throttle: 15.29,
-                    load: 33.33,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:48",
-                    speed: 2,
-                    rpm: 643,
-                    maf: 4.91,
-                    ctemp: 79,
-                    fuel: 41.57,
-                    voltage: 14.25,
-                    evap: 63.92,
-                    timing: -5,
-                    etemp: 79,
-                    mpg: 0.35,
-                    iat: 30,
-                    throttle: 15.29,
-                    load: 33.33,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:49",
-                    speed: 2,
-                    rpm: 643,
-                    maf: 4.91,
-                    ctemp: 81,
-                    fuel: 41.57,
-                    voltage: 14.25,
-                    evap: 63.92,
-                    timing: -5,
-                    etemp: 81,
-                    mpg: 0.35,
-                    iat: 30,
-                    throttle: 15.29,
-                    load: 33.33,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:50",
-                    speed: 2,
-                    rpm: 643,
-                    maf: 4.91,
-                    ctemp: 81,
-                    fuel: 41.57,
-                    voltage: 14.25,
-                    evap: 63.92,
-                    timing: -5,
-                    etemp: 81,
-                    mpg: 0.35,
-                    iat: 30,
-                    throttle: 15.29,
-                    load: 33.33,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:51",
-                    speed: 2,
-                    rpm: 643,
-                    maf: 4.91,
-                    ctemp: 81,
-                    fuel: 41.57,
-                    voltage: 14.19,
-                    evap: 63.92,
-                    timing: -5,
-                    etemp: 81,
-                    mpg: 0.35,
-                    iat: 30,
-                    throttle: 15.29,
-                    load: 33.33,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:52",
-                    speed: 2,
-                    rpm: 720,
-                    maf: 7.94,
-                    ctemp: 81,
-                    fuel: 41.57,
-                    voltage: 14.19,
-                    evap: 70.2,
-                    timing: -11,
-                    etemp: 81,
-                    mpg: 0.47,
-                    iat: 30,
-                    throttle: 16.86,
-                    load: 43.14,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:53",
-                    speed: 2,
-                    rpm: 720,
-                    maf: 7.94,
-                    ctemp: 81,
-                    fuel: 41.57,
-                    voltage: 14.19,
-                    evap: 70.2,
-                    timing: -11,
-                    etemp: 81,
-                    mpg: 0.47,
-                    iat: 30,
-                    throttle: 16.86,
-                    load: 43.14,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:54",
-                    speed: 2,
-                    rpm: 720,
-                    maf: 7.94,
-                    ctemp: 81,
-                    fuel: 41.57,
-                    voltage: 14.19,
-                    evap: 70.2,
-                    timing: -11,
-                    etemp: 81,
-                    mpg: 0.47,
-                    iat: 30,
-                    throttle: 16.86,
-                    load: 43.14,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:55",
-                    speed: 2,
-                    rpm: 720,
-                    maf: 7.94,
-                    ctemp: 82,
-                    fuel: 41.57,
-                    voltage: 14.19,
-                    evap: 70.2,
-                    timing: -11,
-                    etemp: 82,
-                    mpg: 0.47,
-                    iat: 30,
-                    throttle: 16.86,
-                    load: 43.14,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:56",
-                    speed: 2,
-                    rpm: 720,
-                    maf: 7.94,
-                    ctemp: 82,
-                    fuel: 41.57,
-                    voltage: 14.19,
-                    evap: 70.2,
-                    timing: -11,
-                    etemp: 82,
-                    mpg: 0.47,
-                    iat: 30,
-                    throttle: 16.86,
-                    load: 43.14,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:57",
-                    speed: 0,
-                    rpm: 662,
-                    maf: 7.94,
-                    ctemp: 82,
-                    fuel: 41.57,
-                    voltage: 13.07,
-                    evap: 70.2,
-                    timing: -11,
-                    etemp: 82,
-                    mpg: 0.47,
-                    iat: 30,
-                    throttle: 16.86,
-                    load: 43.14,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2705:59:58",
-                    speed: 0,
-                    rpm: 662,
-                    maf: 5.06,
-                    ctemp: 82,
-                    fuel: 41.57,
-                    voltage: 13.07,
-                    evap: 49.8,
-                    timing: -4,
-                    etemp: 82,
-                    mpg: 0.44,
-                    iat: 30,
-                    throttle: 15.69,
-                    load: 38.82,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2706:00:00",
-                    speed: 0,
-                    rpm: 662,
-                    maf: 5.06,
-                    ctemp: 82,
-                    fuel: 41.57,
-                    voltage: 13.07,
-                    evap: 49.8,
-                    timing: -4,
-                    etemp: 82,
-                    mpg: 0.44,
-                    iat: 30,
-                    throttle: 15.69,
-                    load: 38.82,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2706:00:01",
-                    speed: 0,
-                    rpm: 662,
-                    maf: 5.06,
-                    ctemp: 82,
-                    fuel: 40.39,
-                    voltage: 13.07,
-                    evap: 49.8,
-                    timing: -4,
-                    etemp: 82,
-                    mpg: 0.44,
-                    iat: 30,
-                    throttle: 15.69,
-                    load: 38.82,
-                    atemp: 25,
-                    bpressure: 100
-                  },
-                  {
-                    vehicleId: "00:10:CC:4F:36:03",
-                    time: "2026-07-2706:00:02",
-                    speed: 0,
-                    rpm: 662,
-                    maf: 5.06,
-                    ctemp: 82,
-                    fuel: 40.39,
-                    voltage: 13.07,
-                    evap: 49.8,
-                    timing: -4,
-                    etemp: 82,
-                    mpg: 0.44,
-                    iat: 30,
-                    throttle: 15.69,
-                    load: 38.82,
-                    atemp: 25,
-                    bpressure: 100
-                  }
-                ],
-              },
-            ],
-          },
-          {
-            id: 2,
-            name: "Morenike Ayeni",
-            email: "morenike.ayeni@gmail.com",
-            company: "Layer3 Limited",
-            tier: "Enterprise",
-            cars: [
-              {
-                id: "00:10:CC:4F:36:03",
-                make: "Lexus",
-                model: "LX 600",
-                year: 2024,
-                plate: "VI-600-MO",
-                status: "Active",
-                mileage: "3,500 mi",
-                telemetry: [],
-              },
-            ],
-          },
-          {
-            id: 3,
-            name: "Michael Ayeni",
-            email: "michaelkage9@gmail.com",
-            company: "HyperSpace Technologies",
-            tier: "Enterprise",
-            cars: [
-              {
-                id: "00:10:CC:4F:36:03",
-                make: "Land Rover",
-                model: "Defender 110 V8",
-                year: 2023,
-                plate: "LAG-110-MA",
-                status: "Active",
-                mileage: "11,300 mi",
-                telemetry: [],
-              },
-            ],
-          },
-          {
-            id: 4,
-            name: "Gabriel Blitzer",
-            email: "gabriel.blitzer@blitztech.net",
-            company: "Blitz Aero",
-            tier: "Pro",
-            cars: [
-              {
-                id: "00:10:CC:4F:36:03",
-                make: "BMW",
-                model: "M4 Competition",
-                year: 2023,
-                plate: "GBL-004-M",
-                status: "Active",
-                mileage: "7,800 mi",
-                telemetry: [],
-              },
-            ],
-          },
-          {
-            id: 5,
-            name: "Elizabeth Ayeni",
-            email: "elizabeth.ayeni@alphahealth.org",
-            company: "Alpha Medical Centers",
-            tier: "Pro",
-            cars: [
-              {
-                id: "00:10:CC:4F:36:03",
-                make: "Mercedes-Benz",
-                model: "GLE 450",
-                year: 2024,
-                plate: "KRD-450-EL",
-                status: "Active",
-                mileage: "1,900 mi",
-                telemetry: [],
-              },
-            ],
-          },
-        ];
+        const API_KEY = "AIzaSyDnP5gQ-CWLj1J4xEd0T6xvkboRZI_zoAM";
+
+        // 1. Declare CUSTOMER_DATABASE as a mutable variable instead of a const
+        let CUSTOMER_DATABASE = [];
+
+        getCustomers();
+
+        //getCustomers('1');
+
+        //getVehicles('00:10:CC:4F:36:03');
+
+        //getVehicles();
+
         let activeCustomer = null;
-        document.addEventListener("DOMContentLoaded", () => setTimeout(ensureActivationPanel, 0));
         let activeCar = null;
 
         /*
-          These values remember the current table state.
-          Sorting uses them so it can reorder the visible records without
-          downloading the telemetry again or changing the active filters.
+        These values remember the current table state.
+        Sorting uses them so it can reorder the visible records without
+        downloading the telemetry again or changing the active filters.
         */
+
         let currentTelemetryDisplayedLogs = [];
         let telemetrySortKey = null;
         let telemetrySortDirection = "asc";
+
         /* Screen navigation: hides all dashboard screens and shows the requested one. */
         function showScreen(screenIdToShow) {
           const screens = [
             "screen-customers",
             "screen-vehicles",
             "screen-telemetry",
+            "screen-analysis-results",
           ];
           screens.forEach((id) => {
             const el = document.getElementById(id);
             if (el) el.hidden = true;
           });
+
           const target = document.getElementById(screenIdToShow);
           if (target) target.hidden = false;
+
           window.scrollTo({ top: 0, behavior: "smooth" });
         }
+
         document.addEventListener("click", (e) => {
           if (!e.target.closest(".dropdown-wrapper")) {
             document.getElementById("customerDropdownResults").hidden = true;
             document.getElementById("vehicleDropdownResults").hidden = true;
           }
         });
+
         /* Google login helper: reads user information from the login token. */
         function parseJwtToken(token) {
           try {
@@ -2378,26 +1211,130 @@
             return null;
           }
         }
+
+        async function getCustomers(customerId = null) {
+          // FETCH DATA FROM SERVER (Retrieves list of customers from the API)
+          const baseUrl = "https://anywashng.com/api/download_customer_CID.php";
+
+          const parampass = customerId ? `${baseUrl}?Id=${encodeURIComponent(customerId)}` : baseUrl;
+
+
+          // FETCH DATA FROM SERVER (Retrieves list of customers from the API)
+          //const parampass = "https://anywashng.com/api/download_customer_CID.php";
+
+          try {
+            const response = await fetch(parampass, {
+              method: "GET",
+              headers: {
+                "X-API-KEY": API_KEY,
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Content-Type": "application/json",
+              },
+            });
+
+            const result = await response.json();
+            const resultData = result.data;
+            const resultStatus = result.status;
+
+            if (resultStatus === "success" && Array.isArray(resultData)) {
+
+              // Formats the data array with nice spacing for human readability
+              const readableData = JSON.stringify(resultData, null, 2);
+
+              //alert("Successfully fetched customer data:\n\n" + readableData);
+
+              // Ensure we assign the inner data array, with a fallback to an empty array
+              CUSTOMER_DATABASE = result && resultData ? resultData : result;
+
+              //alert("CUSTOMER_DATABASE:\n\n" + CUSTOMER_DATABASE);
+
+              return result && resultData ? resultData : result; // Returns just the clean array of customers
+            } else {
+              alert("Failed to fetch customer data");
+              return [];
+            }
+          } catch (err) {
+            alert("Failed to fetch customer data: " + err);
+            console.error("Failed to fetch customer data:", err);
+            return [];
+          }
+        }
+
+        async function getVehicles(vehicleId = null) {
+          // FETCH DATA FROM SERVER (Retrieves list of customers from the API)
+          const baseUrl = "https://anywashng.com/api/download_vehicles_VID.php";
+
+          const parampass = vehicleId ? `${baseUrl}?Id=${encodeURIComponent(vehicleId)}` : baseUrl;
+
+          //alert(parampass);
+
+          try {
+            const response = await fetch(parampass, {
+              method: "GET",
+              headers: {
+                "X-API-KEY": API_KEY,
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Content-Type": "application/json",
+              },
+            });
+
+            const result = await response.json();
+
+            if (result.status === "success" && Array.isArray(result.data)) {
+              // Show the actual structural results in the alert box cleanly
+              alert("Successfully fetched vehicle data:\n\n" + JSON.stringify(result.data, null, 2));
+
+              // Reformat data fields to guarantee backward-compatibility with your existing UI
+              const formattedVehicles = result.data.map(car => ({
+                id: car.Id,
+                make: car.Make,
+                model: car.Model,
+                year: parseInt(car.Year),
+                plate: car.Plate,
+                status: car.Status,
+                // Transforms the raw DB integer back into a display-friendly string format
+                mileage: car.Mileage_Mi ? Number(car.Mileage_Mi).toLocaleString() + " mi" : "0 mi",
+                telemetry: []
+              }));
+
+              return formattedVehicles;
+            } else {
+              alert("Failed to fetch vehicle data: Invalid API structure");
+              return [];
+            }
+          } catch (err) {
+            alert("Failed to fetch vehicle data: " + err);
+            console.error("Failed to fetch vehicle data:", err);
+            return [];
+          }
+        }
+
+
         /* Google login success: fills the user information and opens the dashboard. */
         function handleCredentialResponse(response) {
           const user = parseJwtToken(response.credential);
           if (!user) return;
+
           document.getElementById("user-name").textContent =
             user.given_name || user.name;
           document.getElementById("user-email").textContent = user.email;
           document.getElementById("user-picture").src = user.picture;
+
           document.getElementById("view-unauthenticated").hidden = true;
           document.getElementById("view-authenticated").hidden = false;
+
           document.getElementById("customerSearchInput").value = "";
           document.getElementById("selectedCustomerSummary").hidden = true;
           showScreen("screen-customers");
         }
+
         /* Google logout: hides the dashboard and returns to the login screen. */
         function handleSignOut() {
           if (window.google?.accounts?.id) google.accounts.id.disableAutoSelect();
           document.getElementById("view-authenticated").hidden = true;
           document.getElementById("view-unauthenticated").hidden = false;
         }
+
         /* Customer search: finds customers matching what the user has typed. */
         function onCustomerSearchInput() {
           const query = document
@@ -2407,68 +1344,83 @@
           const resultsContainer = document.getElementById(
             "customerDropdownResults",
           );
-          const matches = MOCK_DATABASE.filter(
+
+          const matches = CUSTOMER_DATABASE.filter(
             (c) =>
-              c.name.toLowerCase().includes(query) ||
-              c.company.toLowerCase().includes(query) ||
-              c.email.toLowerCase().includes(query),
+              (c.Name && c.Name.toLowerCase().includes(query)) ||
+              (c.Company && c.Company.toLowerCase().includes(query)) ||
+              (c.Email && c.Email.toLowerCase().includes(query))
           ).slice(0, 8);
+
+
           if (matches.length === 0) {
             resultsContainer.innerHTML = `<div class="dropdown-item"><span class="dropdown-item-sub">No matching customers found</span></div>`;
           } else {
             resultsContainer.innerHTML = matches
               .map(
                 (cust) => `
-              <div class="dropdown-item" onclick=selectCustomerFromDropdown(${cust.id})>
-                <div>
-                  <div class="dropdown-item-main">${escapeHtml(cust.name)}</div>
-                  <div class="dropdown-item-sub">${escapeHtml(cust.company)} • ${escapeHtml(cust.email)}</div>
-                </div>
-                <span class="dropdown-item-sub">${cust.cars.length} vehicles</span>
-              </div>
-            `,
+                  <div class="dropdown-item" onclick=selectCustomerFromDropdown(${cust.Id})>
+                    <div>
+                      <div class="dropdown-item-main">${escapeHtml(cust.Name)}</div>
+                      <div class="dropdown-item-sub">${escapeHtml(cust.Company)} • ${escapeHtml(cust.Email)}</div>
+                    </div>
+                    <span class="dropdown-item-sub">${cust.cars.length} vehicles</span>
+                  </div>
+                `,
               )
               .join("");
           }
+
           resultsContainer.hidden = false;
         }
+
         /* Customer selection: stores the chosen customer and fills the summary card. */
         function selectCustomerFromDropdown(customerId) {
-          activeCustomer = MOCK_DATABASE.find((c) => c.id === customerId);
+          //alert(customerId);
+          activeCustomer = CUSTOMER_DATABASE.find((c) => c.Id === customerId);
+          //alert(activeCustomer.id);
           document.getElementById("customerDropdownResults").hidden = true;
           document.getElementById("customerSearchInput").value =
-            `${activeCustomer.name} (${activeCustomer.company})`;
+            `${activeCustomer.Name} (${activeCustomer.Company})`;
+
           document.getElementById("summaryCustName").textContent =
-            activeCustomer.name;
+            activeCustomer.Name;
           document.getElementById("summaryCustCompany").textContent =
-            activeCustomer.company;
+            activeCustomer.Company;
           document.getElementById("summaryCustEmail").textContent =
-            activeCustomer.email;
+            activeCustomer.Email;
           document.getElementById("summaryCustTier").textContent =
-            activeCustomer.tier;
+            activeCustomer.Tier;
           document.getElementById("summaryCustCarsCount").textContent =
             `${activeCustomer.cars.length} Vehicle(s)`;
           document.getElementById("selectedCustomerSummary").hidden = false;
         }
+
         /* Moves from customer selection to the vehicle list for that customer. */
         function confirmCustomerSelection() {
           if (!activeCustomer) return;
           document.getElementById("breadcrumbCustomer").textContent =
-            activeCustomer.name;
+            activeCustomer.Name;
           document.getElementById("vehicleSearchInput").value = "";
           document.getElementById("selectedVehicleSummary").hidden = true;
           showScreen("screen-vehicles");
         }
+
         /* Vehicle search: finds vehicles belonging to the selected customer. */
         function onVehicleSearchInput() {
           if (!activeCustomer) return;
+
+          //alert("onVehicleSearchInput");
+
           const query = document
             .getElementById("vehicleSearchInput")
             .value.toLowerCase()
             .trim();
+
           const resultsContainer = document.getElementById(
             "vehicleDropdownResults",
           );
+
           const matches = activeCustomer.cars
             .filter(
               (car) =>
@@ -2478,80 +1430,114 @@
                 car.year.toString().includes(query),
             )
             .slice(0, 8);
+
           if (matches.length === 0) {
             resultsContainer.innerHTML = `<div class="dropdown-item"><span class="dropdown-item-sub">No matching vehicles found</span></div>`;
           } else {
+            //alert("Length: " + matches.length);
             resultsContainer.innerHTML = matches
               .map(
                 (car) => `
-                <div class="dropdown-item" onclick=selectVehicleFromDropdown('${car.id}')>
-                <div>
-                  <div class="dropdown-item-main">${car.year} ${escapeHtml(car.make)} ${escapeHtml(car.model)}</div>
-                  <div class="dropdown-item-sub">Plate: ${escapeHtml(car.plate)}</div>
-                </div>
-                <span class="dropdown-item-sub">${escapeHtml(car.status)}</span>
-              </div>
-            `,
+                    <div class="dropdown-item" onclick=selectVehicleFromDropdown('${car.id}')>
+                    <div>
+                      <div class="dropdown-item-main">${car.year} ${escapeHtml(car.make)} ${escapeHtml(car.model)}</div>
+                      <div class="dropdown-item-sub">Plate: ${escapeHtml(car.plate)}</div>
+                    </div>
+                    <span class="dropdown-item-sub">${escapeHtml(car.status)}</span>
+                  </div>
+                `,
               )
               .join("");
           }
+
           resultsContainer.hidden = false;
         }
+
         /* Vehicle selection: stores the chosen vehicle and fills its summary card. */
         function selectVehicleFromDropdown(carId) {
+          //alert("CarID: "+carId);
           activeCar = activeCustomer?.cars?.find((c) => c.id === carId);
+          //alert("activeCar: "+activeCar.make);
+
           if (!activeCar) return;
+
           document.getElementById("vehicleDropdownResults").hidden = true;
+
           document.getElementById("vehicleSearchInput").value =
             `${activeCar.make || ""} ${activeCar.model || ""} (${activeCar.plate || ""})`.trim();
+
           const carPlateEl = document.getElementById("summaryCarPlate");
           if (carPlateEl) carPlateEl.textContent = activeCar.plate || "N/A";
+
           const carStatus = document.getElementById("summaryCarStatus");
           if (carStatus) carStatus.textContent = activeCar.status || "N/A";
+
           const carMileage = document.getElementById("summaryCarMileage");
           if (carMileage) carMileage.textContent = activeCar.mileage || "N/A";
+
           const carTitleEl = document.getElementById("summaryCarTitle");
+
           if (carTitleEl) {
             carTitleEl.textContent =
               `${activeCar.year || ""} ${activeCar.make || ""} ${activeCar.model || ""}`.trim();
           }
+
+          //alert("activeCar.year: " + activeCar.year);
+          //alert("activeCar.make: " + activeCar.make);
+          //alert("activeCar.model: " + activeCar.model);
+          //alert("activeCar.plate: " + activeCar.plate);
+
           document.getElementById("selectedVehicleSummary").hidden = false;
         }
+
         /* Telemetry loading: fetches server records and converts them into the table format. */
         async function populateTableBodyTelemetryData(carId) {
           activeCar = activeCustomer?.cars?.find((c) => c.id === carId);
+
           if (!activeCar) return;
+
+          // --- UPDATE TOP OVERVIEW / SUMMARY CARD ---
           const carTitleEl = document.getElementById("telemetryCarTitle");
           const carOwnerEl = document.getElementById("telemetryCarOwner");
           const plateEl = document.getElementById("telemetryPlate");
+          const vIDEl = document.getElementById("telemetryVID");
+
           if (carTitleEl) carTitleEl.innerText = `${activeCar.make || ''} ${activeCar.model || ''}`.trim() || activeCar.name || "Vehicle Overview";
-          if (carOwnerEl) carOwnerEl.innerText = activeCustomer?.name ? `Owner: ${activeCustomer.name}` : "--";
+          if (carOwnerEl) carOwnerEl.innerText = activeCustomer?.Name ? `Owner: ${activeCustomer.Name}` : "--";
           if (plateEl) plateEl.innerText = activeCar.plate || "--";
+          if (vIDEl) vIDEl.innerText = activeCar.id ? `VID: ${activeCar.id}` : `VID: ${activeCar.id || '--'}`;
+
+          // --- UPDATE TABLE LOADING STATE ---
           const tableBody = document.getElementById("telemetryTableBody");
+
           /*
             Show a temporary loading message so the user knows the dashboard
             is waiting for the server instead of appearing empty.
           */
+
           if (tableBody) {
             tableBody.innerHTML = `<tr><td colspan="16" style="text-align:center; padding: 1rem;">Fetching database records for Vehicle with ID ${activeCar.id}...</td></tr>`;
           }
+
           /*
-      The server expects the selected vehicle ID in the VehicleId parameter.
-      The response is mapped into short field names used throughout the dashboard.
-    */
-          const parampass =
-            "https://anywashng.com/api/download_sensors_VID.php?VehicleId=" +
-            carId;
+            The server expects the selected vehicle ID in the VehicleId parameter.
+            The response is mapped into short field names used throughout the dashboard.
+          */
+
+          // 4. FETCH DATA FROM SERVER (Using 'VehicleId' parameter to match SQL column name)
+          const parampass = "https://anywashng.com/api/download_sensors_VID.php?VehicleId=" + carId;
+
           try {
             const response = await fetch(parampass, {
               headers: {
                 "X-API-KEY": API_KEY,
-                "User-Agent":
-                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
                 "Content-Type": "application/json",
               },
             });
+
             const result = await response.json();
+
             if (result.status === "success" && Array.isArray(result.data)) {
               activeCar.telemetry = result.data.map((row) => ({
                 id: row.VehicleId,
@@ -2577,24 +1563,30 @@
             }
           } catch (err) {
             console.error("Failed to fetch sensor data:", err);
-            activeCar.telemetry = activeCar.telemetry || [];
+            activeCar.telemetry = [];
           }
-          if (typeof renderTelemetryTable === "function") {
-            renderTelemetryTable(activeCar.telemetry);
-          } else if (typeof applyTableFilters === "function") {
-            applyTableFilters();
+
+          // Render mapped telemetry data into the table
+          if (typeof runTelemetryAnalysis === "function") {
+            runTelemetryAnalysis(activeCar.telemetry);
           }
+
+          //alert("populateTableBodyTelemetryData activeCar.telemetry.length: " + activeCar.telemetry.length)
+
           if (typeof showScreen === "function") showScreen("screen-telemetry");
         }
+
+        // Function Alias
+        //const selectVehicleFromDropdownAsync = selectVehicleFromDropdown;
+
+        // Bind live filtering controls directly to table update..okay so how do i now make it so that the table updates in real-time as the user changes the filter inputs? I want to avoid having to click a separate "Apply Filters" button. also how do i search for the carid
+
+        document.getElementById("minSpeed")?.addEventListener("input", runTelemetryAnalysis);
+
         [
-          "drivingCondition",
-          "engineCondition",
-          "performanceLoad",
-          "fuelEconomy",
-          "electricalSystem",
-          "airIntake",
-          "coolingSystem",
-          "environment",
+          "minSpeed",
+          "metricType",
+          "engineStatus",
           "startDate",
           "startTime",
           "timeRange"
@@ -2612,41 +1604,39 @@
           This function turns the filtered records into visible table rows.
           It also updates the log counter and remembers what is currently shown.
         */
+
         function renderTelemetryTable(logs) {
           const tableBody = document.getElementById("telemetryTableBody");
           if (!tableBody) return;
 
+          alert("renderTelemetryTable logs.length: " + logs.length);
+
           currentTelemetryDisplayedLogs = Array.isArray(logs) ? [...logs] : [];
+
           updateTelemetryLogCount(currentTelemetryDisplayedLogs.length);
 
           if (currentTelemetryDisplayedLogs.length === 0) {
             tableBody.innerHTML = `
-      <tr>
-        <td colspan="16" style="text-align:center; padding:1rem;">
-          No telemetry records found for this car ID.
-        </td>
-      </tr>
-    `;
+                  <tr>
+                    <td colspan="16" style="text-align:center; padding:1rem;">
+                      No telemetry records found for this car ID.
+                    </td>
+                  </tr>
+                `;
             return;
           }
 
-          const safeEscape = (value) =>
-            typeof escapeHtml === "function" ? escapeHtml(value) : (value ?? "");
+          // Fallback escape function to prevent XSS errors if not defined elsewhere
+          const safeEscape = (val) => (typeof escapeHtml === "function" ? escapeHtml(val) : (val ?? ""));
 
           tableBody.innerHTML = currentTelemetryDisplayedLogs
             .map((log) => {
               const isHighSpeed = (log.speed || 0) >= 80;
 
-              /*
-                The timestamp is kept as a date internally for sorting.
-                This formatted version is only what the user sees in the table.
-              */
               let formattedTime = "--";
-
               if (log.time) {
                 const dateObj = new Date(log.time);
-
-                if (!Number.isNaN(dateObj.getTime())) {
+                if (!isNaN(dateObj.getTime())) {
                   formattedTime = dateObj.toLocaleString("en-US", {
                     month: "short",
                     day: "numeric",
@@ -2660,27 +1650,27 @@
               }
 
               return `
-        <tr>
-          <td>${formattedTime}</td>
-          <td style="color:${isHighSpeed ? "#ef4444" : "#f8fafc"};font-weight:${isHighSpeed ? "600" : "400"};">
-            ${(parseFloat(log.speed) || 0).toFixed(1)}
-          </td>
-          <td>${Math.round(log.rpm || 0)}</td>
-          <td>${(parseFloat(log.maf) || 0).toFixed(1)}</td>
-          <td>${(parseFloat(log.ctemp) || 0).toFixed(1)}</td>
-          <td>${(parseFloat(log.fuel) || 0).toFixed(1)}</td>
-          <td>${(parseFloat(log.voltage) || 0).toFixed(1)}</td>
-          <td>${(parseFloat(log.evap) || 0).toFixed(1)}</td>
-          <td>${(parseFloat(log.timing) || 0).toFixed(1)}</td>
-          <td>${(parseFloat(log.etemp) || 0).toFixed(1)}</td>
-          <td>${(parseFloat(log.mpg) || 0).toFixed(1)}</td>
-          <td>${(parseFloat(log.iat) || 0).toFixed(1)}</td>
-          <td>${(parseFloat(log.throttle) || 0).toFixed(1)}</td>
-          <td>${(parseFloat(log.load) || 0).toFixed(1)}</td>
-          <td>${(parseFloat(log.atemp) || 0).toFixed(1)}</td>
-          <td>${(parseFloat(log.bpressure) || 0).toFixed(1)}</td>
-        </tr>
-      `;
+            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); text-align: center;">
+              <td style="padding: 0.6rem 0.5rem; font-size: 0.8rem; color: #f8fafc;">${formattedTime}</td>
+              <td style="padding: 0.6rem 0.5rem; font-size: 0.8rem; color: ${isHighSpeed ? '#ef4444' : '#f8fafc'}; font-weight: ${isHighSpeed ? '600' : '400'};">
+                ${(parseFloat(log.speed) || 0).toFixed(1)} 
+              </td>
+              <td style="padding: 0.6rem 0.5rem; font-size: 0.8rem; color: #f8fafc;">${Math.round(log.rpm || 0)}</td>
+              <td style="padding: 0.6rem 0.5rem; font-size: 0.8rem; color: #f8fafc;">${(parseFloat(log.maf) || 0).toFixed(1)}</td>
+              <td style="padding: 0.6rem 0.5rem; font-size: 0.8rem; color: #f8fafc;">${(parseFloat(log.ctemp) || 0).toFixed(1)}</td>
+              <td style="padding: 0.6rem 0.5rem; font-size: 0.8rem; color: #f8fafc;">${(parseFloat(log.fuel) || 0).toFixed(1)}</td>
+              <td style="padding: 0.6rem 0.5rem; font-size: 0.8rem; color: #f8fafc;">${(parseFloat(log.voltage) || 0).toFixed(1)}</td>
+              <td style="padding: 0.6rem 0.5rem; font-size: 0.8rem; color: #f8fafc;">${(parseFloat(log.evap) || 0).toFixed(1)}</td>
+              <td style="padding: 0.6rem 0.5rem; font-size: 0.8rem; color: #f8fafc;">${(parseFloat(log.timing) || 0).toFixed(1)}</td>
+              <td style="padding: 0.6rem 0.5rem; font-size: 0.8rem; color: #f8fafc;">${(parseFloat(log.etemp) || 0).toFixed(1)} </td>
+              <td style="padding: 0.6rem 0.5rem; font-size: 0.8rem; color: #f8fafc;">${(parseFloat(log.mpg) || 0).toFixed(1)}</td>
+              <td style="padding: 0.6rem 0.5rem; font-size: 0.8rem; color: #f8fafc;">${(parseFloat(log.iat) || 0).toFixed(1)}</td>
+              <td style="padding: 0.6rem 0.5rem; font-size: 0.8rem; color: #f8fafc;">${(parseFloat(log.throttle) || 0).toFixed(1)}</td>
+              <td style="padding: 0.6rem 0.5rem; font-size: 0.8rem; color: #f8fafc;">${(parseFloat(log.load) || 0).toFixed(1)}</td>
+              <td style="padding: 0.6rem 0.5rem; font-size: 0.8rem; color: #f8fafc;">${(parseFloat(log.atemp) || 0).toFixed(1)}</td>
+              <td style="padding: 0.6rem 0.5rem; font-size: 0.8rem; color: #f8fafc;">${(parseFloat(log.bpressure) || 0).toFixed(1)}</td>
+            </tr>
+          `;
             })
             .join("");
         }
@@ -2692,12 +1682,388 @@
         */
         function updateTelemetryLogCount(count) {
           const counter = document.getElementById("telemetryLogCount");
+
           if (!counter) return;
 
           const numberElement = counter.querySelector("strong");
+
           if (numberElement) {
             numberElement.textContent = Number(count || 0).toLocaleString();
           }
+        }
+
+        // "Analyze Data" button is now reserved for analysis actions
+        //function runTelemetryAnalysis() {
+        //  if (!activeCar || !activeCar.telemetry) {
+        //    alert("No vehicle telemetry available for analysis.");
+        //    return;
+        //  }
+
+        //  alert(
+        //    `Analysis completed for ${activeCar.make} ${activeCar.model}.\nTotal evaluated records: ${activeCar.telemetry.length}`,
+        //  );
+        //}
+
+        function showTelemetryScreen() {
+          if (!activeCar) return;
+
+          document.getElementById("telemetryCarTitle").textContent =
+            `${activeCar.year} ${activeCar.make} ${activeCar.model}`;
+          document.getElementById("telemetryCarOwner").textContent =
+            `Owner: ${activeCustomer.Name} (${activeCustomer.Company})`;
+          document.getElementById("telemetryPlate").textContent = activeCar.plate;
+          document.getElementById("telemetryStatus").textContent =
+            activeCar.status;
+
+          //alert("showTelemetryScreen CarId: " + activeCar.id);
+          populateTableBodyTelemetryData(activeCar.id);
+
+          showScreen("screen-telemetry");
+        }
+
+        function runTelemetryAnalysis() {
+          if (!activeCar || !activeCar.telemetry) return;
+
+          // 1. Grab DOM values safely with fallbacks
+          const minSpeed = parseInt(document.getElementById("minSpeed")?.value || "0", 10);
+          const metricFilter = document.getElementById("metricType")?.value || "all";
+          const engineFilter = document.getElementById("engineStatus")?.value || "all";
+
+          const startDate = document.getElementById("startDate")?.value; // "YYYY-MM-DD" or ""
+          const startTime = document.getElementById("startTime")?.value; // "HH:MM" or ""
+          const timePreset = document.getElementById("timeRange")?.value || "all";
+
+          // Compute preset window cutoff if applicable (assumes log.time is parseable by Date)
+          let presetCutoff = null;
+
+          if (timePreset !== "all") {
+
+            const now = new Date();
+
+            const hoursMap = { "1h": 1, "24h": 24, "7d": 168, "30d": 720 };
+
+            if (hoursMap[timePreset]) {
+              presetCutoff = hoursMap[timePreset] ? new Date(Date.now() - hoursMap[timePreset] * 60 * 60 * 1000) : null;
+            }
+          }
+
+          // 2. Filter telemetry logs
+          const filteredLogs = activeCar.telemetry.filter((log) => {
+
+            // --- Speed Filter ---
+            if (log.speed < minSpeed) return false;
+
+            // --- Metric / Focus Filter ---
+            if (metricFilter === "speed"
+              && !(log.speed > 75)) return false;
+
+            if (metricFilter === "temp"
+              && !(log.ctemp > 200)) return false;
+
+            if (metricFilter === "overheat"
+              && !(log.ctemp > 225)) return false;
+
+            if (metricFilter === "battery"
+              && log.voltage !== undefined
+              && !(log.voltage < 12.0)) return false;
+
+            if (metricFilter === "rpm"
+              && log.rpm !== undefined
+              && !(log.rpm > 5500)) return false;
+
+            // --- Engine/Driving State Filter ---
+            // 1. Stop-and-Go Traffic
+            if (engineFilter === "StopAndGo_Traffic" && !(
+              log.speed >= 0 && log.speed <= 25
+              && log.rpm >= 800 && log.rpm <= 2500
+              //&& log.iat >= 55 && log.iat <= 63
+              //&& log.ctemp >= 90 && log.ctemp <= 96
+              && log.timing >= 8 && log.timing <= 11
+              && log.maf >= 10 && log.maf <= 30
+              //&& log.throttle >= 5 && log.throttle <= 25
+              //&& log.evap >= 30 && log.evap <= 40
+              //&& log.fuel >= 40 && log.fuel <= 60
+              //&& log.mpg >= 6 && log.mpg <= 10
+              //&& log.load >= 20 && log.load <= 40
+              && log.voltage >= 13.0 && log.voltage <= 13.7
+              //&& log.bpressure >= 100.8 && log.bpressure <= 101.7
+              //&& log.atemp >= 28 && log.atemp <= 36
+            )) return false;
+
+            // 2. Rainy Season Cruising
+            if (engineFilter === "RainySeason_Cruising" && !(
+              log.speed >= 40 && log.speed <= 60
+              && log.rpm >= 1500 && log.rpm <= 2200
+              //&& log.iat >= 40 && log.iat <= 46
+              //&& log.ctemp >= 82 && log.ctemp <= 88
+              && log.timing >= 9 && log.timing <= 12
+              && log.maf >= 18 && log.maf <= 43
+              //&& log.throttle >= 10 && log.throttle <= 30
+              //&& log.evap >= 40 && log.evap <= 50
+              //&& log.fuel >= 50 && log.fuel <= 75
+              //&& log.mpg >= 12 && log.mpg <= 15
+              //&& log.load >= 30 && log.load <= 50
+              && log.voltage >= 13.6 && log.voltage <= 14.2
+              //&& log.bpressure >= 100.8 && log.bpressure <= 101.7
+              //&& log.atemp >= 28 && log.atemp <= 36
+            )) return false;
+
+            // 3. Nighttime City Drive
+            if (engineFilter === "Nighttime_CityDrive" && !(
+              log.speed >= 40 && log.speed <= 60
+              && log.rpm >= 1200 && log.rpm <= 2000
+              //&& log.iat >= 38 && log.iat <= 44
+              //&& log.ctemp >= 80 && log.ctemp <= 86
+              && log.timing >= 9 && log.timing <= 12
+              && log.maf >= 15 && log.maf <= 35
+              //&& log.throttle >= 8 && log.throttle <= 23
+              //&& log.evap >= 35 && log.evap <= 45
+              //&& log.fuel >= 45 && log.fuel <= 70
+              //&& log.mpg >= 14 && log.mpg <= 18
+              //&& log.load >= 25 && log.load <= 40
+              && log.voltage >= 13.4 && log.voltage <= 14.0
+              //&& log.bpressure >= 100.8 && log.bpressure <= 101.7
+              //&& log.atemp >= 28 && log.atemp <= 36
+            )) return false;
+
+            // 4. Highway Steady Cruise
+            if (engineFilter === "Highway_SteadyCruise" && !(
+              log.speed >= 80 && log.speed <= 120
+              && log.rpm >= 2200 && log.rpm <= 3000
+              //&& log.iat >= 48 && log.iat <= 54
+              //&& log.ctemp >= 88 && log.ctemp <= 94
+              && log.timing >= 12 && log.timing <= 16
+              && log.maf >= 30 && log.maf <= 70
+              //&& log.throttle >= 20 && log.throttle <= 40
+              //&& log.evap >= 45 && log.evap <= 55
+              //&& log.fuel >= 60 && log.fuel <= 85
+              //&& log.mpg >= 18 && log.mpg <= 25
+              //&& log.load >= 30 && log.load <= 50
+              && log.voltage >= 13.8 && log.voltage <= 14.4
+              //&& log.bpressure >= 100.8 && log.bpressure <= 101.7
+              //&& log.atemp >= 28 && log.atemp <= 36
+            )) return false;
+
+            // 5. Low Fuel Limp Mode
+            if (engineFilter === "LowFuel_LimpMode" && !(
+              log.speed >= 30 && log.speed <= 50
+              && log.rpm >= 1000 && log.rpm <= 2000
+              //&& log.iat >= 50 && log.iat <= 56
+              //&& log.ctemp >= 90 && log.ctemp <= 96
+              && log.timing >= 7 && log.timing <= 10
+              && log.maf >= 10 && log.maf <= 25
+              //&& log.throttle >= 5 && log.throttle <= 20
+              //&& log.evap >= 25 && log.evap <= 35
+              //&& log.fuel >= 5 && log.fuel <= 15
+              //&& log.mpg >= 5 && log.mpg <= 7
+              //&& log.load >= 40 && log.load <= 60
+              && log.voltage >= 12.5 && log.voltage <= 13.2
+              //&& log.bpressure >= 100.8 && log.bpressure <= 101.7
+              //&& log.atemp >= 28 && log.atemp <= 36
+            )) return false;
+
+            // 6. AC Load Stress
+            if (engineFilter === "AC_Load_Stress" && !(
+              log.speed >= 0 && log.speed <= 30
+              && log.rpm >= 650 && log.rpm <= 1500
+              //&& log.iat >= 20 && log.iat <= 40
+              //&& log.ctemp >= 90 && log.ctemp <= 96
+              && log.timing >= 10 && log.timing <= 13
+              && log.maf >= 25 && log.maf <= 45
+              //&& log.throttle >= 15 && log.throttle <= 35
+              //&& log.evap >= 50 && log.evap <= 60
+              //&& log.fuel >= 40 && log.fuel <= 60
+              //&& log.mpg >= 10 && log.mpg <= 13
+              //&& log.load >= 35 && log.load <= 55
+              && log.voltage >= 13.2 && log.voltage <= 13.8
+              //&& log.bpressure >= 100.8 && log.bpressure <= 101.7
+              //&& log.atemp >= 28 && log.atemp <= 36
+            )) return false;
+
+            // 7. Cold Start Morning
+            if (engineFilter === "ColdStart_Morning" && !(
+              log.speed >= 0 && log.speed <= 15
+              && log.rpm >= 1000 && log.rpm <= 1500
+              //&& log.iat >= 10 && log.iat <= 25
+              //&& log.ctemp >= 30 && log.ctemp <= 60
+              && log.timing >= 6 && log.timing <= 8
+              && log.maf >= 15 && log.maf <= 25
+              //&& log.throttle >= 5 && log.throttle <= 15
+              //&& log.evap >= 20 && log.evap <= 30
+              //&& log.fuel >= 50 && log.fuel <= 70
+              //&& log.mpg >= 8 && log.mpg <= 10
+              //&& log.load >= 15 && log.load <= 30
+              && log.voltage >= 12.0 && log.voltage <= 12.6
+              //&& log.bpressure >= 100.8 && log.bpressure <= 101.7
+              //&& log.atemp >= 28 && log.atemp <= 36
+            )) return false;
+
+            // 8. Hill Climb Heavy Load
+            if (engineFilter === "HillClimb_HeavyLoad" && !(
+              log.speed >= 40 && log.speed <= 60
+              && log.rpm >= 3000 && log.rpm <= 4500
+              //&& log.iat >= 60 && log.iat <= 68
+              //&& log.ctemp >= 95 && log.ctemp <= 105
+              && log.timing >= 14 && log.timing <= 18   // advanced timing for heavy load
+              && log.maf >= 60 && log.maf <= 90
+              //&& log.throttle >= 60 && log.throttle <= 90
+              //&& log.evap >= 45 && log.evap <= 55
+              //&& log.fuel >= 30 && log.fuel <= 50
+              //&& log.mpg >= 7 && log.mpg <= 9
+              //&& log.load >= 80 && log.load <= 100
+              && log.voltage >= 13.5 && log.voltage <= 14.2
+              //&& log.bpressure >= 100.8 && log.bpressure <= 101.7
+              //&& log.atemp >= 28 && log.atemp <= 36
+            )) return false;
+
+            // 9. Normal Cruising
+            if (engineFilter === "NormalCruising" && !(
+              log.speed >= 50 && log.speed <= 70
+              && log.rpm >= 1800 && log.rpm <= 2800
+              //&& log.iat >= 45 && log.iat <= 55
+              //&& log.ctemp >= 85 && log.ctemp <= 93
+              && log.timing >= 10 && log.timing <= 14   // BMW cruise timing
+              && log.maf >= 20 && log.maf <= 55
+              //&& log.throttle >= 10 && log.throttle <= 35
+              //&& log.evap >= 40 && log.evap <= 50
+              //&& log.fuel >= 50 && log.fuel <= 80
+              //&& log.mpg >= 15 && log.mpg <= 20
+              //&& log.load >= 25 && log.load <= 45
+              && log.voltage >= 13.8 && log.voltage <= 14.4
+              //&& log.bpressure >= 100.8 && log.bpressure <= 101.7
+              //&& log.atemp >= 28 && log.atemp <= 36
+            )) return false;
+
+            // 10. Traffic Idle Heat Soak
+            if (engineFilter === "TrafficIdle_HeatSoak" && !(
+              log.speed >= 0 && log.speed <= 5
+              && log.rpm >= 750 && log.rpm <= 900
+              //&& log.iat >= 62 && log.iat <= 72
+              //&& log.ctemp >= 95 && log.ctemp <= 101
+              && log.timing >= 4 && log.timing <= 12   // BMW warm idle spec
+              && log.maf >= 3.4 && log.maf <= 4.5      // BMW idle MAF
+              //&& log.throttle == 0
+              //&& log.evap >= 10 && log.evap <= 15
+              //&& log.fuel >= 40 && log.fuel <= 60
+              //&& log.mpg >= 8 && log.mpg <= 10
+              //&& log.load >= 5 && log.load <= 15
+              && log.voltage >= 13.2 && log.voltage <= 13.8
+              //&& log.bpressure >= 100.8 && log.bpressure <= 101.7
+              //&& log.atemp >= 28 && log.atemp <= 36
+            )) {
+              //alert("engineFilter === TrafficIdle_HeatSoak speed: " + log.speed);
+              return false;
+            }
+
+            // 11. High Load Overtaking
+            if (engineFilter === "HighLoad_Overtaking" && !(
+              log.speed >= 80 && log.speed <= 120
+              && log.rpm >= 4000 && log.rpm <= 5800
+              //&& log.iat >= 50 && log.iat <= 58
+              //&& log.ctemp >= 92 && log.ctemp <= 99
+              && log.timing >= 15 && log.timing <= 20   // BMW high load timing
+              && log.maf >= 90 && log.maf <= 130
+              //&& log.throttle >= 70 && log.throttle <= 100
+              //&& log.evap >= 50 && log.evap <= 70
+              //&& log.fuel >= 60 && log.fuel <= 90
+              //&& log.mpg >= 12 && log.mpg <= 15
+              //&& log.load >= 70 && log.load <= 100
+              && log.voltage >= 13.5 && log.voltage <= 14.2
+              //&& log.bpressure >= 100.8 && log.bpressure <= 101.7
+              //&& log.atemp >= 28 && log.atemp <= 36
+            )) {
+              //alert("engineFilter === HighLoad_Overtaking speed: " + log.speed);
+              return false;
+            }
+
+            // 12. Overheating Warning
+            if (engineFilter === "OverheatingWarning" && !(
+              log.speed >= 30 && log.speed <= 50
+              && log.rpm >= 2500 && log.rpm <= 4000
+              //&& log.iat >= 72 && log.iat <= 80
+              //&& log.ctemp >= 104 && log.ctemp <= 112
+              && log.timing >= 5 && log.timing <= 8     // retarded timing to reduce heat
+              && log.maf >= 40 && log.maf <= 70
+              //&& log.throttle >= 30 && log.throttle <= 70
+              //&& log.evap >= 30 && log.evap <= 40
+              //&& log.fuel >= 20 && log.fuel <= 35
+              //&& log.mpg >= 6 && log.mpg <= 8
+              //&& log.load >= 50 && log.load <= 70
+              && log.voltage >= 12.8 && log.voltage <= 13.5
+              //&& log.bpressure >= 100.8 && log.bpressure <= 101.7
+              //&& log.atemp >= 28 && log.atemp <= 36
+            )) return false;
+
+            if (engineFilter === "running"
+              && log.speed === 0) return false;
+
+            if (engineFilter === "idling"
+              && !(log.speed === 0 && log.rpm > 0)) return false;
+
+            if (engineFilter === "off"
+              && log.rpm !== 0) return false;
+
+            // --- Date & Time Handling ---
+            // Extract date and time components from log.time (e.g., "2026-08-07 14:30:00" or ISO string)
+            const logDateObj = new Date(log.time);
+            const hasValidDate = !isNaN(logDateObj.getTime());
+
+            // Date Filter ("YYYY-MM-DD")
+            if (startDate) {
+              if (hasValidDate) {
+                const logDateStr = logDateObj.toISOString().split("T")[0];
+                if (logDateStr !== startDate) return false;
+              } else if (!log.time.includes(startDate)) {
+                // Fallback string matching if log.time is formatted like "2026-08-07 ..."
+                return false;
+              }
+            }
+
+            // Time Filter ("HH:MM")
+            if (startTime) {
+              if (hasValidDate) {
+                const logTimeStr = logDateObj.toTimeString().slice(0, 5); // "14:30"
+                if (logTimeStr !== startTime) return false;
+              } else if (!log.time.includes(startTime)) {
+                return false;
+              }
+            }
+
+            // Time Horizon Preset
+            if (presetCutoff && hasValidDate) {
+              if (logDateObj < presetCutoff) return false;
+            }
+            return true;
+          });
+
+          //alert("runTelemetryAnalysis filteredLogs.length: " + filteredLogs.length);
+
+          window.currentTelemetryDisplayedLogs = filteredLogs;
+          renderTelemetryTable(filteredLogs);
+        }
+
+        /*
+          SORTING EVENTS
+          This connects every clickable column header to the sorting function.
+        */
+        function initializeTelemetrySorting() {
+          document
+            .querySelectorAll("#telemetryTableHeader .sortable-header")
+            .forEach((header) => {
+              header.addEventListener("click", () => {
+                const key = header.dataset.sortKey;
+                if (!key) return;
+
+                const sortedLogs = sortTelemetryLogs(
+                  currentTelemetryDisplayedLogs,
+                  key
+                );
+
+                currentTelemetryDisplayedLogs = sortedLogs;
+                renderTelemetryTable(sortedLogs);
+                updateTelemetrySortIndicators();
+              });
+            });
         }
 
         /*
@@ -2780,374 +2146,299 @@
         }
 
         /*
-          SORTING EVENTS
-          This connects every clickable column header to the sorting function.
         */
-        function initializeTelemetrySorting() {
-          document
-            .querySelectorAll("#telemetryTableHeader .sortable-header")
-            .forEach((header) => {
-              header.addEventListener("click", () => {
-                const key = header.dataset.sortKey;
-                if (!key) return;
 
-                const sortedLogs = sortTelemetryLogs(
-                  currentTelemetryDisplayedLogs,
-                  key
-                );
+        function generateLagosTelemetry(rowCount) {
+          const statuses = [
+            "TrafficIdle_HeatSoak",
+            "NormalCruising",
+            "HighLoad_Overtaking",
+            "OverheatingWarning",
+            "StopAndGo_Traffic",
+            "RainySeason_Cruising",
+            "Nighttime_CityDrive",
+            "Highway_SteadyCruise",
+            "LowFuel_LimpMode",
+            "AC_Load_Stress",
+            "ColdStart_Morning",
+            "HillClimb_HeavyLoad"
+          ];
 
-                currentTelemetryDisplayedLogs = sortedLogs;
-                renderTelemetryTable(sortedLogs);
-                updateTelemetrySortIndicators();
-              });
+          const data = [];
+          for (let i = 0; i < rowCount; i++) {
+            const status = statuses[Math.floor(Math.random() * statuses.length)];
+            const row = {
+              speed: Math.random() * 120,
+              rpm: 700 + Math.random() * 4000,
+              etemp: 70 + Math.random() * 40,
+              maf: 5 + Math.random() * 100,
+              throttle: Math.random() * 100,
+              ctemp: 80 + Math.random() * 30,
+              atemp: 28 + Math.random() * 8,
+              bpressure: 100.8 + Math.random() * 0.9,
+              evap: Math.random(),
+              load: Math.random() * 100,
+              timing: Math.random() * 20,
+              iat: 35 + Math.random() * 40,
+              fuel: Math.random() * 100,
+              voltage: 12 + Math.random() * 2,
+              Diagnostic_Status: status
+            };
+            data.push(row);
+          }
+          return data;
+        }
+
+        function generateNormalLagosTelemetry(rowCount) {
+          const data = [];
+          for (let i = 0; i < rowCount; i++) {
+            const row = {
+              speed: Math.random() * 100,
+              rpm: 800 + Math.random() * 3000,
+              etemp: 75 + Math.random() * 20,
+              maf: 10 + Math.random() * 50,
+              throttle: Math.random() * 50,
+              ctemp: 85 + Math.random() * 10,
+              atemp: 28 + Math.random() * 8,
+              bpressure: 100.8 + Math.random() * 0.9,
+              evap: Math.random(),
+              load: Math.random() * 80,
+              timing: Math.random() * 15,
+              iat: 40 + Math.random() * 20,
+              fuel: Math.random() * 100,
+              voltage: 12.5 + Math.random() * 1.5
+              // No Diagnostic_Status here
+            };
+            data.push(row);
+          }
+          return data;
+        }
+
+        let model;
+
+        const labelClasses = [
+          "TrafficIdle_HeatSoak", "NormalCruising", "HighLoad_Overtaking", "OverheatingWarning",
+          "StopAndGo_Traffic", "RainySeason_Cruising", "Nighttime_CityDrive", "Highway_SteadyCruise",
+          "LowFuel_LimpMode", "AC_Load_Stress", "ColdStart_Morning", "HillClimb_HeavyLoad"
+        ];
+
+
+        function setAnalysisProgress(percent, message, stage) {
+          const safePercent = Math.max(0, Math.min(100, Number(percent) || 0));
+          const fill = document.getElementById("analysisProgressFill");
+          const percentEl = document.getElementById("analysisProgressPercent");
+          const messageEl = document.getElementById("analysisProgressMessage");
+          const stageEl = document.getElementById("analysisProgressStage");
+          if (fill) fill.style.width = `${safePercent}%`;
+          if (percentEl) percentEl.textContent = `${Math.round(safePercent)}%`;
+          if (messageEl && message) messageEl.textContent = message;
+          if (stageEl && stage) stageEl.textContent = stage;
+        }
+
+        function showAnalysisProgress() {
+          const overlay = document.getElementById("analysisProgressOverlay");
+          if (overlay) overlay.hidden = false;
+          setAnalysisProgress(0, "Preparing telemetry and training data...", "Starting");
+        }
+
+        function hideAnalysisProgress() {
+          const overlay = document.getElementById("analysisProgressOverlay");
+          if (overlay) overlay.hidden = true;
+        }
+
+        function renderAnalysisResults(results, trainingInfo) {
+          const tbody = document.getElementById("analysisResultsTableBody");
+          const accuracyEl = document.getElementById("analysisAccuracy");
+          const lossEl = document.getElementById("analysisLoss");
+          const countEl = document.getElementById("analysisRecordCount");
+          const epochsEl = document.getElementById("analysisEpochs");
+
+          if (countEl) countEl.textContent = Number(results.length).toLocaleString();
+          if (accuracyEl) accuracyEl.textContent =
+            Number.isFinite(trainingInfo?.accuracy) ? `${(trainingInfo.accuracy * 100).toFixed(1)}%` : "--";
+          if (lossEl) lossEl.textContent =
+            Number.isFinite(trainingInfo?.loss) ? trainingInfo.loss.toFixed(4) : "--";
+          if (epochsEl) epochsEl.textContent = trainingInfo?.epochs ?? 30;
+
+          if (!tbody) return;
+          if (!results.length) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:1rem;">No classification results were produced.</td></tr>`;
+            return;
+          }
+
+          tbody.innerHTML = results.map((result) => {
+            const log = result.log || {};
+            let timestamp = log.time || log.Timestamp || "--";
+            const parsed = new Date(timestamp);
+            if (!Number.isNaN(parsed.getTime())) timestamp = parsed.toLocaleString();
+
+            return `<tr>
+              <td>${escapeHtml(timestamp)}</td>
+              <td style="color:#38bdf8;font-weight:700;">${escapeHtml(result.predictedClass)}</td>
+              <td>${(result.confidence * 100).toFixed(1)}%</td>
+              <td>${(Number(log.speed) || 0).toFixed(1)} km/h</td>
+              <td>${Math.round(Number(log.rpm) || 0)}</td>
+              <td>${(Number(log.ctemp) || 0).toFixed(1)} °C</td>
+              <td>${(Number(log.voltage) || 0).toFixed(2)} V</td>
+            </tr>`;
+          }).join("");
+        }
+
+        async function runAIAnalysis() {
+          if (!currentTelemetryDisplayedLogs || currentTelemetryDisplayedLogs.length === 0) {
+            alert("No telemetry records are currently available for analysis.");
+            return;
+          }
+
+          const telemetry = [...currentTelemetryDisplayedLogs];
+          showAnalysisProgress();
+
+          try {
+            const trainingInfo = await trainModel((epoch, totalEpochs) => {
+              const progress = (epoch / totalEpochs) * 55;
+              setAnalysisProgress(
+                progress,
+                `Training AI model — epoch ${epoch} of ${totalEpochs}.`,
+                "Training model"
+              );
             });
-        }
 
-        /*
-          TELEMETRY FILTERING
-          This function reads the filter controls, checks every loaded record,
-          and sends the matching records to the table.
-        */
-        function normalizeTelemetryDate(value) {
-          if (value == null) return null;
-          const raw = String(value).trim();
-          if (!raw) return null;
+            const results = [];
+            const total = telemetry.length;
 
-          // The supplied telemetry can use "2026-07-2705:59:07" without
-          // the normal separator between date and time. Normalize it first.
-          const normalized = raw.replace(
-            /^(\d{4}-\d{2}-\d{2})(\d{2}:\d{2}:\d{2})$/,
-            "$1T$2"
-          );
+            for (let index = 0; index < total; index++) {
+              const classification = await classifyTelemetry(telemetry[index]);
+              results.push({
+                log: telemetry[index],
+                ...classification
+              });
 
-          const date = new Date(normalized);
-          return Number.isNaN(date.getTime()) ? null : date;
-        }
+              const progress = 55 + ((index + 1) / total) * 45;
+              setAnalysisProgress(
+                progress,
+                `Classifying record ${index + 1} of ${total}.`,
+                "Classifying telemetry"
+              );
 
-        function telemetryRecordMatchesCategory(log, category, value) {
-          if (value === "all") return true;
-
-          const speed = Number(log.speed ?? 0);
-          const rpm = Number(log.rpm ?? 0);
-          const maf = Number(log.maf ?? 0);
-          const coolant = Number(log.ctemp ?? log.temp ?? 0);
-          const fuel = Number(log.fuel ?? 0);
-          const voltage = Number(log.voltage ?? 0);
-          const mpg = Number(log.mpg ?? 0);
-          const iat = Number(log.iat ?? 0);
-          const throttle = Number(log.throttle ?? 0);
-          const load = Number(log.load ?? 0);
-          const ambient = Number(log.atemp ?? 0);
-          const baro = Number(log.bpressure ?? 0);
-
-          switch (category) {
-            case "drivingCondition":
-              switch (value) {
-                case "off":
-                  return rpm <= 0;
-                case "stationary":
-                  return speed <= 2 && rpm > 0;
-                case "idling":
-                  return speed <= 2 && rpm >= 550 && rpm <= 1000;
-                case "traffic":
-                  return speed > 2 && speed <= 30 && rpm > 0 && rpm <= 2500;
-                case "urban":
-                  return speed > 15 && speed <= 65 && rpm >= 900 && rpm <= 3000;
-                case "cruise":
-                  return speed >= 45 && speed <= 95 && rpm >= 1100 && rpm <= 3000 && load <= 60;
-                case "highway":
-                  return speed >= 80 && rpm >= 1400 && rpm <= 3200 && load <= 60;
-                case "acceleration":
-                  return speed >= 10 && throttle >= 60 && load >= 60 && rpm >= 1500;
-                default:
-                  return true;
+              // Yield periodically so the progress bar can visibly update.
+              if (index % 10 === 0) {
+                await new Promise((resolve) => requestAnimationFrame(resolve));
               }
+            }
 
-            case "engineCondition":
-              switch (value) {
-                case "cold":
-                  return coolant < 60;
-                case "warming":
-                  return coolant >= 60 && coolant < 85;
-                case "normal":
-                  return coolant >= 85 && coolant <= 105;
-                case "high":
-                  return coolant > 105 && coolant <= 115;
-                case "overheat":
-                  return coolant > 115 || (coolant > 110 && load >= 60);
-                default:
-                  return true;
-              }
+            setAnalysisProgress(100, "Classification complete.", "Finished");
+            renderAnalysisResults(results, trainingInfo);
 
-            case "performanceLoad":
-              switch (value) {
-                case "highRpm":
-                  return rpm >= 4500;
-                case "highLoad":
-                  return load >= 70;
-                case "highThrottle":
-                  return throttle >= 70;
-                case "highAirflow":
-                  return maf >= 60;
-                case "lowLoad":
-                  return load <= 25;
-                case "lowAirflow":
-                  return maf <= 8;
-                case "hardAcceleration":
-                  return throttle >= 60 && load >= 60 && rpm >= 1500;
-                default:
-                  return true;
-              }
-
-            case "fuelEconomy":
-              switch (value) {
-                case "lowFuel":
-                  return fuel < 25;
-                case "veryLowFuel":
-                  return fuel < 10;
-                case "goodEconomy":
-                  return mpg >= 20;
-                case "poorEconomy":
-                  return mpg > 0 && mpg < 10;
-                case "heavyConsumption":
-                  return mpg > 0 && mpg < 8;
-                default:
-                  return true;
-              }
-
-            case "electricalSystem":
-              switch (value) {
-                case "engineOffLow":
-                  return rpm <= 0 && voltage > 0 && voltage < 12.2;
-                case "chargingNormal":
-                  return rpm > 500 && voltage >= 13.2 && voltage <= 14.8;
-                case "lowCharging":
-                  return rpm > 500 && voltage > 0 && voltage < 13.2;
-                case "highCharging":
-                  return rpm > 500 && voltage > 14.8;
-                default:
-                  return true;
-              }
-
-            case "airIntake":
-              switch (value) {
-                case "highIat":
-                  return iat >= 45;
-                case "lowIat":
-                  return iat < 15;
-                case "highMaf":
-                  return maf >= 60;
-                case "lowMaf":
-                  return maf <= 8;
-                case "highThrottle":
-                  return throttle >= 70;
-                case "lowThrottle":
-                  return throttle <= 20;
-                default:
-                  return true;
-              }
-
-            case "coolingSystem":
-              switch (value) {
-                case "cold":
-                  return coolant < 60;
-                case "warming":
-                  return coolant >= 60 && coolant < 85;
-                case "normal":
-                  return coolant >= 85 && coolant <= 105;
-                case "high":
-                  return coolant > 105 && coolant <= 115;
-                case "heatSoak":
-                  return speed <= 5 && rpm >= 550 && rpm <= 1000 && iat >= 45 && coolant >= 95;
-                case "overheat":
-                  return coolant > 115;
-                default:
-                  return true;
-              }
-
-            case "environment":
-              switch (value) {
-                case "coldAmbient":
-                  return ambient < 20;
-                case "normalAmbient":
-                  return ambient >= 20 && ambient < 32;
-                case "hotAmbient":
-                  return ambient >= 32;
-                case "highAltitude":
-                  return baro > 0 && baro < 95;
-                case "veryLowPressure":
-                  return baro > 0 && baro < 90;
-                default:
-                  return true;
-              }
-
-            default:
-              return true;
+            // Keep the overlay up while the completion alert is visible.
+            alert("Classification finished.");
+            hideAnalysisProgress();
+            showScreen("screen-analysis-results");
+          } catch (err) {
+            console.error("AI analysis failed:", err);
+            hideAnalysisProgress();
+            alert("Error: " + err.message);
           }
         }
 
-        /*
-          VERSION 1 TELEMETRY FILTERING
-          Each category is independent. A record only needs to satisfy the
-          selected condition in every category whose selector is not "all".
-          Date/time filters remain independent of the vehicle-condition filters.
-        */
+        async function trainModel(onEpochProgress) {
+          const syntheticData = generateLagosTelemetry(1000);
 
-        /*
-         * ================================================================
-         * BEGINNER GUIDE: TELEMETRY FILTERING
-         * ================================================================
-         *
-         * Version 1 uses independent telemetry categories instead of the
-         * old collection of hard-coded driving scenarios.
-         *
-         * The eight main categories are:
-         *
-         *   1. Driving Condition
-         *   2. Engine Condition
-         *   3. Performance / Load
-         *   4. Fuel & Economy
-         *   5. Electrical System
-         *   6. Air / Intake
-         *   7. Cooling System
-         *   8. Environment
-         *
-         * Each category answers a different question about the vehicle.
-         * For example:
-         *
-         *   Driving Condition -> What was the vehicle doing?
-         *   Engine Condition  -> What state was the engine in?
-         *   Performance       -> How hard was the engine working?
-         *   Fuel & Economy    -> What was fuel usage/level like?
-         *   Electrical        -> Was the electrical system behaving normally?
-         *
-         * The filters are independent, so the user can combine them.
-         * A telemetry record must pass every selected filter before it is
-         * included in the displayed results.
-         *
-         * ================================================================
-         */
+          const featureData = syntheticData.map(row => [
+            parseFloat(row.speed || 0),
+            parseFloat(row.rpm || 0),
+            parseFloat(row.etemp || 0),
+            parseFloat(row.maf || 0),
+            parseFloat(row.throttle || 0),
+            parseFloat(row.ctemp || 0),
+            parseFloat(row.atemp || 0),
+            parseFloat(row.bpressure || 0),
+            parseFloat(row.evap || 0),
+            parseFloat(row.load || 0),
+            parseFloat(row.timing || 0),
+            parseFloat(row.iat || 0),
+            parseFloat(row.fuel || 0),
+            parseFloat(row.voltage || 0)
+          ]);
 
-        function runTelemetryAnalysis() {
-          if (!activeCar || !Array.isArray(activeCar.telemetry)) return;
-
-          const filters = {
-            drivingCondition: document.getElementById("drivingCondition")?.value || "all",
-            engineCondition: document.getElementById("engineCondition")?.value || "all",
-            performanceLoad: document.getElementById("performanceLoad")?.value || "all",
-            fuelEconomy: document.getElementById("fuelEconomy")?.value || "all",
-            electricalSystem: document.getElementById("electricalSystem")?.value || "all",
-            airIntake: document.getElementById("airIntake")?.value || "all",
-            coolingSystem: document.getElementById("coolingSystem")?.value || "all",
-            environment: document.getElementById("environment")?.value || "all"
-          };
-
-          const startDate = document.getElementById("startDate")?.value || "";
-          const startTime = document.getElementById("startTime")?.value || "";
-          const timePreset = document.getElementById("timeRange")?.value || "all";
-
-          const hoursMap = {
-            "1h": 1,
-            "24h": 24,
-            "7d": 24 * 7,
-            "30d": 24 * 30
-          };
-
-          const presetCutoff = hoursMap[timePreset]
-            ? new Date(Date.now() - hoursMap[timePreset] * 60 * 60 * 1000)
-            : null;
-
-          const filteredLogs = activeCar.telemetry.filter((log) => {
-            for (const [category, value] of Object.entries(filters)) {
-              if (!telemetryRecordMatchesCategory(log, category, value)) return false;
-            }
-
-            const logDate = normalizeTelemetryDate(log.time);
-            const hasValidDate = !!logDate;
-
-            if (startDate) {
-              if (!hasValidDate) return false;
-              const year = logDate.getFullYear();
-              const month = String(logDate.getMonth() + 1).padStart(2, "0");
-              const day = String(logDate.getDate()).padStart(2, "0");
-              if (`${year}-${month}-${day}` !== startDate) return false;
-            }
-
-            if (startTime) {
-              if (!hasValidDate) return false;
-              const localTime = logDate.toTimeString().slice(0, 5);
-              if (localTime !== startTime) return false;
-            }
-
-            if (presetCutoff && hasValidDate && logDate < presetCutoff) return false;
-
-            return true;
+          const labelData = syntheticData.map(row => {
+            const idx = labelClasses.indexOf(row.Diagnostic_Status);
+            return labelClasses.map((_, i) => (i === idx ? 1 : 0));
           });
 
+          const xs = tf.tensor2d(featureData);
+          const ys = tf.tensor2d(labelData);
 
-          /*
-           * ================================================================
-           * FILTER RESULT
-           * ================================================================
-           *
-           * filteredLogs is the final array produced by the filter process.
-           * It contains only records that passed:
-           *
-           *   - the minimum-speed requirement
-           *   - every selected Version 1 category
-           *   - the date/time restrictions
-           *   - the selected time preset
-           *
-           * The result is stored on window so other dashboard code can use
-           * the same currently displayed dataset.
-           *
-           * Finally, renderTelemetryTable() receives the filtered records
-           * and updates the visible telemetry table.
-           *
-           * Keeping filtering separate from rendering makes the code easier
-           * to understand: this function decides WHICH records to show,
-           * while the renderer decides HOW they are displayed.
-           *
-           * ================================================================
-           */
+          if (!model) {
+            model = tf.sequential();
+            model.add(tf.layers.dense({ units: 64, activation: "relu", inputShape: [xs.shape[1]] }));
+            model.add(tf.layers.dense({ units: 32, activation: "relu" }));
+            model.add(tf.layers.dense({ units: labelClasses.length, activation: "softmax" }));
+            model.compile({
+              optimizer: "adam",
+              loss: "categoricalCrossentropy",
+              metrics: ["accuracy"]
+            });
+          }
 
-          window.currentTelemetryDisplayedLogs = filteredLogs;
-          renderTelemetryTable(filteredLogs);
+          const epochs = 30;
+          try {
+            const history = await model.fit(xs, ys, {
+              epochs,
+              batchSize: 32,
+              callbacks: {
+                onEpochEnd: async (epoch) => {
+                  if (typeof onEpochProgress === "function") onEpochProgress(epoch + 1, epochs);
+                  await tf.nextFrame();
+                }
+              }
+            });
+
+            const accuracyHistory = history.history.accuracy || history.history.acc || [];
+            const lossHistory = history.history.loss || [];
+
+            return {
+              epochs,
+              accuracy: accuracyHistory.length ? Number(accuracyHistory[accuracyHistory.length - 1]) : NaN,
+              loss: lossHistory.length ? Number(lossHistory[lossHistory.length - 1]) : NaN
+            };
+          } finally {
+            xs.dispose();
+            ys.dispose();
+          }
         }
-        /* Opens the telemetry dashboard for the selected vehicle. */
-        async
-        /*
-         * ================================================================
-         * OPEN TELEMETRY SCREEN
-         * ================================================================
-         *
-         * Prepares the telemetry dashboard for the currently selected car.
-         *
-         * activeCar:
-         *   The vehicle selected by the user.
-         *
-         * activeCustomer:
-         *   The customer associated with that vehicle.
-         *
-         * The function fills the vehicle information at the top of the
-         * dashboard, loads the vehicle's telemetry, runs the active
-         * filters, and then switches to the telemetry screen.
-         *
-         * ================================================================
-         */
 
-        async function showTelemetryScreen() {
-          if (!activeCar) return;
-          document.getElementById("telemetryCarTitle").textContent =
-            `${activeCar.year} ${activeCar.make} ${activeCar.model}`;
-          document.getElementById("telemetryCarOwner").textContent =
-            `Owner: ${activeCustomer.name} (${activeCustomer.company})`;
-          document.getElementById("telemetryPlate").textContent = activeCar.plate;
-          document.getElementById("telemetryStatus").textContent = activeCar.status;
-          await populateTableBodyTelemetryData(activeCar.id);
-          runTelemetryAnalysis();
-          showScreen("screen-telemetry");
+        async function classifyTelemetry(row) {
+          const features = tf.tensor2d([[
+            parseFloat(row.speed || 0),
+            parseFloat(row.rpm || 0),
+            parseFloat(row.etemp || 0),
+            parseFloat(row.maf || 0),
+            parseFloat(row.throttle || 0),
+            parseFloat(row.ctemp || 0),
+            parseFloat(row.atemp || 0),
+            parseFloat(row.bpressure || 0),
+            parseFloat(row.evap || 0),
+            parseFloat(row.load || 0),
+            parseFloat(row.timing || 0),
+            parseFloat(row.iat || 0),
+            parseFloat(row.fuel || 0),
+            parseFloat(row.voltage || 0)
+          ]]);
+
+          const prediction = model.predict(features);
+          const probs = await prediction.array();
+          const probabilities = probs[0];
+          const bestIndex = probabilities.indexOf(Math.max(...probabilities));
+
+          features.dispose();
+          prediction.dispose();
+
+          return {
+            predictedClass: labelClasses[bestIndex],
+            confidence: Number(probabilities[bestIndex]) || 0
+          };
         }
+
         /* HTML safety helper: keeps telemetry values from being interpreted as HTML. */
 
         /*
@@ -3182,6 +2473,7 @@
             }[m];
           });
         }
+
         /* Google authentication setup: creates the Google sign-in control. */
 
         /*
@@ -3207,7 +2499,6 @@
          *
          * ================================================================
          */
-
         function initGoogleAuth() {
           if (window.google?.accounts?.id) {
             google.accounts.id.initialize({
@@ -3220,21 +2511,8 @@
             );
           }
         }
-      </script>
 
-<script>
-(() => {
-  const KEY='jafafaActivationCodes';
-  const load=()=>{try{const v=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(v)?v:[]}catch{return[]}};
-  const save=v=>localStorage.setItem(KEY,JSON.stringify(v));
-  const rand=n=>{const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<n;i++)s+=c[Math.floor(Math.random()*c.length)];return s};
-  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  window.jafafaGenerateActivationCode=()=>{const a=load();let code;do{code=`JFF-${rand(4)}-${rand(4)}-${rand(4)}`}while(a.some(x=>x.code===code));a.push({code,status:'AVAILABLE',createdAt:new Date().toISOString(),activatedAt:null,customerId:null,vehicleId:null});save(a);jafafaRefreshActivationCodes();document.getElementById('activation-code-output').innerHTML=`<div style="padding:.8rem;border:1px solid #38bdf8;border-radius:8px;background:#0f172a"><strong style="color:#4ade80">New code:</strong> <code style="font-size:1.1rem;color:#f8fafc">${code}</code><br><span style="color:#94a3b8;font-size:.78rem">Write this code onto the physical product package. It is one-time use.</span></div>`};
-  window.jafafaRefreshActivationCodes=()=>{const rows=document.getElementById('activation-code-rows');if(!rows)return;const a=load();rows.innerHTML=a.length?a.map(x=>`<tr><td><code>${esc(x.code)}</code></td><td>${esc(x.status)}</td><td>${esc(x.createdAt?new Date(x.createdAt).toLocaleString():'—')}</td><td>${esc(x.activatedAt?new Date(x.activatedAt).toLocaleString():'—')}</td><td>${esc(x.customerId||'—')}</td><td>${esc(x.vehicleId||'—')}</td><td>${x.status==='AVAILABLE'?`<button class="btn-back" type="button" onclick="jafafaDisableActivationCode('${x.code}')">Disable</button>`:'—'}</td></tr>`).join(''):'<tr><td colspan="7" style="color:#94a3b8">No activation codes yet.</td></tr>'};
-  window.jafafaDisableActivationCode=code=>{const a=load();const x=a.find(v=>v.code===code);if(!x||x.status!=='AVAILABLE')return;x.status='DISABLED';save(a);jafafaRefreshActivationCodes()};
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',jafafaRefreshActivationCodes,{once:true});else jafafaRefreshActivationCodes();
-})();
-</script>
+      </script>
 </body>
 
 </html>

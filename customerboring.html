@@ -768,7 +768,7 @@
 
     <script>
         // ==========================================
-        // 1. CONSTANTS, STATE & DATABASE INITIALIZATION
+        // CONSTANTS, STATE & DATABASE INITIALIZATION
         // ==========================================
 
         // Key used to load and store customer data inside the browser's localStorage
@@ -794,7 +794,7 @@
 
 
         // ==========================================
-        // 2. HELPER & UTILITY FUNCTIONS
+        // HELPER & UTILITY FUNCTIONS
         // ==========================================
 
         /**
@@ -876,7 +876,7 @@
 
 
         // ==========================================
-        // 3. AUTHENTICATION & GOOGLE OAUTH
+        // AUTHENTICATION & GOOGLE OAUTH
         // ==========================================
 
         // Unique Client ID used for Google Identity Services authentication
@@ -974,7 +974,7 @@
 
 
         // ==========================================
-        // 4. NAVIGATION & SINGLE PAGE APPLICATION (SPA) ROUTER
+        // NAVIGATION & SINGLE PAGE APPLICATION (SPA) ROUTER
         // ==========================================
 
         /**
@@ -1000,7 +1000,7 @@
 
 
         // ==========================================
-        // 5. DATA RENDERING & DASHBOARD LOGIC
+        // DATA RENDERING & DASHBOARD LOGIC
         // ==========================================
 
         /**
@@ -1049,7 +1049,7 @@
 
 
         // ==========================================
-        // 6. VEHICLE REGISTRATION & ACTIVATION CODES
+        // VEHICLE REGISTRATION & ACTIVATION CODES
         // ==========================================
 
         /**
@@ -1098,106 +1098,147 @@
         let isVinVerified = false;
         let isActivationVerified = false;
 
+        // =========================================================================
+        // CENTRALIZED DOM CACHE
+        // =========================================================================
+        // Store frequently accessed DOM element references in an object.
+        // This avoids calling document.getElementById repeatedly, which improves performance.
+        const DOM = {
+            vinInput: document.getElementById("regVin"),           // Input field where user types the VIN
+            statusMsg: document.getElementById("vinStatusMessage"),  // Element for rendering status/error messages
+            regMake: document.getElementById("regMake"),             // Input field for vehicle Make
+            regModel: document.getElementById("regCarModel"),         // Input field for vehicle Model & Trim
+            regYear: document.getElementById("regYear"),             // Input field for vehicle Year
+            actCodeInput: document.getElementById("regActivationCode"), // Input field for activation code
+            actBtn: document.getElementById("btnVerifyActivation"),  // Button to trigger activation code verification
+            modelBadges: document.getElementById("modelBadges")      // Container element for vehicle specs/badges
+        };
+
+        // =========================================================================
+        // STATUS MESSAGE HELPER
+        // =========================================================================
         /**
-         * Searches the auto.dev API using the 17-character VIN
+         * Updates the verification feedback message box with specific text and styling classes.
+         * @param {string} message - The message string to present to the user.
+         * @param {string} type - State category ('error', 'pending', or 'success') to dynamically apply CSS.
+         */
+        function setVinStatus(message, type) {
+            if (!DOM.statusMsg) return; // Guard clause in case element isn't in DOM
+
+            DOM.statusMsg.textContent = message; // Safely set text content
+            DOM.statusMsg.className = `verification ${type}`; // Apply visual styles based on status
+        }
+
+        // =========================================================================
+        // ISOLATED BADGE RENDERING HELPER
+        // =========================================================================
+        /**
+         * Processes vehicle attributes and constructs badge elements for specs (engine, transmission, etc.).
+         * @param {object} data - Raw payload containing car specifications returned from the API.
+         */
+        function renderVehicleSpecs(data) {
+            if (!DOM.modelBadges) return; // Guard clause
+
+            // Extract valid metadata items into an array, filtering out null/undefined values
+            const specs = [
+                data.style,
+                data.body,
+                data.engine,
+                data.drive,
+                data.transmission
+            ].filter(Boolean); // .filter(Boolean) strips out empty or falsey entries
+
+            // If specification badges exist, convert them into HTML badges
+            if (specs.length) {
+                DOM.modelBadges.innerHTML = specs
+                    .map(spec => `<span class="vehicle-spec">${esc(spec)}</span>`) // Escape raw strings for security
+                    .join("");
+                DOM.modelBadges.hidden = false; // Display the badge container
+            } else {
+                DOM.modelBadges.innerHTML = "";
+                DOM.modelBadges.hidden = true;  // Hide container if no specifications are available
+            }
+        }
+
+        // =========================================================================
+        // INPUT FIELD TOGGLER HELPER
+        // =========================================================================
+        /**
+         * Toggles the disabled state of activation code input fields based on VIN validation state.
+         * @param {boolean} enabled - True to unlock fields; false to lock them.
+         */
+        function toggleActivationFields(enabled) {
+            if (DOM.actCodeInput) DOM.actCodeInput.disabled = !enabled; // Enable/disable activation input
+            if (DOM.actBtn) DOM.actBtn.disabled = !enabled;             // Enable/disable verification button
+        }
+
+        // =========================================================================
+        // MAIN VIN FETCH & DECODE FUNCTION
+        // =========================================================================
+        /**
+         * Asynchronously retrieves vehicle information using a 17-character VIN string.
          */
         async function fetchVinDetails() {
-            const vinInput = document.getElementById("regVin");
-            const statusMsg = document.getElementById("vinStatusMessage");
-            const regMake = document.getElementById("regMake");
-            const regModel = document.getElementById("regCarModel");
-            const regYear = document.getElementById("regYear");
-            const actCodeInput = document.getElementById("regActivationCode");
-            const actBtn = document.getElementById("btnVerifyActivation");
+            // 1. Clean up user input: convert to uppercase, trim spaces, strip out non-alphanumeric chars
+            const vin = DOM.vinInput.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
 
-            const vin = vinInput.value.trim().toUpperCase();
-
+            // 2. Validate VIN length requirement (Standard VINs are exactly 17 characters)
             if (vin.length !== 17) {
-                statusMsg.textContent = "Please enter a valid 17-character VIN.";
-                statusMsg.className = "verification error";
+                setVinStatus("Please enter a valid 17-character VIN.", "error"); // Update UI on bad input
                 return;
             }
 
-            statusMsg.textContent = "Fetching vehicle details...";
-            statusMsg.className = "verification pending";
+            // 3. Notify user that network request has started
+            setVinStatus("Fetching vehicle details...", "pending");
 
             try {
-                const apiKey = "sk_ad_EhEpipfu5dA3QtUVGCOe_Ef3";
-                const targetUrl = `https://api.auto.dev/vin/${vin}?apiKey=${apiKey}`;
+                // Build request URL routing through the custom backend API proxy endpoint
+                const parampass = `https://anywashng.com/api/AutoDev.php?vin=${vin}`;
+                alert(parampass); // Debug notification
 
-                // Use CORS proxy if making client-side requests directly
-                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+                // Execute asynchronous HTTP request
+                const response = await fetch(parampass, {
+                    headers: {
+                        "X-API-KEY": API_KEY, // Inject API key into custom header
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                        "Content-Type": "application/json",
+                    },
+                });
 
-                const response = await fetch(proxyUrl);
+                // Check if the response returned a failure HTTP status (e.g., 404, 500)
                 if (!response.ok) {
-                    throw new Error(`API returned HTTP ${response.status}`);
+                    throw new Error("Unable to locate vehicle with this VIN.");
                 }
 
-                const data = await response.json();
+                // Parse JSON response payload
+                const result = await response.json();
 
-                if (data && (data.make || data.model || data.vehicle)) {
-                    isVinVerified = true;
-                    // Extract Make & Year
-                    regMake.value = data.make || data.vehicle?.make || "";
-                    regYear.value = data.year || data.vehicle?.year || "";
+                // Unify nested payload structure variations (data wrapper vs raw result object)
+                const data = result?.data || result;
+                const vehicle = data?.vehicle || data;
 
-                    // Extract Model and additional specifications
-                    const baseModel = data.model || data.vehicle?.model || "";
-                    const trim = data.trim || "";
-                    const style = data.style || "";
-                    const body = data.body || "";
-                    const engine = data.engine || "";
-                    const drive = data.drive || "";
-                    const transmission = data.transmission || "";
+                // 4. Check if valid vehicle attributes were successfully parsed
+                if (vehicle && (vehicle.make || vehicle.model)) {
+                    isVinVerified = true; // Mark VIN validation flag as true
 
-                    // Build details array filter out empty strings
-                    // Main model shown inside the clean readonly input
-                    regModel.value = [baseModel, trim]
-                        .filter(Boolean)
-                        .join(" ");
+                    // Populate form inputs with retrieved vehicle details
+                    DOM.regMake.value = vehicle.make || "";
+                    DOM.regYear.value = vehicle.year || "";
+                    DOM.regModel.value = [vehicle.model, data.trim].filter(Boolean).join(" "); // Combine model & trim
 
-                    // Additional vehicle specifications displayed as badges
-                    const specs = [
-                        style,
-                        body,
-                        engine,
-                        drive,
-                        transmission
-                    ].filter(Boolean);
+                    // Render spec badges and unlock the activation code input section
+                    renderVehicleSpecs(data);
+                    toggleActivationFields(true);
 
-                    const modelBadges = document.getElementById("modelBadges");
-
-                    if (specs.length) {
-
-                        modelBadges.innerHTML = specs.map(spec => `
-        <span class="vehicle-spec">
-            ${esc(spec)}
-        </span>
-    `).join("");
-
-                        modelBadges.hidden = false;
-
-                    } else {
-
-                        modelBadges.innerHTML = "";
-                        modelBadges.hidden = true;
-                    }
-
-                    statusMsg.textContent = "Vehicle details loaded successfully. Please enter your activation code.";
-                    statusMsg.className = "verification success";
-
-                    // Unlock activation code input fields
-                    if (actCodeInput) actCodeInput.disabled = false;
-                    if (actBtn) actBtn.disabled = false;
-
+                    setVinStatus("Vehicle details loaded successfully. Please enter your activation code.", "success");
                 } else {
-                    statusMsg.textContent = "Vehicle details could not be found for this VIN.";
-                    statusMsg.className = "verification error";
+                    // Handle edge case where request succeeds but returned no matching car record
+                    setVinStatus("Vehicle details could not be found for this VIN.", "error");
                 }
             } catch (error) {
+                // Catch network failure or HTTP errors and output feedback to console/UI
                 console.error("VIN Fetch Error:", error);
-                statusMsg.textContent = "Error retrieving VIN details. Please check connection and try again.";
-                statusMsg.className = "verification error";
+                setVinStatus(error.message || "Error retrieving VIN details. Please check connection and try again.", "error");
             }
         }
 
