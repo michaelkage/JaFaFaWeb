@@ -1,17 +1,23 @@
 name: JaFaFa incremental index refactor
+
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+
 permissions:
   contents: write
+
 jobs:
   refactor:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Apply index.html telemetry and AI refactor
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply incremental telemetry and AI refactor
+        shell: python
         run: |
-          python3 - <<'PY'
           from pathlib import Path
           import re
 
@@ -19,99 +25,35 @@ jobs:
           text = path.read_text(encoding='utf-8')
           original = text
 
+          # Refactor telemetry filtering into reusable helpers.
           old = re.search(r'    function filteredTelemetryRecords\(\) \{.*?\n    function renderFilteredTelemetryTable', text, re.S)
           if not old:
               raise SystemExit('Could not locate filteredTelemetryRecords block')
-          replacement = r'''    function getTelemetryFilterSettings() {
+          replacement = '''    function getTelemetryFilterSettings() {
       const hours = { "1h": 1, "24h": 24, "7d": 168, "30d": 720 };
       const range = document.getElementById("timeRange")?.value || "all";
-      return {
-        search: (document.getElementById("jfTelemetrySearch")?.value || "").trim().toLowerCase(),
-        minSpeed: Number(document.getElementById("minSpeed")?.value || 0),
-        metric: document.getElementById("metricType")?.value || "all",
-        engine: document.getElementById("engineStatus")?.value || "all",
-        startDate: document.getElementById("startDate")?.value || "",
-        startTime: document.getElementById("startTime")?.value || "",
-        range,
-        cutoff: hours[range] ? Date.now() - hours[range] * 3600000 : null,
-        diagnostic: document.getElementById("diagnosticFilter")?.value || "all",
-      };
+      return { search: (document.getElementById("jfTelemetrySearch")?.value || "").trim().toLowerCase(), minSpeed: Number(document.getElementById("minSpeed")?.value || 0), metric: document.getElementById("metricType")?.value || "all", engine: document.getElementById("engineStatus")?.value || "all", startDate: document.getElementById("startDate")?.value || "", startTime: document.getElementById("startTime")?.value || "", range, cutoff: hours[range] ? Date.now() - hours[range] * 3600000 : null, diagnostic: document.getElementById("diagnosticFilter")?.value || "all" };
     }
-    function getLocalDateString(date) {
-      if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, "0");
-      const d = String(date.getDate()).padStart(2, "0");
-      return `${y}-${m}-${d}`;
-    }
-    function getLocalTimeString(date) {
-      if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
-      return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-    }
+    function getLocalDateString(date) { if (!(date instanceof Date) || Number.isNaN(date.getTime())) return ""; return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; }
+    function getLocalTimeString(date) { if (!(date instanceof Date) || Number.isNaN(date.getTime())) return ""; return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`; }
     function hasValidTimestamp(log) { return !!parseTime(log?.time ?? log?.timestamp); }
     function isEngineRunning(log) { return Number(normalizeTelemetryValue(log?.rpm) || 0) > 0; }
     function isIdling(log) { return Number(normalizeTelemetryValue(log?.speed) || 0) === 0 && isEngineRunning(log); }
     function matchesSpeedFilter(log, settings) { return (normalizeTelemetryValue(log?.speed) || 0) >= settings.minSpeed; }
-    function matchesMetricFilter(log, settings) {
-      const speed = normalizeTelemetryValue(log?.speed) || 0;
-      const rpm = normalizeTelemetryValue(log?.rpm) || 0;
-      const temp = normalizeTelemetryValue(log?.ctemp);
-      const voltage = normalizeTelemetryValue(log?.voltage);
-      if (settings.metric === "speed") return speed >= TELEMETRY_CONFIG.speed.warning;
-      if (settings.metric === "temp") return temp !== null && temp >= TELEMETRY_CONFIG.ctemp.warning;
-      if (settings.metric === "overheat") return temp !== null && temp >= TELEMETRY_CONFIG.ctemp.critical;
-      if (settings.metric === "battery") return voltage !== null && voltage > 0 && voltage < TELEMETRY_CONFIG.voltage.warningBelow;
-      if (settings.metric === "rpm") return rpm >= TELEMETRY_CONFIG.rpm.warning;
-      return true;
-    }
-    function matchesEngineFilter(log, settings) {
-      const speed = normalizeTelemetryValue(log?.speed) || 0;
-      const running = isEngineRunning(log);
-      if (settings.engine === "running") return running;
-      if (settings.engine === "moving") return speed > 0;
-      if (settings.engine === "idling") return isIdling(log);
-      if (settings.engine === "off") return !running;
-      return true;
-    }
-    function matchesDiagnosticProfile(log, settings) {
-      if (!settings.diagnostic || settings.diagnostic === "all" || !window.diagnosticProfiles) return true;
-      const profile = window.diagnosticProfiles[settings.diagnostic];
-      if (!profile) return true;
-      return Object.entries(profile.ranges).every(([field, range]) => {
-        const value = normalizeTelemetryValue(log?.[field]);
-        return value !== null && value >= range[0] && value <= range[1];
-      });
-    }
-    function matchesDateTimeFilter(log, settings) {
-      if (!settings.startDate && !settings.startTime && !settings.cutoff) return true;
-      const d = parseTime(log?.time ?? log?.timestamp);
-      if (!d) return false;
-      if (settings.startDate && getLocalDateString(d) !== settings.startDate) return false;
-      if (settings.startTime && getLocalTimeString(d) !== settings.startTime) return false;
-      if (settings.cutoff && d.getTime() < settings.cutoff) return false;
-      return true;
-    }
-    function matchesTelemetryFilters(log, settings) {
-      if (!matchesSpeedFilter(log, settings)) return false;
-      if (!matchesMetricFilter(log, settings)) return false;
-      if (!matchesEngineFilter(log, settings)) return false;
-      if (!matchesDiagnosticProfile(log, settings)) return false;
-      if (!matchesDateTimeFilter(log, settings)) return false;
-      if (settings.search && !JSON.stringify(log).toLowerCase().includes(settings.search)) return false;
-      return true;
-    }
-    function filteredTelemetryRecords() {
-      const settings = getTelemetryFilterSettings();
-      const source = Array.isArray(activeCar?.telemetry) ? activeCar.telemetry : [];
-      return source.filter(log => matchesTelemetryFilters(log, settings));
-    }
+    function matchesMetricFilter(log, settings) { const speed = normalizeTelemetryValue(log?.speed) || 0, rpm = normalizeTelemetryValue(log?.rpm) || 0, temp = normalizeTelemetryValue(log?.ctemp), voltage = normalizeTelemetryValue(log?.voltage); if (settings.metric === "speed") return speed >= TELEMETRY_CONFIG.speed.warning; if (settings.metric === "temp") return temp !== null && temp >= TELEMETRY_CONFIG.ctemp.warning; if (settings.metric === "overheat") return temp !== null && temp >= TELEMETRY_CONFIG.ctemp.critical; if (settings.metric === "battery") return voltage !== null && voltage > 0 && voltage < TELEMETRY_CONFIG.voltage.warningBelow; if (settings.metric === "rpm") return rpm >= TELEMETRY_CONFIG.rpm.warning; return true; }
+    function matchesEngineFilter(log, settings) { const speed = normalizeTelemetryValue(log?.speed) || 0, running = isEngineRunning(log); if (settings.engine === "running") return running; if (settings.engine === "moving") return speed > 0; if (settings.engine === "idling") return isIdling(log); if (settings.engine === "off") return !running; return true; }
+    function matchesDiagnosticProfile(log, settings) { if (!settings.diagnostic || settings.diagnostic === "all" || !window.diagnosticProfiles) return true; const profile = window.diagnosticProfiles[settings.diagnostic]; if (!profile) return true; return Object.entries(profile.ranges).every(([field, range]) => { const value = normalizeTelemetryValue(log?.[field]); return value !== null && value >= range[0] && value <= range[1]; }); }
+    function matchesDateTimeFilter(log, settings) { if (!settings.startDate && !settings.startTime && !settings.cutoff) return true; const d = parseTime(log?.time ?? log?.timestamp); if (!d) return false; if (settings.startDate && getLocalDateString(d) !== settings.startDate) return false; if (settings.startTime && getLocalTimeString(d) !== settings.startTime) return false; if (settings.cutoff && d.getTime() < settings.cutoff) return false; return true; }
+    function matchesTelemetryFilters(log, settings) { return matchesSpeedFilter(log, settings) && matchesMetricFilter(log, settings) && matchesEngineFilter(log, settings) && matchesDiagnosticProfile(log, settings) && matchesDateTimeFilter(log, settings) && (!settings.search || JSON.stringify(log).toLowerCase().includes(settings.search)); }
+    function filteredTelemetryRecords() { const settings = getTelemetryFilterSettings(), source = Array.isArray(activeCar?.telemetry) ? activeCar.telemetry : []; return source.filter(log => matchesTelemetryFilters(log, settings)); }
     function renderFilteredTelemetryTable'''
           text = text[:old.start()] + replacement + text[old.end():]
 
+          # Protect telemetry loading from stale vehicle requests and remove the debug log.
           old_pop = re.search(r'    async function populateTelemetry\(vid\) \{.*?\n    function showTelemetryScreen', text, re.S)
           if not old_pop:
               raise SystemExit('Could not locate populateTelemetry block')
-          new_pop = r'''    let telemetryRequestId = 0;
+          new_pop = '''    let telemetryRequestId = 0;
     async function populateTelemetry(vid) {
       if (!activeCar) return;
       const requestId = ++telemetryRequestId;
@@ -121,8 +63,7 @@ jobs:
         const response = await fetch(endpoint, { method: "GET", headers: { Accept: "application/json", "X-API-KEY": ANYWASH_API_KEY } });
         const responseText = await response.text();
         if (!response.ok) throw new Error(`HTTP ${response.status}: ${responseText.slice(0, 300)}`);
-        let result;
-        try { result = JSON.parse(responseText); } catch { throw new Error("Telemetry response was not valid JSON"); }
+        let result; try { result = JSON.parse(responseText); } catch { throw new Error("Telemetry response was not valid JSON"); }
         if (requestId !== telemetryRequestId || activeCar?.id !== vid) return;
         activeCar.telemetry = result.status === "success" && Array.isArray(result.data) ? mapTelemetryData(result.data, vid) : [];
       } catch (err) {
@@ -139,62 +80,49 @@ jobs:
     function showTelemetryScreen'''
           text = text[:old_pop.start()] + new_pop + text[old_pop.end():]
 
+          # Add the AI engine once. It is self-contained and does not replace the existing UI.
           if 'id="jafafa-ai-engine-script"' not in text:
-              ai = r'''
+              ai = '''
   <script id="jafafa-ai-engine-script">
     (() => {
       "use strict";
       const MODEL_FEATURES = Object.freeze(["speed", "rpm", "maf", "ctemp", "voltage", "throttle", "load"]);
       const FEATURE_NORMALIZATION = Object.freeze({ speed: 150, rpm: 7000, maf: 200, ctemp: 150, voltage: 20, throttle: 100, load: 100 });
-      const AI_EPOCHS = 30;
-      const AI_SAMPLES_PER_PROFILE = 140;
-      const AI_LABELS = [];
+      const AI_EPOCHS = 30, AI_SAMPLES_PER_PROFILE = 140, AI_LABELS = [];
       const aiState = { model: null, trainingPromise: null, metrics: null, isAnalyzing: false };
       const diagnosticProfiles = Object.freeze({
-        NormalCruising: { label: "NormalCruising", description: "Normal vehicle operation under typical Lagos cruising conditions.", ranges: { speed: [40, 90], rpm: [1500, 3000], maf: [20, 70], ctemp: [80, 100], voltage: [13.5, 14.6], throttle: [10, 50], load: [20, 60] } },
-        TrafficIdle_HeatSoak: { label: "TrafficIdle_HeatSoak", description: "Low-speed traffic or idling with elevated engine temperature.", ranges: { speed: [0, 15], rpm: [650, 1500], maf: [5, 35], ctemp: [95, 110], voltage: [12.2, 14.5], throttle: [0, 25], load: [10, 40] } },
-        HighLoad_Overtaking: { label: "HighLoad_Overtaking", description: "High engine load and throttle demand during acceleration or overtaking.", ranges: { speed: [50, 130], rpm: [3000, 6000], maf: [60, 180], ctemp: [80, 105], voltage: [13.0, 14.7], throttle: [70, 100], load: [70, 100] } },
-        ThermalWarning: { label: "ThermalWarning", description: "Coolant temperature is elevated enough to indicate a thermal warning condition.", ranges: { speed: [0, 90], rpm: [700, 4000], maf: [5, 110], ctemp: [105, 118], voltage: [12.0, 14.6], throttle: [0, 70], load: [5, 75] } },
-        LowVoltage: { label: "LowVoltage", description: "Electrical system voltage is below the normal operating range.", ranges: { speed: [0, 100], rpm: [0, 4000], maf: [0, 110], ctemp: [70, 105], voltage: [9.5, 12.0], throttle: [0, 70], load: [0, 75] } },
-        EngineOff: { label: "EngineOff", description: "The engine is not running, indicated by zero RPM.", ranges: { speed: [0, 0], rpm: [0, 0], maf: [0, 2], ctemp: [20, 105], voltage: [11.5, 13.0], throttle: [0, 0], load: [0, 5] } }
+        NormalCruising: { label: "NormalCruising", description: "Normal vehicle operation under typical Lagos cruising conditions.", ranges: { speed:[40,90], rpm:[1500,3000], maf:[20,70], ctemp:[80,100], voltage:[13.5,14.6], throttle:[10,50], load:[20,60] } },
+        TrafficIdle_HeatSoak: { label: "TrafficIdle_HeatSoak", description: "Low-speed traffic or idling with elevated engine temperature.", ranges: { speed:[0,15], rpm:[650,1500], maf:[5,35], ctemp:[95,110], voltage:[12.2,14.5], throttle:[0,25], load:[10,40] } },
+        HighLoad_Overtaking: { label: "HighLoad_Overtaking", description: "High engine load and throttle demand during acceleration or overtaking.", ranges: { speed:[50,130], rpm:[3000,6000], maf:[60,180], ctemp:[80,105], voltage:[13,14.7], throttle:[70,100], load:[70,100] } },
+        ThermalWarning: { label: "ThermalWarning", description: "Coolant temperature is elevated enough to indicate a thermal warning condition.", ranges: { speed:[0,90], rpm:[700,4000], maf:[5,110], ctemp:[105,118], voltage:[12,14.6], throttle:[0,70], load:[5,75] } },
+        LowVoltage: { label: "LowVoltage", description: "Electrical system voltage is below the normal operating range.", ranges: { speed:[0,100], rpm:[0,4000], maf:[0,110], ctemp:[70,105], voltage:[9.5,12], throttle:[0,70], load:[0,75] } },
+        EngineOff: { label: "EngineOff", description: "The engine is not running, indicated by zero RPM.", ranges: { speed:[0,0], rpm:[0,0], maf:[0,2], ctemp:[20,105], voltage:[11.5,13], throttle:[0,0], load:[0,5] } }
       });
-      AI_LABELS.push(...Object.keys(diagnosticProfiles));
-      window.diagnosticProfiles = diagnosticProfiles;
-      window.MODEL_FEATURES = MODEL_FEATURES;
-      window.aiState = aiState;
-      const aiEscape = value => String(value ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
-      const randomBetween = (min, max) => min + Math.random() * (max - min);
-      const clamp01 = value => Math.max(0, Math.min(1, Number(value) || 0));
-      const sleepFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
-      function normalizeFeatures(telemetry) { return MODEL_FEATURES.map(field => { const raw = Number(telemetry?.[field]); const value = Number.isFinite(raw) ? raw : 0; return Math.max(-1, Math.min(1.25, value / FEATURE_NORMALIZATION[field])); }); }
-      window.normalizeFeatures = normalizeFeatures;
-      function generateTelemetryForProfile(profileName) { const profile = diagnosticProfiles[profileName]; if (!profile) throw new Error(`Unknown diagnostic profile: ${profileName}`); const telemetry = { Diagnostic_Status: profile.label }; for (const [field, range] of Object.entries(profile.ranges)) telemetry[field] = randomBetween(range[0], range[1]); telemetry.time = new Date().toISOString(); return telemetry; }
-      window.generateTelemetryForProfile = generateTelemetryForProfile;
-      window.generateNormalLagosTelemetry = count => Array.from({ length: count || 1 }, () => generateTelemetryForProfile("NormalCruising"));
-      window.generateLagosTelemetry = count => Array.from({ length: count || 1 }, (_, i) => generateTelemetryForProfile(AI_LABELS[i % AI_LABELS.length]));
-      function updateAIProgress(value, label) { const progress = Math.max(0, Math.min(100, value)); const fill = document.getElementById("jfAIProgressFill"); const valueEl = document.getElementById("jfAIProgressValue"); const labelEl = document.getElementById("jfAIProgressLabel"); if (fill) fill.style.width = `${progress}%`; if (valueEl) valueEl.textContent = `${Math.round(progress)}%`; if (labelEl && label) labelEl.textContent = label; }
-      window.updateAIProgress = updateAIProgress;
-      function ensureAIStyles() { if (document.getElementById("jfAIStyles")) return; const style = document.createElement("style"); style.id = "jfAIStyles"; style.textContent = `.jf-ai-overlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(2,6,18,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);pointer-events:all}.jf-ai-progress-card{width:min(620px,100%);padding:32px;border:1px solid rgba(56,189,248,.28);border-radius:24px;background:rgba(7,14,28,.94);box-shadow:0 30px 100px rgba(0,0,0,.5);text-align:center}.jf-ai-progress-card h2{margin:0 0 8px;font-size:1.5rem}.jf-ai-progress-card p{margin:0 0 24px;color:var(--muted)}.jf-ai-progress-track{height:12px;border-radius:999px;overflow:hidden;background:rgba(148,163,184,.12);border:1px solid var(--line)}.jf-ai-progress-fill{height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#0ea5e9,#67e8f9);box-shadow:0 0 24px rgba(56,189,248,.4);transition:width .18s ease}.jf-ai-progress-meta{display:flex;justify-content:space-between;gap:12px;margin-top:12px;color:#cbd5e1;font-size:.82rem}.jf-ai-results{margin-top:26px}.jf-ai-results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}.jf-ai-stat{padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.jf-ai-stat-label{color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.08em}.jf-ai-stat-value{margin-top:5px;font-size:1.35rem;font-weight:800}.jf-ai-counts{display:grid;gap:8px;margin:12px 0 20px}.jf-ai-count{display:flex;justify-content:space-between;gap:15px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(8,15,29,.55)}.jf-ai-table-wrap{max-height:600px;overflow:auto;border:1px solid var(--line);border-radius:16px;background:var(--panel)}.jf-ai-table{width:100%;min-width:720px;border-collapse:collapse;font-size:.78rem}.jf-ai-table th{position:sticky;top:0;background:rgba(5,10,21,.98);color:#9fb0c7;padding:11px 9px;text-align:center;border-bottom:1px solid var(--line);font-size:.67rem;text-transform:uppercase}.jf-ai-table td{padding:10px 9px;text-align:center;border-bottom:1px solid rgba(148,163,184,.06);white-space:nowrap}.jf-ai-confidence{font-weight:800;color:var(--cyan2)}.jf-ai-empty{padding:28px;text-align:center;color:var(--muted)}.jf-ai-button{white-space:nowrap}.jf-ai-button:disabled{opacity:.55;cursor:not-allowed}`; document.head.appendChild(style); }
-      function showAIProgressOverlay() { ensureAIStyles(); let overlay = document.getElementById("jfAIProgressOverlay"); if (!overlay) { overlay = document.createElement("div"); overlay.id = "jfAIProgressOverlay"; overlay.className = "jf-ai-overlay"; overlay.setAttribute("aria-modal", "true"); overlay.innerHTML = `<div class="jf-ai-progress-card"><div class="eyebrow">JaFaFa AI Engine</div><h2>Analyzing telemetry</h2><p id="jfAIProgressLabel">Preparing the model…</p><div class="jf-ai-progress-track"><div id="jfAIProgressFill" class="jf-ai-progress-fill"></div></div><div class="jf-ai-progress-meta"><span>Processing</span><strong id="jfAIProgressValue">0%</strong></div></div>`; document.body.appendChild(overlay); } document.body.style.overflow = "hidden"; updateAIProgress(0, "Preparing the model…"); }
-      function hideAIProgressOverlay() { document.getElementById("jfAIProgressOverlay")?.remove(); document.body.style.overflow = ""; }
-      function buildTrainingDataset() { const samples = []; AI_LABELS.forEach((label, classIndex) => { for (let i = 0; i < AI_SAMPLES_PER_PROFILE; i++) { const telemetry = generateTelemetryForProfile(label); samples.push({ features: normalizeFeatures(telemetry), label: classIndex }); } }); for (let i = samples.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [samples[i], samples[j]] = [samples[j], samples[i]]; } return samples; }
-      async function loadTensorFlow() { if (window.tf) return window.tf; await new Promise((resolve, reject) => { const existing = document.querySelector('script[data-jafafa-tfjs]'); if (existing) { existing.addEventListener("load", resolve, { once: true }); existing.addEventListener("error", reject, { once: true }); return; } const script = document.createElement("script"); script.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"; script.dataset.jafafaTfjs = "1"; script.onload = resolve; script.onerror = () => reject(new Error("TensorFlow.js failed to load.")); document.head.appendChild(script); }); if (!window.tf) throw new Error("TensorFlow.js is unavailable."); return window.tf; }
-      async function trainModel() { const tf = await loadTensorFlow(); const samples = buildTrainingDataset(); const splitIndex = Math.floor(samples.length * 0.8); const trainSamples = samples.slice(0, splitIndex); const validationSamples = samples.slice(splitIndex); let xs, ys, valXs, valYs, trainedModel; try { xs = tf.tensor2d(trainSamples.map(s => s.features)); ys = tf.oneHot(tf.tensor1d(trainSamples.map(s => s.label), "int32"), AI_LABELS.length); valXs = tf.tensor2d(validationSamples.map(s => s.features)); valYs = tf.oneHot(tf.tensor1d(validationSamples.map(s => s.label), "int32"), AI_LABELS.length); trainedModel = tf.sequential(); trainedModel.add(tf.layers.dense({ inputShape: [MODEL_FEATURES.length], units: 32, activation: "relu" })); trainedModel.add(tf.layers.dense({ units: 16, activation: "relu" })); trainedModel.add(tf.layers.dense({ units: AI_LABELS.length, activation: "softmax" })); trainedModel.compile({ optimizer: tf.train.adam(0.001), loss: "categoricalCrossentropy", metrics: ["accuracy"] }); const history = await trainedModel.fit(xs, ys, { epochs: AI_EPOCHS, batchSize: 32, validationData: [valXs, valYs], shuffle: true, callbacks: { onEpochEnd: async epoch => { updateAIProgress(((epoch + 1) / AI_EPOCHS) * 50, `Training model · epoch ${epoch + 1} of ${AI_EPOCHS}`); await sleepFrame(); } } }); const h = history.history; return { model: trainedModel, epochs: history.epoch.length, trainingAccuracy: Number((h.accuracy || h.acc || []).at(-1) || 0), validationAccuracy: Number((h.val_accuracy || h.val_acc || []).at(-1) || 0), trainingLoss: Number((h.loss || []).at(-1) || 0), validationLoss: Number((h.val_loss || []).at(-1) || 0) }; } finally { xs?.dispose(); ys?.dispose(); valXs?.dispose(); valYs?.dispose(); } }
-      window.trainModel = trainModel;
-      async function ensureModelReady() { if (aiState.model && aiState.metrics) return aiState.metrics; if (aiState.trainingPromise) return aiState.trainingPromise; aiState.trainingPromise = trainModel().then(result => { aiState.model = result.model; aiState.metrics = { epochs: result.epochs, trainingAccuracy: result.trainingAccuracy, validationAccuracy: result.validationAccuracy, trainingLoss: result.trainingLoss, validationLoss: result.validationLoss }; return aiState.metrics; }).finally(() => { aiState.trainingPromise = null; }); return aiState.trainingPromise; }
-      function classifyTelemetry(telemetry) { if (!aiState.model || !window.tf) throw new Error("AI model is not ready."); const tf = window.tf; const probabilities = tf.tidy(() => aiState.model.predict(tf.tensor2d([normalizeFeatures(telemetry)]))); try { const values = Array.from(probabilities.dataSync()); let bestIndex = 0; values.forEach((value, index) => { if (value > values[bestIndex]) bestIndex = index; }); return { classification: AI_LABELS[bestIndex], confidence: values[bestIndex], probabilities: Object.fromEntries(AI_LABELS.map((label, index) => [label, values[index]])) }; } finally { probabilities.dispose(); } }
-      window.classifyTelemetry = classifyTelemetry;
-      async function classifyDisplayedTelemetry(logs) { const source = Array.isArray(logs) ? logs : []; const results = []; for (let i = 0; i < source.length; i++) { const log = source[i]; const prediction = classifyTelemetry(log); results.push({ telemetry: log, ...prediction }); updateAIProgress(50 + ((i + 1) / source.length) * 50, `Classifying telemetry · ${i + 1} of ${source.length}`); if (i % 25 === 0) await sleepFrame(); } return results; }
-      function showAIResults(metrics, results) { ensureAIStyles(); let screen = document.getElementById("screen-ai-results"); if (!screen) { screen = document.createElement("section"); screen.id = "screen-ai-results"; screen.className = "screen jf-ai-results"; const main = document.querySelector(".main-content"); if (!main) throw new Error("Main content container not found."); main.appendChild(screen); } const counts = results.reduce((map, item) => { map[item.classification] = (map[item.classification] || 0) + 1; return map; }, {}); const countHtml = AI_LABELS.map(label => `<div class="jf-ai-count"><span>${aiEscape(label)}</span><strong>${counts[label] || 0}</strong></div>`).join(""); const rows = results.map(item => { const l = item.telemetry || {}; const confidence = `${(clamp01(item.confidence) * 100).toFixed(1)}%`; return `<tr><td>${aiEscape(prettyTime(l.time))}</td><td>${aiEscape(item.classification)}</td><td class="jf-ai-confidence">${confidence}</td><td>${aiEscape(l.speed ?? "—")}</td><td>${aiEscape(l.rpm ?? "—")}</td><td>${aiEscape(l.ctemp ?? "—")}</td><td>${aiEscape(l.voltage ?? "—")}</td></tr>`; }).join(""); screen.innerHTML = `<div class="breadcrumb"><button class="btn-back" type="button" onclick="showScreen('screen-telemetry')">← Telemetry</button></div><div class="view-header"><div class="eyebrow">AI telemetry analysis</div><h2>Classification results</h2><p>Results are generated from the telemetry currently visible after filtering.</p></div><div class="dashboard-panel" style="padding:20px"><div class="stat-label">Model performance</div><div class="jf-ai-results-grid"><div class="jf-ai-stat"><div class="jf-ai-stat-label">Epochs</div><div class="jf-ai-stat-value">${metrics.epochs}</div></div><div class="jf-ai-stat"><div class="jf-ai-stat-label">Training accuracy</div><div class="jf-ai-stat-value">${(metrics.trainingAccuracy * 100).toFixed(1)}%</div></div><div class="jf-ai-stat"><div class="jf-ai-stat-label">Validation accuracy</div><div class="jf-ai-stat-value">${(metrics.validationAccuracy * 100).toFixed(1)}%</div></div><div class="jf-ai-stat"><div class="jf-ai-stat-label">Training loss</div><div class="jf-ai-stat-value">${metrics.trainingLoss.toFixed(3)}</div></div><div class="jf-ai-stat"><div class="jf-ai-stat-label">Validation loss</div><div class="jf-ai-stat-value">${metrics.validationLoss.toFixed(3)}</div></div><div class="jf-ai-stat"><div class="jf-ai-stat-label">Records analyzed</div><div class="jf-ai-stat-value">${results.length.toLocaleString()}</div></div></div><div class="stat-label">Classification summary</div><div class="jf-ai-counts">${countHtml}</div></div><div style="height:18px"></div><div class="jf-ai-table-wrap"><table class="jf-ai-table"><thead><tr><th>Timestamp</th><th>Classification</th><th>Confidence</th><th>Speed</th><th>RPM</th><th>Coolant</th><th>Voltage</th></tr></thead><tbody>${rows || `<tr><td colspan="7"><div class="jf-ai-empty">No telemetry records were available for analysis.</div></td></tr>`}</tbody></table></div>`; ["screen-dashboard", "screen-customers", "screen-vehicles", "screen-telemetry"].forEach(id => { const e = document.getElementById(id); if (e) e.hidden = true; }); screen.hidden = false; window.scrollTo({ top: 0, behavior: "auto" }); }
-      window.showAIResults = showAIResults;
-      async function runAIanalysis() { if (aiState.isAnalyzing) return; const logs = Array.isArray(window.currentTelemetryDisplayedLogs) ? window.currentTelemetryDisplayedLogs.slice() : []; if (!activeCar) return alert("Select a vehicle before running AI analysis."); if (!logs.length) return alert("There is no telemetry currently available for AI analysis. Clear or adjust the filters, then try again."); aiState.isAnalyzing = true; document.querySelectorAll("button, input, select, textarea, a").forEach(el => { el.dataset.jfAiDisabled = el.disabled ? "1" : "0"; el.disabled = true; }); showAIProgressOverlay(); try { const metrics = await ensureModelReady(); updateAIProgress(50, "Model ready · classifying telemetry…"); const results = await classifyDisplayedTelemetry(logs); updateAIProgress(100, "Classification complete."); await sleepFrame(); alert("Classification finished."); hideAIProgressOverlay(); showAIResults(metrics, results); } catch (error) { console.error("AI analysis failed:", error); hideAIProgressOverlay(); alert("AI analysis failed. Please try again."); } finally { document.querySelectorAll("[data-jf-ai-disabled]").forEach(el => { el.disabled = el.dataset.jfAiDisabled === "1"; delete el.dataset.jfAiDisabled; }); aiState.isAnalyzing = false; } }
-      window.runAIanalysis = runAIanalysis;
-      function ensureAIButton() { const toolbar = document.getElementById("jfTelemetryToolbar"); if (!toolbar || document.getElementById("jfAnalyzeAI")) return; const button = document.createElement("button"); button.id = "jfAnalyzeAI"; button.type = "button"; button.className = "btn-action jf-ai-button"; button.textContent = "Analyze with AI"; button.onclick = runAIanalysis; toolbar.appendChild(button); }
-      const oldTelemetryReady = window.telemetryCoreReady;
-      window.telemetryCoreReady = function () { const result = oldTelemetryReady ? oldTelemetryReady.apply(this, arguments) : undefined; ensureAIButton(); return result; };
-      const oldShowScreen = window.showScreen;
-      window.showScreen = function (id) { if (id !== "screen-ai-results") { const ai = document.getElementById("screen-ai-results"); if (ai) ai.hidden = true; } const result = oldShowScreen ? oldShowScreen.apply(this, arguments) : undefined; if (id === "screen-telemetry") ensureAIButton(); return result; };
-      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ensureAIButton); else ensureAIButton();
+      AI_LABELS.push(...Object.keys(diagnosticProfiles)); window.diagnosticProfiles = diagnosticProfiles; window.MODEL_FEATURES = MODEL_FEATURES; window.aiState = aiState;
+      const escAI = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+      const rand = (a,b) => a + Math.random() * (b-a), frame = () => new Promise(r => requestAnimationFrame(r));
+      function normalizeFeatures(t) { return MODEL_FEATURES.map(k => { const n=Number(t?.[k]); return Math.max(-1,Math.min(1.25,Number.isFinite(n)?n/FEEATURE_NORMALIZATION[k]:0)); }); }
+      const FEEATURE_NORMALIZATION = FEATURE_NORMALIZATION;
+      window.normalizeFeatures = t => MODEL_FEATURES.map(k => { const n=Number(t?.[k]); return Math.max(-1,Math.min(1.25,Number.isFinite(n)?n/FEATURE_NORMALIZATION[k]:0)); });
+      function generateTelemetryForProfile(name) { const p=diagnosticProfiles[name]; if(!p) throw new Error(`Unknown diagnostic profile: ${name}`); const t={Diagnostic_Status:p.label,time:new Date().toISOString()}; Object.entries(p.ranges).forEach(([k,r])=>t[k]=rand(r[0],r[1])); return t; }
+      window.generateTelemetryForProfile=generateTelemetryForProfile; window.generateNormalLagosTelemetry=n=>Array.from({length:n||1},()=>generateTelemetryForProfile("NormalCruising")); window.generateLagosTelemetry=n=>Array.from({length:n||1},(_,i)=>generateTelemetryForProfile(AI_LABELS[i%AI_LABELS.length]));
+      function styles(){ if(document.getElementById('jfAIStyles'))return; const s=document.createElement('style'); s.id='jfAIStyles'; s.textContent=`.jf-ai-overlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(2,6,18,.84);backdrop-filter:blur(18px);pointer-events:all}.jf-ai-progress-card{width:min(620px,100%);padding:32px;border:1px solid rgba(56,189,248,.28);border-radius:24px;background:rgba(7,14,28,.96);box-shadow:0 30px 100px rgba(0,0,0,.5);text-align:center}.jf-ai-progress-track{height:12px;border-radius:999px;overflow:hidden;background:rgba(148,163,184,.12);margin-top:20px}.jf-ai-progress-fill{height:100%;width:0;background:linear-gradient(90deg,#0ea5e9,#67e8f9);transition:width .18s ease}.jf-ai-progress-meta{display:flex;justify-content:space-between;margin-top:10px;color:#cbd5e1;font-size:.8rem}.jf-ai-results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin:18px 0}.jf-ai-stat{padding:15px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}.jf-ai-stat-label{color:var(--muted);font-size:.67rem;text-transform:uppercase}.jf-ai-stat-value{margin-top:5px;font-size:1.3rem;font-weight:800}.jf-ai-counts{display:grid;gap:7px;margin:12px 0 20px}.jf-ai-count{display:flex;justify-content:space-between;padding:10px 12px;border:1px solid var(--line);border-radius:10px}.jf-ai-table-wrap{max-height:600px;overflow:auto;border:1px solid var(--line);border-radius:16px}.jf-ai-table{width:100%;min-width:720px;border-collapse:collapse;font-size:.78rem}.jf-ai-table th{position:sticky;top:0;background:rgba(5,10,21,.98);padding:10px;color:#9fb0c7}.jf-ai-table td{padding:9px;text-align:center;border-bottom:1px solid rgba(148,163,184,.06);white-space:nowrap}.jf-ai-confidence{color:var(--cyan2);font-weight:800}.jf-ai-empty{padding:25px;text-align:center;color:var(--muted)}`; document.head.appendChild(s); }
+      function progress(v,label){ const f=document.getElementById('jfAIProgressFill'),n=document.getElementById('jfAIProgressValue'),l=document.getElementById('jfAIProgressLabel'); if(f)f.style.width=`${v}%`;if(n)n.textContent=`${Math.round(v)}%`;if(l)l.textContent=label||''; }
+      async function loadTF(){ if(window.tf)return window.tf; await new Promise((ok,bad)=>{let s=document.querySelector('script[data-jafafa-tfjs]');if(s){s.addEventListener('load',ok,{once:true});s.addEventListener('error',bad,{once:true});return}s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js';s.dataset.jafafaTfjs='1';s.onload=ok;s.onerror=()=>bad(new Error('TensorFlow.js failed to load'));document.head.appendChild(s)});return window.tf}
+      function data(){const a=[];AI_LABELS.forEach((label,i)=>{for(let n=0;n<AI_SAMPLES_PER_PROFILE;n++){const t=generateTelemetryForProfile(label);a.push({x:window.normalizeFeatures(t),y:i})}});for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+      async function trainModel(){const tf=await loadTF(),a=data(),cut=Math.floor(a.length*.8),tr=a.slice(0,cut),va=a.slice(cut);let xs,ys,vx,vy,m;try{xs=tf.tensor2d(tr.map(s=>s.x));ys=tf.oneHot(tf.tensor1d(tr.map(s=>s.y),'int32'),AI_LABELS.length);vx=tf.tensor2d(va.map(s=>s.x));vy=tf.oneHot(tf.tensor1d(va.map(s=>s.y),'int32'),AI_LABELS.length);m=tf.sequential();m.add(tf.layers.dense({inputShape:[MODEL_FEATURES.length],units:32,activation:'relu'}));m.add(tf.layers.dense({units:16,activation:'relu'}));m.add(tf.layers.dense({units:AI_LABELS.length,activation:'softmax'}));m.compile({optimizer:tf.train.adam(.001),loss:'categoricalCrossentropy',metrics:['accuracy']});const h=await m.fit(xs,ys,{epochs:AI_EPOCHS,batchSize:32,shuffle:true,validationData:[vx,vy],callbacks:{onEpochEnd:async e=>{progress((e+1)/AI_EPOCHS*50,`Training model · epoch ${e+1} of ${AI_EPOCHS}`);await frame()}}});return{model:m,epochs:h.epoch.length,trainingAccuracy:Number((h.history.accuracy||h.history.acc).at(-1)||0),validationAccuracy:Number((h.history.val_accuracy||h.history.val_acc).at(-1)||0),trainingLoss:Number(h.history.loss.at(-1)||0),validationLoss:Number(h.history.val_loss.at(-1)||0)}}finally{xs?.dispose();ys?.dispose();vx?.dispose();vy?.dispose()}}
+      window.trainModel=trainModel;
+      async function ensureModelReady(){if(aiState.model&&aiState.metrics)return aiState.metrics;if(aiState.trainingPromise)return aiState.trainingPromise;aiState.trainingPromise=trainModel().then(r=>{aiState.model=r.model;aiState.metrics={epochs:r.epochs,trainingAccuracy:r.trainingAccuracy,validationAccuracy:r.validationAccuracy,trainingLoss:r.trainingLoss,validationLoss:r.validationLoss};return aiState.metrics}).finally(()=>aiState.trainingPromise=null);return aiState.trainingPromise}
+      function classifyTelemetry(t){if(!aiState.model||!window.tf)throw new Error('AI model is not ready');const tf=window.tf,p=tf.tidy(()=>aiState.model.predict(tf.tensor2d([window.normalizeFeatures(t)])));try{const a=Array.from(p.dataSync());let i=0;a.forEach((v,k)=>{if(v>a[i])i=k});return{classification:AI_LABELS[i],confidence:a[i],probabilities:Object.fromEntries(AI_LABELS.map((l,k)=>[l,a[k]]))}}finally{p.dispose()}}
+      window.classifyTelemetry=classifyTelemetry;
+      async function classify(logs){const out=[];for(let i=0;i<logs.length;i++){out.push({telemetry:logs[i],...classifyTelemetry(logs[i])});progress(50+(i+1)/logs.length*50,`Classifying telemetry · ${i+1} of ${logs.length}`);if(i%25===0)await frame()}return out}
+      function results(metrics,rows){styles();let s=document.getElementById('screen-ai-results');if(!s){s=document.createElement('section');s.id='screen-ai-results';s.className='screen';document.querySelector('.main-content').appendChild(s)}const counts=rows.reduce((a,r)=>(a[r.classification]=(a[r.classification]||0)+1,a),{});s.innerHTML=`<div class="breadcrumb"><button class="btn-back" type="button" onclick="showScreen('screen-telemetry')">← Telemetry</button></div><div class="view-header"><div class="eyebrow">AI telemetry analysis</div><h2>Classification results</h2><p>Results are based on the telemetry currently visible after filtering.</p></div><div class="dashboard-panel" style="padding:20px"><div class="stat-label">Model performance</div><div class="jf-ai-results-grid"><div class="jf-ai-stat"><div class="jf-ai-stat-label">Epochs</div><div class="jf-ai-stat-value">${metrics.epochs}</div></div><div class="jf-ai-stat"><div class="jf-ai-stat-label">Training accuracy</div><div class="jf-ai-stat-value">${(metrics.trainingAccuracy*100).toFixed(1)}%</div></div><div class="jf-ai-stat"><div class="jf-ai-stat-label">Validation accuracy</div><div class="jf-ai-stat-value">${(metrics.validationAccuracy*100).toFixed(1)}%</div></div><div class="jf-ai-stat"><div class="jf-ai-stat-label">Training loss</div><div class="jf-ai-stat-value">${metrics.trainingLoss.toFixed(3)}</div></div><div class="jf-ai-stat"><div class="jf-ai-stat-label">Validation loss</div><div class="jf-ai-stat-value">${metrics.validationLoss.toFixed(3)}</div></div><div class="jf-ai-stat"><div class="jf-ai-stat-label">Records analyzed</div><div class="jf-ai-stat-value">${rows.length.toLocaleString()}</div></div></div><div class="stat-label">Classification summary</div><div class="jf-ai-counts">${AI_LABELS.map(l=>`<div class="jf-ai-count"><span>${escAI(l)}</span><strong>${counts[l]||0}</strong></div>`).join('')}</div></div><div style="height:18px"></div><div class="jf-ai-table-wrap"><table class="jf-ai-table"><thead><tr><th>Timestamp</th><th>Classification</th><th>Confidence</th><th>Speed</th><th>RPM</th><th>Coolant</th><th>Voltage</th></tr></thead><tbody>${rows.map(r=>{const t=r.telemetry||{};return `<tr><td>${escAI(prettyTime(t.time))}</td><td>${escAI(r.classification)}</td><td class="jf-ai-confidence">${(Math.max(0,Math.min(1,r.confidence))*100).toFixed(1)}%</td><td>${escAI(t.speed??'—')}</td><td>${escAI(t.rpm??'—')}</td><td>${escAI(t.ctemp??'—')}</td><td>${escAI(t.voltage??'—')}</td></tr>`}).join('')||'<tr><td colspan="7"><div class="jf-ai-empty">No telemetry records were available.</div></td></tr>'}</tbody></table></div>`;['screen-dashboard','screen-customers','screen-vehicles','screen-telemetry'].forEach(id=>{const e=document.getElementById(id);if(e)e.hidden=true});s.hidden=false;window.scrollTo({top:0,behavior:'auto'})}
+      window.showAIResults=results;
+      async function runAIanalysis(){if(aiState.isAnalyzing)return;const logs=Array.isArray(window.currentTelemetryDisplayedLogs)?window.currentTelemetryDisplayedLogs.slice():[];if(!activeCar)return alert('Select a vehicle before running AI analysis.');if(!logs.length)return alert('There is no telemetry currently available for AI analysis. Clear or adjust the filters, then try again.');aiState.isAnalyzing=true;document.querySelectorAll('button,input,select,textarea,a').forEach(e=>{e.dataset.jfAiDisabled=e.disabled?'1':'0';e.disabled=true});styles();const o=document.createElement('div');o.id='jfAIProgressOverlay';o.className='jf-ai-overlay';o.innerHTML='<div class="jf-ai-progress-card"><div class="eyebrow">JaFaFa AI Engine</div><h2>Analyzing telemetry</h2><p id="jfAIProgressLabel">Preparing the model…</p><div class="jf-ai-progress-track"><div id="jfAIProgressFill" class="jf-ai-progress-fill"></div></div><div class="jf-ai-progress-meta"><span>Processing</span><strong id="jfAIProgressValue">0%</strong></div></div>';document.body.appendChild(o);document.body.style.overflow='hidden';try{const metrics=await ensureModelReady(),rows=await classify(logs);progress(100,'Classification complete.');await frame();alert('Classification finished.');o.remove();document.body.style.overflow='';results(metrics,rows)}catch(err){console.error('AI analysis failed:',err);o.remove();document.body.style.overflow='';alert('AI analysis failed. Please try again.')}finally{document.querySelectorAll('[data-jf-ai-disabled]').forEach(e=>{e.disabled=e.dataset.jfAiDisabled==='1';delete e.dataset.jfAiDisabled});aiState.isAnalyzing=false}}
+      window.runAIanalysis=runAIanalysis;
+      function button(){const t=document.getElementById('jfTelemetryToolbar');if(!t||document.getElementById('jfAnalyzeAI'))return;const b=document.createElement('button');b.id='jfAnalyzeAI';b.type='button';b.className='btn-action';b.textContent='Analyze with AI';b.onclick=runAIanalysis;t.appendChild(b)}
+      const ready=window.telemetryCoreReady;window.telemetryCoreReady=function(){const r=ready?ready.apply(this,arguments):undefined;button();return r};const oldShow=window.showScreen;window.showScreen=function(id){if(id!=='screen-ai-results')document.getElementById('screen-ai-results')?.setAttribute('hidden','');const r=oldShow?oldShow.apply(this,arguments):undefined;if(id==='screen-telemetry')button();return r};
+      if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',button);else button();
     })();
   </script>
 '''
@@ -203,13 +131,37 @@ jobs:
           if text == original:
               raise SystemExit('No changes were made')
           path.write_text(text, encoding='utf-8')
-          print('Updated index.html:', len(original), '->', len(text), 'bytes')
-          PY
-      - name: Remove temporary workflow and commit
+          print(f'Updated index.html: {len(original)} -> {len(text)} bytes')
+
+      - name: Validate JavaScript syntax
+        shell: python
+        run: |
+          import re
+          import subprocess
+          import tempfile
+          from pathlib import Path
+          text = Path('index.html').read_text(encoding='utf-8')
+          blocks = re.findall(r'<script(?:\s[^>]*)?>([\s\S]*?)</script>', text, flags=re.I)
+          for i, code in enumerate(blocks, 1):
+              if not code.strip():
+                  continue
+              with tempfile.NamedTemporaryFile('w', suffix='.js', encoding='utf-8', delete=False) as f:
+                  f.write(code)
+                  temp = f.name
+              result = subprocess.run(['node', '--check', temp], text=True, capture_output=True)
+              Path(temp).unlink(missing_ok=True)
+              if result.returncode:
+                  print(result.stdout)
+                  print(result.stderr)
+                  raise SystemExit(f'JavaScript syntax error in inline script #{i}')
+          print('index.html: JavaScript syntax OK')
+
+      - name: Commit final index and remove temporary workflow
+        shell: bash
         run: |
           rm -f .github/workflows/jafafa-index-refactor.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html .github/workflows/jafafa-index-refactor.yml
-          git commit -m "Refactor telemetry filtering and add AI analysis engine" || exit 0
+          git commit -m "Refactor telemetry filtering and add AI analysis engine"
           git push
